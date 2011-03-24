@@ -1,0 +1,1 @@
+# Build great WordPress plugins, and then monetize them with wpgetapps.com
