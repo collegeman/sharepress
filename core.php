@@ -25,10 +25,10 @@ class PluginNameCore {
   }
   
   /**
-   * ou should begin here to hook your plugin into WordPress's action and
-   * filter APIs.
+   * Begin here to hook your plugin into WordPress's action and filter APIs.
    */
   private function __construct() {
+    
     #
     # Establish the run-time path for this plugin.
     #
@@ -41,13 +41,24 @@ class PluginNameCore {
     # functions. The second parameter to add_action below is a callback that
     # references the function "init" on this instance of your plugin core.
     #
-    
-    add_action('activate_sharepress/sharepress-lite.php', array($this, 'activate'));
-    
     add_action('init', array($this, 'init'), 11, 1);
+    
+    
+    #
+    # Need to do something when the plugin was activated - setup default data
+    # or create some database tables? Do that in the activate hook.
+    #
+    // add_action('activate_sharepress/sharepress-lite.php', array($this, 'activate'));
+    
   }
   
   function init() {
+    PluginNameCore::$pro = $this;
+    
+  }
+  
+  function activate() {
+    
     
   }
   

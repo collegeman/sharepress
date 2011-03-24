@@ -62,7 +62,7 @@ if (!class_exists('PluginUpdateClient')):
           add_action('admin_head', array('PluginUpdateClient', 'admin_head'));
           add_action('wp_ajax_plugin_update_get_key', array('PluginUpdateClient', 'ajax_get_key'));
           add_action('wp_ajax_plugin_update_set_key', array('PluginUpdateClient', 'ajax_set_key'));
-          wp_enqueue_script('plugin-update-client', plugins_url("{$dir_path}/plugin-update-client.js"), array('jquery'));
+          wp_enqueue_script('update-client', plugins_url("{$dir_path}/update-client.js"), array('jquery'));
         }
         
         self::$one_time = true;
