@@ -1,14 +1,14 @@
 <?php
 /*
 Plugin Name: Plugin Name Pro
-Description: The pro version of your plugin, to be licensed on getwpapps.com, or directly from you!
+Description: The pro version of your plugin
 Author: Plugin Author
 Author URI: 
-Version: 0.1
+Version: @VERSION@
 */
 
 /*
-Plugin Name Pro
+Plugin Name
 Copyright (C)2011  Plugin Author
 
 This program is free software; you can redistribute it and/or
@@ -40,7 +40,7 @@ if (!defined('ABSPATH')) exit;
  * mind that what you program here (and/or include here) is not only the basis
  * for the free application, but is also the basis for the pro version. 
  */
-class PluginNameCorePro {
+class PluginNamePro {
   
   // holds the singleton instance of your plugin's core
   static $instance;
@@ -51,31 +51,19 @@ class PluginNameCorePro {
    */
   static function load() {
     if (!self::$instance) {
-      self::$instance = new PluginNameCore();
+      self::$instance = new PluginNamePro();
     }
     return self::$instance;
   }
   
-  /**
-   * Create a new instance of this plugin's core. This should only be called
-   * once for plugin, which is why we use the singleton approach for accessing
-   * its functions.
-   *
-   * You should begin here to hook your plugin into WordPress's action and
-   * filter APIs.
-   */
   private function __construct() {
     
-    # 
-    # The best practice is to use this object's namespace for the plugin's
-    # functions. The second parameter to add_action below is a callback that
-    # references the function "init" on this instance of your plugin core.
-    #
     add_action('init', array($this, 'init'), 10, 1);
     
     #
-    # Setup the plugin publisher client.
-    PluginPublisherClient::init(array(
+    # Setup the update client to be able to receive updates from getwpapps.com
+    #
+    PluginUpdateClient::init(array(
       'name' => 'Plugin Name Pro',
       'plugin' => 'pro',
       'version' => PLUGIN_NAME_PRO_VERSION,
@@ -85,6 +73,10 @@ class PluginNameCorePro {
   }
   
   function init() {
+    // attach a reference to the pro version onto the lite version
+    PluginName::$pro = $this;
+    
+    
     
   }
   

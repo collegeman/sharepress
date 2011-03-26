@@ -1,15 +1,7 @@
 <?php
 /*
-Plugin Name: Plugin Name
-Description: The free version of your plugin, to be distributed on WordPress.org
-Author: Plugin Author
-Author URI: 
-Version: 0.1
-*/
-
-/*
-Plugin Name
-Copyright (C)2011  Plugin Author
+getwpapps.com Plugin Publisher script
+Copyright (C)2010-2011  Fat Panda, LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -25,5 +17,3 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-
-require('core.php');
