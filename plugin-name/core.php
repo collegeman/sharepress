@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 if (!defined('ABSPATH')) exit;
 
+// don't allow the plugin to be loaded twice - hedges against double installations
+if (class_exists('PluginName')) return;
+
 /**
  * This PHP class is a namespace for the free version of your plugin. Bear in
  * mind that what you program here (and/or include here) is not only the 
@@ -46,9 +49,9 @@ class PluginName {
       #
       # Establish the run-time path for this plugin.
       #
-      $dir_path = explode('/', __FILE__);
+      $dir_path = explode(DIRECTORY_SEPARATOR, __FILE__);
       array_pop($dir_path);
-      self::$dir_path = implode('/', $dir_path);
+      self::$dir_path = implode(DIRECTORY_SEPARATOR, $dir_path);
     }
     return self::$instance;
   }
@@ -61,10 +64,11 @@ class PluginName {
   private function __construct() {
     
     #
-    # All plugins tend to need these basic functions.
+    # All plugins tend to need these basic actions.
     #
     add_action('init', array($this, 'init'), 11, 1);
-    add_action("{self::$dir_path}/lite.php", array($this, 'activate'));
+    add_action("{self::$dir_path}/lite.php_activate", array($this, 'activate'));
+    add_action("{self::$dir_path}/lite.php_deactivate", array($this, 'deactivate'));
     
     # 
     # Add actions and filters here that should be called before the "init" action
@@ -80,6 +84,11 @@ class PluginName {
     #
     // add_action($action_name, array($this, $action_name), $priority = 10, $num_args_supported = 1);
     // add_filter($filter_name, array($this, $filter_name), $priority = 10, $num_args_supported = 1);
+    
+    #
+    # self::$pro will be defined here and will be a reference to your pro component
+    # iff the pro plugin is installed and activated
+    #
   }
   
   function activate() {

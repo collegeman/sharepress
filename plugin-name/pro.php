@@ -26,8 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-define('PLUGIN_NAME_PRO_VERSION', '@VERSION@');
-
 // load the core dependency
 require('core.php');
 // load the plugin updater client
@@ -61,14 +59,20 @@ class PluginNamePro {
     add_action('init', array($this, 'init'), 10, 1);
     
     #
+    # Discover this file's path
+    #
+    $parts = explode(DIRECTORY_SEPARATOR, __FILE__);
+    $fn = array_pop($parts);
+    $fd = array_pop($parts);
+    $file = $fd != 'plugins' ? "{$fd}/{$fn}" : $fn;
+    
+    #
     # Setup the update client to be able to receive updates from getwpapps.com
     #
     PluginUpdateClient::init(array(
       'name' => 'Plugin Name Pro',
       'plugin' => 'pro',
-      'version' => PLUGIN_NAME_PRO_VERSION,
-      'file' => 'wpapp/pro.php',
-      'server' => 'http://getwpapps.com'
+      'file' => $file
     ));
   }
   
@@ -76,10 +80,11 @@ class PluginNamePro {
     // attach a reference to the pro version onto the lite version
     PluginName::$pro = $this;
     
-    
-    
+    #
+    # Use your own custom actions and filters to override and expand the
+    # functionality in the lite version of your plugin.
+    #
   }
-  
   
 }
 

@@ -34,30 +34,26 @@ if (!class_exists('PluginUpdateClient')):
       extract(wp_parse_args($args));
       
       if (!$name) {
-        wp_die("[name] arg to PluginUpdateClient::init should be a descriptive name for your plugin, e.g., Plugin Update");
+        wp_die("[name] arg to PluginUpdateClient::init should be a descriptive name for your plugin, e.g., &quot;My Plugin&quot;");
       }
       
       if (!$plugin) {
-        wp_die("[plugin] arg to PluginUpdateClient::init should be the URL slug of your plugin, as configured in your copy of the Plugin Update, e.g., plugin-update");
-      }
-      
-      if (!$version) {
-        wp_die("[version] arg to PluginUpdateClient::init should be a string, and should be the current version of your plugin, e.g., 1.0");
+        wp_die("[plugin] arg to PluginUpdateClient::init should be the URL slug of your plugin, e.g., &quot;my-plugin&quot;");
       }
       
       if (!$file) {
-        wp_die("[file] arg to PluginUpdateClient::init should specify the plugin to be updated, e.g., plugin-update/plugin-update.php");
+        wp_die("[file] arg to PluginUpdateClient::init should specify the plugin to be updated, e.g., my-plugin/my-plugin.php");
       }
       
       if (!$server) {
-        wp_die("[server] arg to PluginUpdateClient::init should specify the RSS Feed URL at which your copy of the Plugin Update resides and is broadcasting updates for your plugin");
+        $server = 'http://getwpapps.com';
       }
       
       if (!self::$one_time) {
         if (is_admin()) {
-          $dir_path = explode('/', $file);
+          $dir_path = explode(DIRECTORY_SEPARATOR, $file);
           array_pop($dir_path);
-          $dir_path = implode('/', $dir_path);
+          $dir_path = implode(DIRECTORY_SEPARATOR, $dir_path);
         
           add_action('admin_head', array('PluginUpdateClient', 'admin_head'));
           add_action('wp_ajax_plugin_update_get_key', array('PluginUpdateClient', 'ajax_get_key'));
@@ -68,7 +64,7 @@ if (!class_exists('PluginUpdateClient')):
         self::$one_time = true;
       }
 
-      $client = new PluginUpdateClient($name, $plugin, $version, $file, $server);
+      $client = new PluginUpdateClient($name, $plugin, $file, $server);
     }
     
     static function ajax_get_key() {
@@ -93,13 +89,20 @@ if (!class_exists('PluginUpdateClient')):
     private $file;
     private $server;
   
-    private function __construct($name, $plugin, $version, $file, $server) {
+    private function __construct($name, $plugin, $file, $server) {
       $this->name = $name;
       $this->plugin = $plugin;
-      $this->version = $version;
       $this->file = $file;
       $this->server = $server;
       
+      // extract version from the file
+      if (!file_exists($path = WP_PLUGIN_DIR.'/'.$file)) {
+        wp_die("Plugin file [$file] does not exist");
+      } else {
+        $data = get_plugin_data($file);
+        $this->version = $data['Version'];
+      }
+
       self::$plugins[md5($this->file)] = $this;
       
       add_filter('plugins_api', array($this, 'plugins_api'), 10, 3);
