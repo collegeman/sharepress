@@ -1,15 +1,16 @@
 <?php
 /*
-Plugin Name: Plugin Name Pro
-Description: The pro version of your plugin
-Author: Plugin Author
+Plugin Name: 
+Plugin URI: 
+Description: 
+Author: 
 Author URI: 
-Version: @VERSION@
+Version: 
+License: GPL2
 */
 
 /*
-Plugin Name
-Copyright (C)2011  Plugin Author
+Copyright (C)2011
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -34,11 +35,9 @@ require('plugin-update-client.php');
 if (!defined('ABSPATH')) exit;
 
 /**
- * This PHP class is a namespace for the free version of your plugin. Bear in
- * mind that what you program here (and/or include here) is not only the basis
- * for the free application, but is also the basis for the pro version. 
+ * This PHP class is a namespace for the pro version of your plugin. 
  */
-class PluginNamePro {
+class /*@PLUGIN_PRO_CLASS@*/ PluginNamePro {
   
   // holds the singleton instance of your plugin's core
   static $instance;
@@ -49,7 +48,7 @@ class PluginNamePro {
    */
   static function load() {
     if (!self::$instance) {
-      self::$instance = new PluginNamePro();
+      self::$instance = new /*@PLUGIN_PRO_CLASS@*/ PluginNamePro();
     }
     return self::$instance;
   }
@@ -69,16 +68,13 @@ class PluginNamePro {
     #
     # Setup the update client to be able to receive updates from getwpapps.com
     #
-    PluginUpdateClient::init(array(
-      'name' => 'Plugin Name Pro',
-      'plugin' => 'pro',
-      'file' => $file
-    ));
+    $meta = get_plugin_data(__FILE__);
+    PluginUpdateClient::init(array('name' => $meta['Name'], 'plugin' => /*@PLUGIN_PRO_SLUG@*/ 'pro', 'file' => $file));
   }
   
   function init() {
     // attach a reference to the pro version onto the lite version
-    PluginName::$pro = $this;
+    /*@PLUGIN_LITE_CLASS@*/ PluginName::$pro = $this;
     
     #
     # Use your own custom actions and filters to override and expand the
@@ -88,4 +84,4 @@ class PluginNamePro {
   
 }
 
-PluginNameCore::load();
+/*@PLUGIN_PRO_CLASS@*/ PluginNamePro::load();

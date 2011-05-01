@@ -1,15 +1,16 @@
 <?php
 /*
-Plugin Name: Plugin Name
-Description: The free version of your plugin, to be distributed on WordPress.org
-Author: Plugin Author
+Plugin Name: 
+Plugin URI: 
+Description: 
+Author: 
 Author URI: 
-Version: @VERSION@
+Version: 
+License: GPL2
 */
 
 /*
-Plugin Name
-Copyright (C)2011  Plugin Author
+Copyright (C)2011
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

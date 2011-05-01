@@ -1,7 +1,6 @@
 <?php 
 /*
-Plugin Name
-Copyright (C)2011  Plugin Author
+Copyright (C)2011
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -21,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 if (!defined('ABSPATH')) exit;
 
 // don't allow the plugin to be loaded twice - hedges against double installations
-if (class_exists('PluginName')) return;
+if (class_exists(/*@PLUGIN_LITE_CLASS@*/ 'PluginName')) return;
 
 /**
  * This PHP class is a namespace for the free version of your plugin. Bear in
@@ -29,7 +28,7 @@ if (class_exists('PluginName')) return;
  * the free plugin itself, but is also the basis for the pro version - the core
  * functionality, if you will.
  */
-class PluginName {
+class /*@PLUGIN_LITE_CLASS@*/ PluginName {
   
   // holds the singleton instance of your plugin's core
   static $instance;
@@ -44,7 +43,7 @@ class PluginName {
    */
   static function load() {
     if (!self::$instance) {
-      self::$instance = new PluginName();
+      self::$instance = new /*@PLUGIN_LITE_CLASS*/ PluginName();
       
       #
       # Establish the run-time path for this plugin.
@@ -103,4 +102,4 @@ class PluginName {
   
 }
 
-PluginNameCore::load();
+/*@PLUGIN_LITE_CLASS@*/ PluginName::load();
