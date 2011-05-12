@@ -10,7 +10,7 @@ WordPress.org plugin registry - by showing you how to split your plugin into *li
 
 ## Getting Started
 
-**Step 1** Prepare your development system.
+**Step 1** Prepare your computer.
 
 You'll need to setup [Git and your GitHub account](http://help.github.com/). 
 
