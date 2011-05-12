@@ -22,7 +22,7 @@ You'll want to consider registering your plugin's namespace on three different s
 2. [github.com](https://github.com/repositories/new) - where you'll be hosting your source code (the *best* place to promote
    open source, especially when [required to do so](http://wordpress.org/extend/plugins/about/) -
    refer to the part about being required to use a GPLv2-compatible license)
-3. [getwpapps.com](#) (Coming soon!) - where we hope you'll be selling licenses to your plugin,
+3. [getwpapps.com](http://getwpapps.com/developers) (Coming soon!) - where we hope you'll be selling licenses to your plugin,
    and supporting the community that forms around awesome software
 
 **Step 2** Clone this project.
