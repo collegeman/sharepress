@@ -38,7 +38,7 @@ Or, if you have a master project that groups your plugins and themes together, s
 **Step 3** Rename the `plugin-name` folder to a name of your choosing. To ensure that it's easy for you
 to pull updates from this project, you'll want to make this change using the `git mv` command:
 
-    your-plugin #> git mv plugin-name your-plugin``
+    your-plugin #> git mv plugin-name your-plugin
     
 **Step 4** Update the make file, `make.php`
 
