@@ -21,7 +21,7 @@ You'll want to consider registering your plugin's namespace on three different s
 2. [github.com](https://github.com/repositories/new) - where you'll be hosting your source code (the *best* place to promote
    open source, especially when [required to do so](http://wordpress.org/extend/plugins/about/) -
    refer to the part about being required to use a GPLv2-compatible license)
-3. [wpgetapps.com](#) (Coming soon!) - where we hope you'll be selling licenses to your plugin,
+3. [getwpapps.com](#) (Coming soon!) - where we hope you'll be selling licenses to your plugin,
    and supporting the community that forms around awesome software
 
 **Step 2** Clone this project.
@@ -34,9 +34,10 @@ Or, if you have a master project that groups your plugins and themes together, s
     ~ #> git submodule add git@github.com:collegeman/wpapp.git your-plugin
     ~ #> cd your-plugin
     
-**Step 3** Rename the `plugin-name` folder to a name of your choosing.
+**Step 3** Rename the `plugin-name` folder to a name of your choosing. To ensure that it's easy for you
+to pull updates from this project, you'll want to make this change using the `git mv` command:
 
-    your-plugin #> git mv plugin-name your-plugin
+    your-plugin #> git mv plugin-name your-plugin``
     
 **Step 4** Update the make file, `make.php`
 
@@ -49,7 +50,8 @@ file, we do for you from this configuration script. The file's documentation exp
     your-plugin #> git remote add origin git@github.com:you/your-plugin.git
     your-plugin #> git push origin master
     
-Optionally, reconfigure your master branch so that your GitHub project is the default target of push/pull operations.
+Then, reconfigure your master branch so that your GitHub project is the default target of
+push/pull operations (ease-of-use, FTW):
     
     your-plugin #> git branch --set-upstream master origin/master
 
