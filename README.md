@@ -1,11 +1,12 @@
 Make sure to read the Getting Started guide below, and be off and running on your project
 in 30 seconds flat.
 
-This base WordPress plugin is offered by wpgetapps.com - a place for WordPress developers
-to promote, support, and get paid for their work. Our plugin architecture eases one aspect
-of promoting your plugin - committing it to the WordPress.org plugin registry - by showing
-you how to split your plugin into *lite* and *pro* versions, and by scripting the deployment
-into WordPress' Subversion repository.
+This base WordPress plugin is offered by getwpapps.com - a place for WordPress developers
+to promote, support, and get paid for their work. 
+
+Our plugin architecture eases one aspect of promoting your plugin - committing it to the
+WordPress.org plugin registry - by showing you how to split your plugin into *lite* and 
+*pro* versions, and by scripting deployment into WordPress' Subversion repository.
 
 ## Getting Started
 
