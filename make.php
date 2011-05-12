@@ -45,38 +45,38 @@ To learn more about this make script, visit
 @define('PLUGIN_VERSION',              '1.0');
 
 // What is your name?
-@define('PLUGIN_AUTHOR',               'You');
+@define('PLUGIN_AUTHOR',               'Aaron Collegeman');
 
 // What is the URL of your website?
-@define('PLUGIN_AUTHOR_URI',           'http://yourdomain.com');
+@define('PLUGIN_AUTHOR_URI',           'http://aaroncollegeman.com');
 
 // What is the URL for your plugin?
-@define('PLUGIN_URI',                  'http://plugindomain.com');
+@define('PLUGIN_URI',                  'http://getwpapps.com/plugins/sharepress');
 
 // Describe your plugin.
 @define('PLUGIN_DESCRIPTION',          'This is my plugin. There are others like it, but this one is mine.');
 
 // What is the name of the lite version of your plugin?
-@define('PLUGIN_LITE_NAME',            'Plugin Name');
+@define('PLUGIN_LITE_NAME',            'Sharepress');
 
 // What is the PHP class name of the lite version of your plugin?
-@define('PLUGIN_LITE_CLASS',           'PluginNameFoo');
+@define('PLUGIN_LITE_CLASS',           'Sharepress');
 
 // What is the name you registered with Wordpress.org?
 //   see http://wordpress.org/extend/plugins/add/
-@define('PLUGIN_LITE_SLUG',            'plugin-name');
+@define('PLUGIN_LITE_SLUG',            'sharepress');
 
 // What is the name of the pro version of your plugin?
 //   If you don't specify one, "%PLUGIN_LITE_NAME% Pro" will be used
-@define('PLUGIN_PRO_NAME',             '');
+@define('PLUGIN_PRO_NAME',             'Sharepress Pro');
 
 // What is the PHP class name of the pro version of your plugin?
 //   If you don't specify one, "%PLUGIN_LITE_NAME%Pro" will be used
-@define('PLUGIN_PRO_CLASS',            '');
+@define('PLUGIN_PRO_CLASS',            'SharepressPro');
 
 // What is the name you registered with wpgetapps.com?
 //   see http://wpgetapps.com/developers/plugin/add
-@define('PLUGIN_PRO_SLUG',             'plugin-name');
+@define('PLUGIN_PRO_SLUG',             'sharepress');
 
 ###############################################################################
 # THAT'S IT! The script does the rest. 
