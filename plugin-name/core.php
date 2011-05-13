@@ -99,6 +99,15 @@ class /*@PLUGIN_LITE_CLASS@*/ PluginName {
     
   }
   
+  function deactivate() {
+    global $wpdb;
+    
+    # 
+    # Cleanup stuff that shouldn't be left behind.
+    #
+    
+  }
+  
   
 }
 
