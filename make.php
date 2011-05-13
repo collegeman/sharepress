@@ -141,15 +141,19 @@ function __replace($file, $vars, $return = false) {
   }
   
   // update the headers in the readme.txt file
-  if (preg_match('#/=== Plugin Name ===(.*?)== Description ==/#s', $content, $matches, PREG_OFFSET)) {
-    list( $header, $pos ) = $matches[0];
-    $len = strlen($header);
+  if ($file == 'readme.txt' && strpos($content, '=== Plugin Name ===') !== false) {
+    $start = strpos($content, '=== Plugin Name ===') + 20;
+    $end = strpos($content, '== Description ==') + 1;
+    $len = $end - $start;
+    $header = substr( $content, strpos($content, '=== Plugin Name ===')+20, $len );
+    
     foreach($vars as $token => $var) {
       if ($var['header']) {
         $header = preg_replace('#'.preg_quote($token, '#').'\s.*#', sprintf('%s %s', $token, $var['value']), $header);
       }
     }
-    $content = substr($content, 0, $pos).$header.substr($content, $pos + $len);
+    
+    $content = substr($content, 0, $start).$header.substr($content, $end);
   }
   
   // update other tokens
@@ -161,7 +165,11 @@ function __replace($file, $vars, $return = false) {
   }
   
   
-  return $content;
+  if ($return) {
+    return $content;
+  } else {
+    echo $content;
+  }
 }
 
 function publish() {
