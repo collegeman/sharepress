@@ -4,7 +4,7 @@ Donate link: http://example.com/
 Tags: comments, spam
 Requires at least: 3.0
 Tested up to: 3.0
-Stable tag:
+Stable tag: 
 
 Here is a short description of the plugin.  This should be no more than 150 characters.  No markup here.
 
