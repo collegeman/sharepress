@@ -111,14 +111,14 @@ function configure() {
     '@PLUGIN_LITE_SLUG@'  => array( 'value' => PLUGIN_LITE_SLUG,    'header' => false )
   );
   
-  file_put_contents("{$slug}/lite.php", __replace("{$slug}/lite.php", $vars, true));
-  file_put_contents("{$slug}/core.php", __replace("{$slug}/core.php", $vars, true));
+  file_put_contents("lite.php", __replace("lite.php", $vars, true));
+  file_put_contents("core.php", __replace("core.php", $vars, true));
   
   // update the variables for pro.php
   $vars['Plugin Name:'] =       array( 'value' => $pro_name,        'header' => true  );
   $vars['@PLUGIN_PRO_SLUG@'] =  array( 'value' => PLUGIN_PRO_SLUG,  'header' => false );
   
-  file_put_contents("{$slug}/pro.php", __replace("{$slug}/pro.php", $vars, true));
+  file_put_contents("pro.php", __replace("pro.php", $vars, true));
 }
 
 function __replace($file, $vars, $return = false) {
