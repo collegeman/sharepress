@@ -4,107 +4,101 @@ Donate link: http://example.com/
 Tags: comments, spam
 Requires at least: 3.0
 Tested up to: 3.0
-Stable tag: 
+Stable tag: 1.0.20110513051121
 
-Here is a short description of the plugin.  This should be no more than 150 characters.  No markup here.
+Sharepress is a WordPress plugin that publishes your content to your Facebook Wall. 
 
 == Description ==
 
-This is the long description.  No limit, and you can use Markdown (as well as in the following sections).
+Sharepress is a WordPress plugin that publishes your content to your Facebook Wall. 
 
-For backwards compatibility, if this section is missing, the full length of the short description will be used, and
-Markdown parsed.
+Reaching an audience of more than 500,000,000 people, Facebook has become the next
+great stage from which to speak to the world. Rest assured: your customers and your
+readers are there - past, present, and future. 
 
-A few notes about the sections above:
+But if you're like us, then posting things on Facebook is somewhere at the bottom of your list.
+After all, you're creating quality content with WordPress, and who has time to keep
+one eye on Facebook all day long? No longer will you have to manually share links to 
+your Posts - just click Publish, and let Sharepress do the rest.
 
-*   "Contributors" is a comma separated list of wp.org/wp-plugins.org usernames
-*   "Tags" is a comma separated list of tags that apply to the plugin
-*   "Requires at least" is the lowest version that the plugin will work on
-*   "Tested up to" is the highest version that you've *successfully used to test the plugin*. Note that it might work on
-higher versions... this is just the highest one you've verified.
-*   Stable tag should indicate the Subversion "tag" of the latest stable version, or "trunk," if you use `/trunk/` for
-stable.
+This version of Sharepress does only one thing: posts your content on your Facebook
+Wall, without the distraction of ever laying eyes on those Facebook blues. *Looking
+for more power?* The forthcoming [Sharepress Pro](http://sharepress.fatpandadev.com)
+builds on the success of Sharepress Lite with a number of excellent features:
 
-    Note that the `readme.txt` of the stable tag is the one that is considered the defining one for the plugin, so
-if the `/trunk/readme.txt` file says that the stable tag is `4.3`, then it is `/tags/4.3/readme.txt` that'll be used
-for displaying information about the plugin.  In this situation, the only thing considered from the trunk `readme.txt`
-is the stable tag pointer.  Thus, if you develop in trunk, you can update the trunk `readme.txt` to reflect changes in
-your in-development version, without having that information incorrectly disclosed about the current stable version
-that lacks those changes -- as long as the trunk's `readme.txt` points to the correct stable tag.
+* Share your Posts not only on your personal Wall, but also on any Facebook Page
+* Share your Post simultaneously on as many pages as you wish, and configure defaults in advance
+* Edit the content of each Share on a Post-by-Post basis, including the Featured Image
+* Track Comments and Liks, allowing you to measure the success of your content
+* Identify the strongest voices in your community, and build your [Tribe](http://sethgodin.typepad.com/seths_blog/2008/01/tribal-manageme.html), one relationship at a time
 
-    If no stable tag is provided, it is assumed that trunk is stable, but you should specify "trunk" if that's where
-you put the stable version, in order to eliminate any doubt.
+Sharepress Pro will be available in early 2011, but you can [register now](http://sharepress.fatpandadev.com),
+and we'll let you know when it's ready.
 
 == Installation ==
 
-This section describes how to install the plugin and get it working.
+1. Get the plugin-in. Download it manually or install through the 'Plugins' menu in WordPress.
 
-e.g.
+1. If you downloaded the plugin as a zip file, extract the plugin into your `wp-content/plugins` 
+folder. This should create within the plugins folder another folder named `sharepress`. If it 
+does not create this folder, you must create the folder yourself, and put the plugin files in it. 
+Sharepress will not work unless it resides in a folder named `sharepress`.
 
-1. Upload `plugin-name.php` to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Place `<?php do_action('plugin_name_hook'); ?>` in your templates
+1. Activate the plugin through the 'Plugins' menu in WordPress.
+
+1. Configure through the 'Sharepress' item on the 'Settings' menu. Instructions in the application
+will help you to create your own Facebook Application (required).
+
+Post questions about installation and usage [in the forum](http://wordpress.org/tags/sharepress?forum_id=10#postform).
 
 == Frequently Asked Questions ==
 
-= A question that someone might have =
-
-An answer to that question.
-
-= What about foo bar? =
-
-Answer to foo bar dilemma.
+None yet!
 
 == Screenshots ==
 
-1. This screen shot description corresponds to screenshot-1.(png|jpg|jpeg|gif). Note that the screenshot is taken from
-the directory of the stable readme.txt, so in this case, `/tags/4.3/screenshot-1.png` (or jpg, jpeg, gif)
-2. This is the second screen shot
+None yet!
 
 == Changelog ==
 
-= 1.0 =
-* A change since the previous version.
-* Another change.
+= 1.0.10 =
+* [Jen Russo](http://www.mauitime.com) reported that posts created via e-mailing to Posterous weren't triggering Sharepress. There was a bug that prevented Sharepress from firing in all cases other than the ones wherein the user was manually accessing the admin. This is now fixed.
 
-= 0.5 =
-* List versions from most recent at top to oldest at bottom.
+= 1.0.9 =
+* [Corey Brown](http://www.twitter.com/coreyweb) reported a bug in the "Publish to Facebook again" feature: not only was it not publishing again, but it was deleting the original meta data. This is now fixed.
+
+= 1.0.8 =
+* Ron Kochanowski reported a strange problem with brand new posts displaying the message "This post is older than the date on which Sharepress was activated." in the editor. I couldn't fix the problem, so I eliminated the "feature." Problem solved.
+
+= 1.0.7 =
+* Added "sp" prefix to the Facebook classes, now "spFacebook" and "spFacebookApiException" - was creating namespace conflicts with other Facebook plugins (thanks [Ben Gillbanks](http://twitter.com/binarymoon) of [WPVOTE](http://www.wpvote.com))
+
+= 1.0.6 =
+* Addressing some inconsistencies in the way the plugin is named, and the way that name is used internally.
+
+= 1.0.5 =
+* Major typo in the readme. Sheesh.
+
+= 1.0.4 =
+* Discovered that the only message that displays within the WordPress plugin library search is under the Description header.
+
+= 1.0.3 =
+* Forgot to up the plugin version. Hope I don't make that mistake twice.
+
+= 1.0.2 =
+* Admin notices should not display for any users other than administrators
+* Broad update to readme.txt
+
+= 1.0.1 =
+* Added links for learning more about Sharepress Pro
+
+= 1.0 =
+* The first release!
 
 == Upgrade Notice ==
 
+= 1.0.6 =
+Fixes a bug that results in breaking core JavaScript in the WordPress admin
+
 = 1.0 =
-Upgrade notices describe the reason a user should upgrade.  No more than 300 characters.
-
-= 0.5 =
-This version fixes a security related bug.  Upgrade immediately.
-
-== Arbitrary section ==
-
-You may provide arbitrary sections, in the same format as the ones above.  This may be of use for extremely complicated
-plugins where more information needs to be conveyed that doesn't fit into the categories of "description" or
-"installation."  Arbitrary sections will be shown below the built-in sections outlined above.
-
-== A brief Markdown Example ==
-
-Ordered list:
-
-1. Some feature
-1. Another feature
-1. Something else about the plugin
-
-Unordered list:
-
-* something
-* something else
-* third thing
-
-Here's a link to [WordPress](http://wordpress.org/ "Your favorite software") and one to [Markdown's Syntax Documentation][markdown syntax].
-Titles are optional, naturally.
-
-[markdown syntax]: http://daringfireball.net/projects/markdown/syntax
-            "Markdown is what the parser uses to process much of the readme file"
-
-Markdown uses email style notation for blockquotes and I've been told:
-> Asterisks for *emphasis*. Double it up  for **strong**.
-
-`<?php code(); // goes in backticks ?>`
+Because it's the first version!

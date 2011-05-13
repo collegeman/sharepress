@@ -5,7 +5,7 @@ Plugin URI: http://getwpapps.com/plugins/sharepress
 Description: This is my plugin. There are others like it, but this one is mine.
 Author: Aaron Collegeman
 Author URI: http://aaroncollegeman.com
-Version: 1.0.20110511092044
+Version: 1.0.20110513051121
 License: GPL2
 */
 
