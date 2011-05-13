@@ -60,7 +60,7 @@ To learn more about this make script, visit
 @define('PLUGIN_LITE_NAME',            'Plugin Name');
 
 // What is the PHP class name of the lite version of your plugin?
-@define('PLUGIN_LITE_CLASS',           'PluginNameFoo');
+@define('PLUGIN_LITE_CLASS',           'PluginName');
 
 // What is the name you registered with Wordpress.org?
 //   see http://wordpress.org/extend/plugins/add/
