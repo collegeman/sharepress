@@ -27,9 +27,9 @@ Use this section to define your plugins' meta data. When you're finished, run
 
     php make.php configure
     
-This command will open core.php, lite.php, pro.php, and update-client.php, and
-configure them all with your plugin's meta data. You can do this at any time,
-and it is run automatically when you run the publish command.
+This command will open core.php, lite.php, pro.php, and readme.txt, and
+configure them all with your plugin's meta data. You can run this at any time,
+and it runs automatically when you run the publish command.
 
 To learn more about this make script, visit 
 
@@ -105,12 +105,14 @@ function configure() {
     'Version:'            => array( 'value' => $version,            'header' => true  ),
     'Author:'             => array( 'value' => PLUGIN_AUTHOR,       'header' => true  ),
     'Author URI:'         => array( 'value' => PLUGIN_AUTHOR_URI,   'header' => true  ),
+    'Stable tag:'         => array( 'value' => $version,            'header' => true  ),
     
     '@PLUGIN_LITE_CLASS@' => array( 'value' => PLUGIN_LITE_CLASS,   'header' => false ),
     '@PLUGIN_PRO_CLASS@'  => array( 'value' => $pro_class,          'header' => false ),
     '@PLUGIN_LITE_SLUG@'  => array( 'value' => PLUGIN_LITE_SLUG,    'header' => false )
   );
   
+  file_put_contents("readme.txt", __replace("readme.txt", $vars, true));
   file_put_contents("lite.php", __replace("lite.php", $vars, true));
   file_put_contents("core.php", __replace("core.php", $vars, true));
   
@@ -126,7 +128,7 @@ function __replace($file, $vars, $return = false) {
     die("Failed to open file: $file");
   }
 
-  // update the headers
+  // update the headers in a PHP file
   if (preg_match('#/\*(.*?)\*/#s', $content, $matches, PREG_OFFSET_CAPTURE)) {
     list( $header, $pos ) = $matches[0];
     $len = strlen($header);
@@ -138,6 +140,22 @@ function __replace($file, $vars, $return = false) {
     $content = substr($content, 0, $pos).$header.substr($content, $pos + $len);
   }
   
+  // update the headers in the readme.txt file
+  if ($file == 'readme.txt' && strpos($content, '=== Plugin Name ===') !== false) {
+    $start = strpos($content, '=== Plugin Name ===') + 20;
+    $end = strpos($content, '== Description ==') + 1;
+    $len = $end - $start;
+    $header = substr( $content, strpos($content, '=== Plugin Name ===')+20, $len );
+    
+    foreach($vars as $token => $var) {
+      if ($var['header']) {
+        $header = preg_replace('#'.preg_quote($token, '#').'\s.*#', sprintf('%s %s', $token, $var['value']), $header);
+      }
+    }
+    
+    $content = substr($content, 0, $start).$header.substr($content, $end);
+  }
+  
   // update other tokens
   foreach($vars as $token => $var) {
     if (!$var['header']) {
@@ -147,7 +165,11 @@ function __replace($file, $vars, $return = false) {
   }
   
   
-  return $content;
+  if ($return) {
+    return $content;
+  } else {
+    echo $content;
+  }
 }
 
 function publish() {
