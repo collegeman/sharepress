@@ -1,16 +1,7 @@
-<?php
+<?php 
 /*
-Plugin Name: Sharepress
-Plugin URI: http://getwpapps.com/plugins/sharepress
-Description: This is my plugin. There are others like it, but this one is mine.
-Author: Aaron Collegeman
-Author URI: http://aaroncollegeman.com
-Version: 1.0.20110511092044
-License: GPL2
-*/
-
-/*
-Copyright (C)2011
+sharepress
+Copyright (C)2010-2011  Fat Panda LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,5 +18,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-// the only thing we do in this file is load the core
-require('core.php');
+if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
+
+<div style="padding:0px 7px; background-color: lightYellow; border: 1px solid #e6db55; border-radius: 3px;">
+  <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://sharepress.fatpandadev.com">Learn more</a>.</p>
+</div>
+
+

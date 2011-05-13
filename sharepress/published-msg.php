@@ -1,16 +1,7 @@
-<?php
+<?php 
 /*
-Plugin Name: Sharepress
-Plugin URI: http://getwpapps.com/plugins/sharepress
-Description: This is my plugin. There are others like it, but this one is mine.
-Author: Aaron Collegeman
-Author URI: http://aaroncollegeman.com
-Version: 1.0.20110511092044
-License: GPL2
-*/
-
-/*
-Copyright (C)2011
+sharepress
+Copyright (C)2010-2011  Fat Panda LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,5 +18,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-// the only thing we do in this file is load the core
-require('core.php');
+if (!defined('ABSPATH')) exit; ?>
+
+<fieldset>
+  <legend>
+    <b>Published on Facebook</b>
+  </legend>
+  <label style="display:inline-block;">
+    <p><em><?php echo htmlentities($meta['message']) ?></em></p>
+    <div style="margin-bottom:10px;"><?php echo date_i18n('M d, Y @ H:i', is_string($posted) ? strtotime($posted) : $posted, true) ?></div>
+    <input type="checkbox" id="sharepress_meta_publish_again" name="sharepress_meta[publish_again]" value="1" /> 
+    Publish to Facebook again
+  </label>
+</fieldset>
+<br />
