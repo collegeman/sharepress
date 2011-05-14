@@ -73,9 +73,8 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     #
     # Setup the update client to be able to receive updates from getwpapps.com
     #
-    $meta = get_plugin_data(__FILE__);
     PluginUpdateClient::init(array(
-      'name' => $meta['Name'], 
+      'path' => __FILE__,
       'plugin' => /*@PLUGIN_PRO_SLUG@*/ 'sharepress', 
       'file' => $file
     ));
