@@ -33,6 +33,11 @@ if (!class_exists('PluginUpdateClient')):
     static function init($args = '') {
       extract(wp_parse_args($args));
       
+      if ($path) {
+        $meta = self::get_file_data($path, array('Name' => ''));
+        $name = $meta['Name'];
+      }
+      
       if (!$name) {
         wp_die("[name] arg to PluginUpdateClient::init should be a descriptive name for your plugin, e.g., &quot;My Plugin&quot;");
       }
@@ -99,7 +104,7 @@ if (!class_exists('PluginUpdateClient')):
       if (!file_exists($path = WP_PLUGIN_DIR.'/'.$file)) {
         wp_die("Plugin file [$file] does not exist");
       } else {
-        $data = get_plugin_data($file);
+        $data = self::get_plugin_data($file, array('Version' => ''));
         $this->version = $data['Version'];
       }
 
@@ -217,6 +222,53 @@ if (!class_exists('PluginUpdateClient')):
     
       return $upgrades;
     }
+    
+    function get_file_data( $file, $default_headers = array(), $context = '' ) {
+    	// We don't need to write to the file, so just open for reading.
+    	$fp = fopen( $file, 'r' );
+
+    	// Pull only the first 8kiB of the file in.
+    	$file_data = fread( $fp, 8192 );
+
+    	// PHP will close file handle, but we are good citizens.
+    	fclose( $fp );
+
+    	if ( $context != '' ) {
+    		$extra_headers = array_flip( $extra_headers );
+    		foreach( $extra_headers as $key=>$value ) {
+    			$extra_headers[$key] = $key;
+    		}
+    		$all_headers = array_merge( $extra_headers, (array) $default_headers );
+    	} else {
+    		$all_headers = $default_headers;
+    	}
+
+    	foreach ( $all_headers as $field => $regex ) {
+    		preg_match( '/^[ \t\/*#]*' . preg_quote( $regex, '/' ) . ':(.*)$/mi', $file_data, ${$field});
+    		if ( !empty( ${$field} ) )
+    			${$field} = self::_cleanup_header_comment( ${$field}[1] );
+    		else
+    			${$field} = '';
+    	}
+
+    	$file_data = compact( array_keys( $all_headers ) );
+
+    	return $file_data;
+    }
+    
+    /**
+     * Strip close comment and close php tags from file headers used by WP
+     * See http://core.trac.wordpress.org/ticket/8497
+     *
+     * @since 2.8.0
+     *
+     * @param string $str
+     * @return string
+     */
+    function _cleanup_header_comment($str) {
+    	return trim(preg_replace("/\s*(?:\*\/|\?>).*/", '', $str));
+    }
+    
 
   } 
 
