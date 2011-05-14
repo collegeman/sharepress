@@ -104,7 +104,7 @@ if (!class_exists('PluginUpdateClient')):
       if (!file_exists($path = WP_PLUGIN_DIR.'/'.$file)) {
         wp_die("Plugin file [$file] does not exist");
       } else {
-        $data = self::get_plugin_data($file, array('Version' => ''));
+        $data = self::get_file_data($file, array('Version' => ''));
         $this->version = $data['Version'];
       }
 
