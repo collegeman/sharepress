@@ -34,7 +34,7 @@ if (!class_exists('PluginUpdateClient')):
       extract(wp_parse_args($args));
       
       if ($path) {
-        $meta = self::get_file_data($path, array('Name' => ''));
+        $meta = self::get_file_data($path, array('Name' => 'Plugin Name'));
         $name = $meta['Name'];
       }
       
@@ -104,7 +104,7 @@ if (!class_exists('PluginUpdateClient')):
       if (!file_exists($path = WP_PLUGIN_DIR.'/'.$file)) {
         wp_die("Plugin file [$file] does not exist");
       } else {
-        $data = self::get_file_data($file, array('Version' => ''));
+        $data = self::get_file_data($path, array('Version' => 'Version'));
         $this->version = $data['Version'];
       }
 
