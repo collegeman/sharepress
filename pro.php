@@ -2,10 +2,10 @@
 /*
 Plugin Name: Sharepress Pro
 Plugin URI: http://getwpapps.com/plugins/sharepress
-Description: This is my plugin. There are others like it, but this one is mine.
+Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Aaron Collegeman
 Author URI: http://aaroncollegeman.com
-Version: 1.0.20110513051121
+Version: 1.0.20110514090320
 License: GPL2
 */
 
@@ -28,9 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 // load the core dependency
-require('core.php');
+require_once('core.php');
 // load the plugin updater client
-require('update-client.php');
+require_once('update-client.php');
 
 // support for setting individual images in options
 require('postimage.php');
@@ -92,6 +92,8 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     // enhancement #3: configure the content of each post individually
     add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 3);
     add_action('wp_ajax_sharepress_get_excerpt', array($this, 'ajax_get_excerpt'));
+    
+    // add_filter('plugin_action_links_sharepress/pro.php', array(Sharepress::load(), 'plugin_action_links'), 10, 4);
   }
   
   function ajax_get_excerpt() {

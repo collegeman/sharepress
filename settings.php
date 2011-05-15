@@ -34,7 +34,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
       <a href="options-general.php?page=sharepress" class="nav-tab <?php if (@$_REQUEST['action'] != 'upgrade') echo 'nav-tab-active' ?>">Settings</a>
       <a href="options-general.php?page=sharepress&amp;action=clear_session" class="nav-tab">Run Setup Again</a>
       <?php if (!Sharepress::$pro) { ?>
-        <a href="options-general.php?page=sharepress&amp;action=clear_session" class="nav-tab <?php if (@$_REQUEST['action'] == 'upgrade') echo 'nav-tab-active' ?>" style="float:right;">Upgrade</a>
+        <a href="http://getwpapps.com/plugins/sharepress" class="nav-tab <?php if (@$_REQUEST['action'] == 'upgrade') echo 'nav-tab-active' ?>" style="float:right;">Upgrade</a>
       <?php } ?>
     </h2>
   <?php } ?>
@@ -53,7 +53,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
         <p>To match your blog, you should consider naming your application <b><?php bloginfo('name') ?></b>.</p>
         <a href="<?php echo plugins_url('sharepress/img/create_app_step2.jpg'); ?>"><img src="<?php echo plugins_url('sharepress/img/create_app_step2_thumb.jpg') ?>" style="border: 1px solid #ccc;" /></a>
         
-        <p>Your Site URL is <b><?php echo get_option('siteurl') ?></b>, and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.</p>
+        <p>Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.</p>
         <a href="<?php echo plugins_url('sharepress/img/create_app_step3.jpg'); ?>"><img src="<?php echo plugins_url('sharepress/img/create_app_step3_thumb.jpg') ?>" style="border: 1px solid #ccc;" /></a>
       </div>
       
@@ -169,7 +169,8 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
       <?php settings_fields('fb-step2') ?>
       
       <div style="float:left; width:300px; margin-right: 50px;">
-        <p>Next, you need to connect to your Facebook Application! Click <b>Connect to Facebook</b> to begin.</p>
+        <p>Next, you need to connect to your Facebook Application! Click <b>Connect to Facebook</b> to begin.
+          <b>Don't forget to turn off pop-up blockers.</b></p>
       </div>
       
       <br />
@@ -239,7 +240,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
         <?php if (Sharepress::$pro) { ?>
           You'll be able to change this for each post: these are just the defaults.
         <?php } else { ?>
-          If you <a href="#">upgrade</a>, you can also choose to post to your Facebook pages.
+          If you <a href="http://getwpapps.com/plugins/sharepress">upgrade to Sharepress Pro</a>, you can also choose to post to your Facebook pages.
         <?php } ?>
          
       <div style="max-height: 365px; overflow:auto; border:1px solid #ccc;">

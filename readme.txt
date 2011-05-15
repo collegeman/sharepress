@@ -4,13 +4,13 @@ Donate link: http://example.com/
 Tags: comments, spam
 Requires at least: 3.0
 Tested up to: 3.0
-Stable tag: 1.0.20110513051121
+Stable tag: 1.0.20110514090320
 
-Sharepress is a WordPress plugin that publishes your content to your Facebook Wall. 
+Sharepress publishes your content to your Facebook Wall. 
 
 == Description ==
 
-Sharepress is a WordPress plugin that publishes your content to your Facebook Wall. 
+Sharepress publishes your content to your Facebook Wall. 
 
 Reaching an audience of more than 500,000,000 people, Facebook has become the next
 great stage from which to speak to the world. Rest assured: your customers and your

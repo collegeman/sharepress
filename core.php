@@ -19,9 +19,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 if (!defined('ABSPATH')) exit;
 
-// don't allow the plugin to be loaded twice - hedges against double installations
-if (class_exists(/*@PLUGIN_LITE_CLASS@*/ 'Sharepress')) return;
-
 // we depend on this...
 require('lib/facebook-sdk-2.1.2.php');
 // we don't care about certificate verification
@@ -64,7 +61,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
    */
   static function load() {
     if (!self::$instance) {
-      self::$instance = new /*@PLUGIN_LITE_CLASS*/ PluginName();
+      self::$instance = new /*@PLUGIN_LITE_CLASS@*/ Sharepress();
       
       #
       # Establish the run-time path for this plugin.
@@ -82,7 +79,6 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
    * instead ask all other parts of WordPress to call ::load().
    */
   private function __construct() {
-    
     #
     # All plugins tend to need these basic actions.
     #
@@ -106,7 +102,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       add_action('wp_ajax_fb_save_session', array($this, 'ajax_fb_save_session'));
       add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
       add_filter('contextual_help', array($this, 'contextual_help'));
-      add_filter('plugin_action_links_sharepress/sharepress-lite.php', array($this, 'plugin_action_links'), 10, 4);
+      add_filter('plugin_action_links_sharepress/lite.php', array($this, 'plugin_action_links'), 10, 4);
     }
     
     add_action('save_post', array($this, 'save_post'));
@@ -285,7 +281,9 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   }
   
   function add_meta_boxes() {
-    add_meta_box(self::META, 'Sharepress', array($this, 'meta_box'), 'post', 'side', 'high');
+    if (self::installed()) {
+      add_meta_box(self::META, 'Sharepress', array($this, 'meta_box'), 'post', 'side', 'high');
+    }
   }
   
   function get_default_picture() {
@@ -571,7 +569,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   function plugin_action_links($actions, $plugin_file, $plugin_data, $context) {
     $actions['settings'] = '<a href="options-general.php?page=sharepress">Settings</a>';
     if (!self::$pro && self::session()) {
-      $actions['go-pro'] = '<a href="options-general.php?page=sharepress&action=upgrade">Upgrade to Pro Version</a>';
+      $actions['go-pro'] = '<a href="http://getwpapps.com/plugins/sharepress">Upgrade to Pro Version</a>';
     }
     return $actions;
   }
@@ -651,18 +649,22 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     wp_enqueue_script('fancybox', plugins_url('sharepress/lib/fancybox/jquery.fancybox-1.3.4.pack.js', array('jquery')));
   }
   
+  static function installed() {
+    return ( self::api_key() && self::app_secret() && self::session() );
+  }
+  
   function admin_notices() {
     if (current_user_can('administrator')) {
-      if (( !self::api_key() || !self::app_secret() || !self::session() ) && @$_REQUEST['page'] != 'sharepress') {
+      if ( !self::installed() && @$_REQUEST['page'] != 'sharepress' ) {
         ?>
           <div class="error">
-            <p>You haven't finished setting up <a href="<?php get_option('siteurl') ?>/wp-admin/options-general.php?page=sharepress">Sharepress</a>.</p>
+            <p>You haven't finished setting up <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">Sharepress</a>.</p>
           </div>
         <?php
       } else if (@$_REQUEST['page'] == 'sharepress' && !self::$pro) {
         ?>
           <div class="updated">
-            <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://sharepress.fatpandadev.com">Learn more</a>.</p>
+            <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://getwpapps.com/plugins/sharepress">Learn more</a>.</p>
           </div>
         <?php
       }

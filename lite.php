@@ -2,10 +2,10 @@
 /*
 Plugin Name: Sharepress
 Plugin URI: http://getwpapps.com/plugins/sharepress
-Description: This is my plugin. There are others like it, but this one is mine.
+Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Aaron Collegeman
 Author URI: http://aaroncollegeman.com
-Version: 1.0.20110513051121
+Version: 1.0.20110514090320
 License: GPL2
 */
 
@@ -28,4 +28,4 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 // the only thing we do in this file is load the core
-require('core.php');
+require_once('core.php');

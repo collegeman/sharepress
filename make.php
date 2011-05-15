@@ -54,7 +54,7 @@ To learn more about this make script, visit
 @define('PLUGIN_URI',                  'http://getwpapps.com/plugins/sharepress');
 
 // Describe your plugin.
-@define('PLUGIN_DESCRIPTION',          'This is my plugin. There are others like it, but this one is mine.');
+@define('PLUGIN_DESCRIPTION',          'Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.');
 
 // What is the name of the lite version of your plugin?
 @define('PLUGIN_LITE_NAME',            'Sharepress');
