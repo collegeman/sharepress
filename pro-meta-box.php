@@ -30,7 +30,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
         same as Excerpt
       </label> &nbsp;
       <span id="sharepress_description_wait" style="position:relative; top:4px; margin-right:5px;">
-        <img src="<?php echo plugins_url('sharepress-lite/wait.gif') ?>" />
+        <img src="<?php echo plugins_url('sharepress/img/wait.gif') ?>" />
       </span>
     </label>
   </legend>

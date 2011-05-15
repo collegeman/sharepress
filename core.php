@@ -28,7 +28,7 @@ spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
 // debugging
 if (!defined('SHAREPRESS_DEBUG')) {
   // by default, on if host is sharepress.dev.wp (my local dev name)
-  define('SHAREPRESS_DEBUG', $_SERVER['HTTP_HOST'] == 'sharepress.dev.wp' || $_SERVER['SERVER_NAME'] == 'sharepress.dev.wp');
+  define('SHAREPRESS_DEBUG', $_SERVER['HTTP_HOST'] == 'dev.getwpapps.com');
 }  
 
 class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
@@ -290,7 +290,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     if ($set = get_option(self::OPTION_DEFAULT_PICTURE)) {
       return $set['url'];
     } else {
-      return plugins_url('sharepress/wordpress.png');
+      return plugins_url('sharepress/img/wordpress.png');
     }
   }
   
@@ -371,6 +371,11 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       
       // update meta?
       if (@$_POST[self::META]['publish_again'] || !get_post_meta($post->ID, self::META_POSTED, true)) {
+        // if publish_action was set, make sure enabled = 'on'
+        if ($_POST[self::META]['publish_again']) {
+          $_POST[self::META]['enabled'] = 'on';
+        }
+        
         // remove the publish_again flag
         unset($_POST[self::META]['publish_again']);
         // clear the published date in meta
@@ -386,6 +391,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
         // save the meta data
         update_post_meta($post->ID, self::META, $meta);
         
+        // if the post is published, then post to facebook immediately
         if ($post->post_status == 'publish') {
           $this->post_on_facebook($post);
         }

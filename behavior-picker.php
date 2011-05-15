@@ -5,7 +5,7 @@
       <input type="radio" name="sharepress_meta[enabled]" value="on" <?php if (@$meta['enabled'] == 'on') echo 'checked="checked"' ?> /> <strong>Yes</strong>
     </label>
     <label>
-      <input type="radio" name="sharepress_meta[enabled]" value="off" <?php if (@$meta['enabled'] == 'off') echo 'checked="checked"' ?> /> No
+      <input type="radio" name="sharepress_meta[enabled]" value="off" <?php if (@$meta['enabled'] != 'on') echo 'checked="checked"' ?> /> No
     </label>
     <div style="clear:left;"></div>
   </div>
