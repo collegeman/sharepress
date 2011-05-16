@@ -436,25 +436,25 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     }
   }
   
-  private function get_excerpt($post) {
+  public function get_excerpt($post) {
     $text = $post->post_excerpt ? $post->post_excerpt : $post->post_content;
-		$text = strip_shortcodes( $text );
-		$text = str_replace(']]>', ']]&gt;', $text);
-		$text = strip_tags($text);
-		
-		$excerpt_length = apply_filters('sharepress_excerpt_length', self::setting('excerpt_length'));
-		$excerpt_more = apply_filters('sharepress_excerpt_more', self::setting('excerpt_more'));
-		$words = preg_split("/[\n\r\t ]+/", $text, $excerpt_length + 1, PREG_SPLIT_NO_EMPTY);
-		
-		if ( count($words) > $excerpt_length ) {
-			array_pop($words);
-			$text = implode(' ', $words);
-			$text = $text . $excerpt_more;
-		} else {
-			$text = implode(' ', $words);
-		}
-		
-		return $text;
+    $text = strip_shortcodes( $text );
+    $text = str_replace(']]>', ']]&gt;', $text);
+    $text = strip_tags($text);
+    
+    $excerpt_length = apply_filters('sharepress_excerpt_length', self::setting('excerpt_length'));
+    $excerpt_more = apply_filters('sharepress_excerpt_more', self::setting('excerpt_more'));
+    $words = preg_split("/[\n\r\t ]+/", $text, $excerpt_length + 1, PREG_SPLIT_NO_EMPTY);
+    
+    if ( count($words) > $excerpt_length ) {
+      array_pop($words);
+      $text = implode(' ', $words);
+      $text = $text . $excerpt_more;
+    } else {
+      $text = implode(' ', $words);
+    }
+    
+    return $text;
   }
   
   function filter_sharepress_meta($meta, $post) {

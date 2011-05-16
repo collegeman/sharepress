@@ -23,13 +23,13 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 <br />
 <fieldset>
   <legend>
-    <label for="sharepress_meta_description">
+    <label for="sharepress_meta_description" style="position:relative;">
       <b>Description</b> &nbsp;&nbsp; 
       <label style="display:inline-block;">
         <input type="checkbox" id="sharepress_meta_excerpt_is_description" name="sharepress_meta[excerpt_is_description]" value="1" onclick="click_use_excerpt(this);" <?php if (@$meta['excerpt_is_description']) echo 'checked="checked"' ?> /> 
         same as Excerpt
       </label> &nbsp;
-      <span id="sharepress_description_wait" style="position:relative; top:4px; margin-right:5px;">
+      <span id="sharepress_description_wait" style="position:absolute; right: -15px; top: -2px; display:none;">
         <img src="<?php echo plugins_url('sharepress/img/wait.gif') ?>" />
       </span>
     </label>
@@ -110,7 +110,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
       if (cb.checked) {
         copy_excerpt_to_description(true);
       } else {
-        clearInterval(copy_excerpt_to_description_intv);
+        clearInterval(copy_excerpt_to_description_timeout);
         $('#sharepress_meta_description').focus();
       }
     };
@@ -142,25 +142,33 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
       var description = $('#sharepress_meta_description');
       var excerpt = $('#excerpt');
       
-      if (synchronize || !$.trim(description.val())) {
-        description.val(excerpt.val());
-      }
-    
       var description_was = description.val();
       
-      window.copy_excerpt_to_description_intv = setInterval(function() {
+      window.copy_excerpt_to_description_timeout = setTimeout(function() {
         if ($('#sharepress_meta_excerpt_is_description:checked').size()) {
-          clearInterval(copy_excerpt_to_description_intv);
-          $.post(ajax_url, { action: ''})
-        }
+          // show the wait icon
+          //$('#sharepress_description_wait').show();
           
-        } else {
-          if ($.trim(excerpt.val())) {
-            description.val(excerpt.val());
-            description_was = description.val();
-          }
-        }
-      }, 10000);
+          // post to the server to get the excerpt
+          $.post(ajaxurl, { action: 'sharepress_get_excerpt', post_id: $('#post_ID').val() }, function(excerpt) {
+            // hide the wait icon
+            //$('#sharepress_description_wait').hide();
+            // check the checkbox again
+            if (!$('#sharepress_meta_excerpt_is_description:checked').size()) {
+              return;
+            }
+            // if the user changed the value, cancel
+            if (description_was != description.val()) {
+              $('#sharepress_meta_excerpt_is_description').attr('checked', '');
+              return;
+            }
+            // update the excerpt
+            description.val(excerpt);
+            // rinse, repeat
+            copy_excerpt_to_description();
+          });
+        } 
+      }, synchronize ? 0 : 5000);
     };
     
     if ($('#sharepress_meta_excerpt_is_description:checked').size()) {
