@@ -144,7 +144,7 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   }
   
   static function sort_by_name($a, $b) {
-    return strcmp($a['name'], $b['name']);
+    return strcasecmp($a['name'], $b['name']);
   }
   
   function pages($default = array()) {

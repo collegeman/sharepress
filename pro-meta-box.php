@@ -78,7 +78,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
           <?php echo $wall_name ?>
         </label>
       </p>
-      <?php foreach(Sharepress::pages() as $page) { ?>
+      <?php $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); foreach($pages as $page) { ?>
         <p>
           <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
             <input type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />

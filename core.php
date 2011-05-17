@@ -294,6 +294,17 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     }
   }
   
+  static $meta;
+  
+  static function sort_by_selected($p1, $p2) {
+    $s1 = @in_array($p1['id'], self::$meta['targets']);
+    $s2 = @in_array($p2['id'], self::$meta['targets']);
+    return $s1 === $s2 ? 
+      ( self::$pro ? self::$pro->sort_by_name($p1, $p2) : 0 ) 
+      : 
+      ( $s1 && !$s2 ? -1 : 1 );
+  }
+  
   function meta_box($post) {
     // standard meta box
     ob_start();
@@ -332,9 +343,12 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       }
     }
     
-    
+    // stash $meta globally for access from Sharepress::sort_by_selected
+    self::$meta = $meta;
     // allow for pro override
     $meta_box = apply_filters('sharepress_meta_box', $meta_box, $post, $meta);
+    // unstash $meta
+    self::$meta = null;
     
     // nonce, followed by the form
     echo $nonce;
