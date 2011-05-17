@@ -99,13 +99,14 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   function ajax_get_excerpt() {
     global $wpdb;
     $post_id = @$_POST['post_id'];
+    $content = @$_POST['content'];
 
     if (!current_user_can('edit_post', $post_id)) {
       exit;
     }
     
-    echo Sharepress::load()->get_excerpt( get_post($post_id) );
-    
+    echo str_replace( array('&nbsp;'), array(' '), Sharepress::load()->get_excerpt( null, stripslashes($content) ) );
+
     exit;
   }
   

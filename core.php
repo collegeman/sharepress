@@ -321,7 +321,17 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
         'targets' => array_keys(self::targets()),
         'enabled' => Sharepress::setting('default_behavior')
       );
+    } else {
+      // overrides:
+      if ($meta['title_is_message']) {
+        $meta['message'] = $post->post_title;
+      }
+      
+      if ($meta['excerpt_is_description']) {
+        $meta['description'] = $this->get_excerpt($post);
+      }
     }
+    
     
     // allow for pro override
     $meta_box = apply_filters('sharepress_meta_box', $meta_box, $post, $meta);
@@ -436,8 +446,10 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     }
   }
   
-  public function get_excerpt($post) {
-    $text = $post->post_excerpt ? $post->post_excerpt : $post->post_content;
+  public function get_excerpt($post = null, $text = null) {
+    if (!is_null($post)) {
+      $text = $post->post_excerpt ? $post->post_excerpt : $post->post_content;
+    } 
     $text = strip_shortcodes( $text );
     $text = str_replace(']]>', ']]&gt;', $text);
     $text = strip_tags($text);

@@ -97,83 +97,107 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 <script>
 (function($) {
   $(function() {
+    var editor = null;
+    var description_timeout = null;
+    var message_timeout = null;
+    var excerpt_was = null;
+    var content_was = null;
+
+    var msg = $('#sharepress_meta_message');
+    var title = $('#title');
+
+    var excerpt = $('#excerpt');
+    var description = $('#sharepress_meta_description');
+    var description_was = description.val();
+    var suspend = false;
+    
+    msg.keypress(function() {
+      $('#sharepress_meta_title_is_message').attr('checked', '');
+    })
+    
+    description.keypress(function() {
+      $('#sharepress_meta_excerpt_is_description').attr('checked', '');
+    });
+    
     window.click_use_post_title = function(cb) {
       if (cb.checked) {
         copy_title_to_message(true);
       } else {
-        clearInterval(copy_title_to_message_intv);
         $('#sharepress_meta_message').focus();
       }
     };
     
     window.click_use_excerpt = function(cb) {
       if (cb.checked) {
+        excerpt_was = null;
+        content_was = null;
         copy_excerpt_to_description(true);
       } else {
-        clearInterval(copy_excerpt_to_description_timeout);
         $('#sharepress_meta_description').focus();
       }
     };
     
     window.copy_title_to_message = function(synchronize) {
-      var msg = $('#sharepress_meta_message');
-      var title = $('#title');
-      if (synchronize || !$.trim(msg.val())) {
+      clearTimeout(message_timeout);
+      setTimeout(function() {
         msg.val(title.val());
-      }
-    
-      var msg_was = msg.val();
-      window.copy_title_to_message_intv = setInterval(function() {
-        if (msg_was != msg.val()) {
-          $('#sharepress_meta_title_is_message').attr('checked', '');
-          clearInterval(copy_title_to_message_intv);
-        } else {
-          msg.val(title.val());
-          msg_was = msg.val();
-        }
-      }, 100);
+        msg_was = msg.val();
+      }, synchronize ? 0 : 1000);
     };
     
-    if ($('#sharepress_meta_title_is_message:checked').size()) {
-      copy_title_to_message();
-    }
+    title.keypress(copy_title_to_message);
+    title.blur(copy_title_to_message);
     
-    window.copy_excerpt_to_description = function(synchronize) {
-      var description = $('#sharepress_meta_description');
-      var excerpt = $('#excerpt');
+    window.copy_excerpt_to_description = function(ed, e) {
+      if (suspend) {
+        return;
+      }
       
-      var description_was = description.val();
-      
-      window.copy_excerpt_to_description_timeout = setTimeout(function() {
-        if ($('#sharepress_meta_excerpt_is_description:checked').size()) {
-          // show the wait icon
-          //$('#sharepress_description_wait').show();
+      clearTimeout(description_timeout);
+      description_timeout = setTimeout(function() {
+        if (!$('#sharepress_meta_excerpt_is_description:checked').size()) {
+          return false;
+        }
+        
+        if (content_was != editor.getContent() || excerpt_was != excerpt.val()) {
+          suspend = true;
           
-          // post to the server to get the excerpt
-          $.post(ajaxurl, { action: 'sharepress_get_excerpt', post_id: $('#post_ID').val() }, function(excerpt) {
+          content_was = editor.getContent();
+          excerpt_was = excerpt.val();
+          
+          // show the wait icon
+          $('#sharepress_description_wait').show();
+
+          $.post(ajaxurl, { action: 'sharepress_get_excerpt', post_id: $('#post_ID').val(), content: excerpt_was ? excerpt_was : content_was }, function(excerpt) {
             // hide the wait icon
-            //$('#sharepress_description_wait').hide();
+            $('#sharepress_description_wait').hide();
             // check the checkbox again
             if (!$('#sharepress_meta_excerpt_is_description:checked').size()) {
               return;
             }
-            // if the user changed the value, cancel
-            if (description_was != description.val()) {
-              $('#sharepress_meta_excerpt_is_description').attr('checked', '');
-              return;
-            }
             // update the excerpt
             description.val(excerpt);
-            // rinse, repeat
-            copy_excerpt_to_description();
+            
+            suspend = false;
           });
-        } 
-      }, synchronize ? 0 : 5000);
+        }
+      }, ed === true ? 0 : 1000);
     };
     
-    if ($('#sharepress_meta_excerpt_is_description:checked').size()) {
-      copy_excerpt_to_description();
-    }
+    var setupEditor = setInterval(function() {
+      editor = tinyMCE.get('content');
+      if (editor) {
+        clearInterval(setupEditor);
+        
+        content_was = editor.getContent();
+        
+        editor.onKeyPress.add(copy_excerpt_to_description);
+        editor.onLoadContent.add(copy_excerpt_to_description);
+        editor.onChange.add(copy_excerpt_to_description);
+        excerpt.keypress(copy_excerpt_to_description);
+        excerpt.blur(copy_excerpt_to_description);
+      }
+    }, 100);
     
   });
 })(jQuery);
