@@ -20,7 +20,6 @@
   var enabled_val;
   setInterval(function() {
     var enabled = $('input[name="sharepress_meta\[enabled\]"]:checked');
-
     if (enabled.val() != enabled_val) {
       enabled_val = enabled.val();
       if (enabled_val == 'on') {

@@ -39,7 +39,6 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   const OPTION_PUBLISHING_TARGETS = 'sharepress_publishing_targets';
   const OPTION_NOTIFICATIONS = 'sharepress_notifications';
   const OPTION_DEFAULT_PICTURE = 'sharepress_default_picture';
-  const OPTION_ACTIVATED = 'sharepress_activated';
   const OPTION_SETTINGS = 'sharepress_settings';
   
   //const META_MESSAGE_ID = 'sharepress_message_id';
@@ -47,50 +46,22 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   const META_ERROR = 'sharepress_error';
   const META_POSTED = 'sharepress_posted';
   const META = 'sharepress_meta';
+  const META_SCHEDULED = 'sharepress_scheduled';
   
   // holds the singleton instance of your plugin's core
   static $instance;
   // holds a reference to the pro version of the plugin
   static $pro;
-  // the path to this plugin
-  static $dir_path;
   
-  /**
-   * Get the singleton instance of this plugin's core, creating it if it does
-   * not already exist.
-   */
   static function load() {
     if (!self::$instance) {
       self::$instance = new /*@PLUGIN_LITE_CLASS@*/ Sharepress();
-      
-      #
-      # Establish the run-time path for this plugin.
-      #
-      $dir_path = explode(DIRECTORY_SEPARATOR, __FILE__);
-      array_pop($dir_path);
-      self::$dir_path = implode(DIRECTORY_SEPARATOR, $dir_path);
     }
     return self::$instance;
   }
   
-  /**
-   * Create a new instance of this plugin's core. There should only ever
-   * be one instance of a plugin, so we make the constructor private, and
-   * instead ask all other parts of WordPress to call ::load().
-   */
   private function __construct() {
-    #
-    # All plugins tend to need these basic actions.
-    #
     add_action('init', array($this, 'init'), 11, 1);
-    add_action("{self::$dir_path}/lite.php_activate", array($this, 'activate'));
-    
-    # 
-    # Add actions and filters here that should be called before the "init" action
-    # Note that self::$pro will be null until the "init" action is called
-    #
-    // add_action($action_name, array($this, $action_name), $priority = 10, $num_args_supported = 1);
-    // add_filter($filter_name, array($this, $filter_name), $priority = 10, $num_args_supported = 1);
   }
   
   function init() {
@@ -110,12 +81,6 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     add_action('future_to_publish', array($this, 'future_to_publish'));
     add_action('publish_post', array($this, 'publish_post'));
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
-  }
-  
-  function activate() {
-    if (!get_option(self::OPTION_ACTIVATED)) {
-      update_option(self::OPTION_ACTIVATED, date('Y/m/d H:i:s'));
-    }
   }
   
   static function err($message) {
@@ -316,7 +281,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     wp_nonce_field(plugin_basename(__FILE__), 'sharepress-nonce');
     $nonce = ob_get_clean();
     
-    $activated_on = get_option(self::OPTION_ACTIVATED);
+    $posted = get_post_meta($post->ID, self::META_POSTED, true);
+    $scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
 
     // load the meta data
     $meta = get_post_meta($post->ID, self::META, true);
@@ -346,7 +312,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     // stash $meta globally for access from Sharepress::sort_by_selected
     self::$meta = $meta;
     // allow for pro override
-    $meta_box = apply_filters('sharepress_meta_box', $meta_box, $post, $meta);
+    $meta_box = apply_filters('sharepress_meta_box', $meta_box, $post, $meta, $posted, $scheduled);
     // unstash $meta
     self::$meta = null;
     
@@ -362,7 +328,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       </style>
     <?php
     
-    if ($posted = get_post_meta($post->ID, self::META_POSTED, true)) {
+    if ($posted || $scheduled) {
       require('published-msg.php');
       echo $meta_box;
     } else {
@@ -371,6 +337,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   }
   
   function save_post($post_id) {
+    self::log("save_post($post_id)");
+    
     // don't do anything on autosave events
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
       return false;
@@ -394,7 +362,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       delete_post_meta($post->ID, self::META_ERROR);
       
       // update meta?
-      if (@$_POST[self::META]['publish_again'] || !get_post_meta($post->ID, self::META_POSTED, true)) {
+      if (@$_POST[self::META]['publish_again'] || ( $_POST[self::META]['enabled'] == 'on' && !get_post_meta($post->ID, self::META_POSTED, true) && !get_post_meta($post->ID, self::META_SCHEDULED, true) )) {
+                
         // if publish_action was set, make sure enabled = 'on'
         if ($_POST[self::META]['publish_again']) {
           $_POST[self::META]['enabled'] = 'on';
@@ -404,8 +373,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
         unset($_POST[self::META]['publish_again']);
         // clear the published date in meta
         delete_post_meta($post->ID, self::META_POSTED);
-        // filter the meta
         
+        // filter the meta
         if (!$_POST[self::META]) {
           $meta = get_post_meta($post->ID, self::META, true);
         } else {
@@ -415,12 +384,23 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
         // save the meta data
         update_post_meta($post->ID, self::META, $meta);
         
-        // if the post is published, then post to facebook immediately
+        // if the post is published, then consider posting to facebook immediately
         if ($post->post_status == 'publish') {
-          $this->post_on_facebook($post);
+          // if lite version or if publish time has already past
+          if (!self::$pro || ( ($time = self::$pro->get_publish_time()) < current_time('timestamp') )) {
+            $this->post_on_facebook($post);
+          // otherwise, if $time specified, schedule future publish
+          } else if ($time) {
+            update_post_meta($post->ID, self::META_SCHEDULED, $time);
+          }
         }
         
         return true;
+        
+      } else if (get_post_meta($post->ID, self::META_SCHEDULED, true) && @$_POST[self::META]['cancelled']) {
+        
+        delete_post_meta($post->ID, self::META_SCHEDULED);
+        
       } else {
         return false;
       }
@@ -438,6 +418,11 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   }
   
   function transition_post_status($new_status, $old_status, $post) {
+    if (@$_POST[self::META]) {
+      // saving operation... don't execute this
+      return;
+    }
+    
     if (SHAREPRESS_DEBUG) {
       self::log(sprintf("transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
     }
@@ -453,7 +438,14 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   }
   
   function publish_post($post_id) {
-    self::log("publish_post($post_id)");
+    if (@$_POST[self::META]) {
+      // saving operation... don't execute this
+      return;
+    }
+    
+    if (SHAREPRESS_DEBUG) {
+      self::log("publish_post($post_id)");
+    }
     
     if ($post = get_post($post_id)) {
       $this->post_on_facebook($post);
@@ -525,10 +517,6 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       // post only if defined
       $post 
       
-      // post only if newer than plugin activation date
-      // NOTE: this was replaced by setting $meta['enabled'] to 'off' when post is older
-      //&& strtotime($post->post_date_gmt) >= $activated 
-      
       // post only if sharepress meta data is available
       && ($meta = get_post_meta($post->ID, self::META, true)) 
       
@@ -536,7 +524,10 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       && ($meta['enabled'] == 'on') 
       
       // post only if never posted before
-      && !get_post_meta($post->ID, self::META_POSTED, true) 
+      && !get_post_meta($post->ID, self::META_POSTED, true)
+      
+      // on schedule
+      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled < current_time('timestamp')) 
       
       // post only if no errors precede this posting
       && !get_post_meta($post->ID, self::META_ERROR)
@@ -545,12 +536,14 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     return ($can_post_on_facebook ? $meta : false);
   }
   
-  private function post_on_facebook($post) {
+  function post_on_facebook($post) {
     if (SHAREPRESS_DEBUG) {
       self::log(sprintf("post_on_facebook(%s)", is_object($post) ? $post->post_title : $post));
     }
     
-    $activated = strtotime(get_option(self::OPTION_ACTIVATED, 0));
+    if (!is_object($post)) {
+      $post = get_post($post);
+    }
     
     if ($meta = $this->can_post_on_facebook($post)) {
       // prefix the message with the permalink

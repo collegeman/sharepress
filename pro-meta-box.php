@@ -7,92 +7,113 @@ You must own a valid licenses to use the Pro version of sharepress.
 
 if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 
-<fieldset>
-  <legend>
-    <label for="sharepress_meta_message">
-      <b>Message</b> &nbsp;&nbsp; 
-      <label style="display:inline-block;">
-        <input type="checkbox" id="sharepress_meta_title_is_message" name="sharepress_meta[title_is_message]" value="1" onclick="click_use_post_title(this);" <?php if (@$meta['title_is_message']) echo 'checked="checked"' ?> /> 
-        same as Post Title
-      </label>
-    </label>
-  </legend>
-  <textarea style="width:100%; height:75px;" name="sharepress_meta[message]" id="sharepress_meta_message"><?php echo @$meta['message'] ?></textarea>
-</fieldset>
-
-<br />
-<fieldset>
-  <legend>
-    <label for="sharepress_meta_description" style="position:relative;">
-      <b>Description</b> &nbsp;&nbsp; 
-      <label style="display:inline-block;">
-        <input type="checkbox" id="sharepress_meta_excerpt_is_description" name="sharepress_meta[excerpt_is_description]" value="1" onclick="click_use_excerpt(this);" <?php if (@$meta['excerpt_is_description']) echo 'checked="checked"' ?> /> 
-        same as Excerpt
-      </label> &nbsp;
-      <span id="sharepress_description_wait" style="position:absolute; right: -15px; top: -2px; display:none;">
-        <img src="<?php echo plugins_url('sharepress/img/wait.gif') ?>" />
-      </span>
-    </label>
-  </legend>
-  <textarea style="width:100%; height:75px;" name="sharepress_meta[description]" id="sharepress_meta_description"><?php echo htmlentities(@$meta['description']) ?></textarea>
-</fieldset>
-
-<p class="sharepress_show_advanced">
-  <a href="javascript:;" onclick="jQuery(this).parent().hide(); jQuery('.sharepress_advanced').slideDown();">Show Advanced Options</a>
-</p>
-
-<div class="sharepress_advanced" style="display:none;">
+<div id="sharepress" <?php if (($posted || $scheduled) && @$_GET['sharepress'] != 'schedule') echo 'style="display:none;"' ?>>
   
   <br />
   <fieldset>
     <legend>
-      <label for="sharepress_meta_picture">
-        <b>Picture</b>
-      </label>
-    </legend>
-  
-    <label style="display:block; margin-bottom: 5px;">
-      <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="0" <?php if (!@$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
-      Use this post's <a href="javascript:;" onclick="jQuery('#set-post-thumbnail').click();">Featured Image</a>
-    </label>
-
-    <label style="display:block; margin-bottom: 5px;">
-      <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if (@$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
-      Let Facebook choose a picture
-    </label>
-  </fieldset>
-  
-  <br />
-  <fieldset>
-    <legend>
-      <label for="sharepress_meta_targets">
-        <b>Publishing Targets</b> &nbsp;&nbsp; 
-      </label>
-    </legend>
-    
-    <div style="max-height:150px; overflow:auto;">
-      <p>
-        <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
-        <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
-          <input type="checkbox" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
-          <?php echo $wall_name ?>
+      <label for="sharepress_meta_message">
+        <b>Message</b> &nbsp;&nbsp; 
+        <label style="display:inline-block;">
+          <input type="checkbox" id="sharepress_meta_title_is_message" name="sharepress_meta[title_is_message]" value="1" onclick="click_use_post_title(this);" <?php if (@$meta['title_is_message']) echo 'checked="checked"' ?> /> 
+          same as Post Title
         </label>
-      </p>
-      <?php $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); foreach($pages as $page) { ?>
+      </label>
+    </legend>
+    <textarea style="width:100%; height:75px;" name="sharepress_meta[message]" id="sharepress_meta_message"><?php echo @$meta['message'] ?></textarea>
+  </fieldset>
+
+  <br />
+  <fieldset>
+    <legend>
+      <label for="sharepress_meta_description" style="position:relative;">
+        <b>Description</b> &nbsp;&nbsp; 
+        <label style="display:inline-block;">
+          <input type="checkbox" id="sharepress_meta_excerpt_is_description" name="sharepress_meta[excerpt_is_description]" value="1" onclick="click_use_excerpt(this);" <?php if (@$meta['excerpt_is_description']) echo 'checked="checked"' ?> /> 
+          same as Excerpt
+        </label> &nbsp;
+        <span id="sharepress_description_wait" style="position:absolute; right: -15px; top: -2px; display:none;">
+          <img src="<?php echo plugins_url('sharepress/img/wait.gif') ?>" />
+        </span>
+      </label>
+    </legend>
+    <textarea style="width:100%; height:75px;" name="sharepress_meta[description]" id="sharepress_meta_description"><?php echo htmlentities(@$meta['description']) ?></textarea>
+  </fieldset>
+
+  <?php if ( ($posted || $scheduled) || (!$posted && !$scheduled && $post->post_status == 'publish') ) { ?>
+    <br />
+    <fieldset>
+      <legend>
+        <label for="sharepress_meta_schedule">
+          <b>Schedule</b>
+        </label>
+      </legend>
+      <?php Sharepress::$pro->touch_time($scheduled); ?>
+      <div style="padding:10px 0 2px 0;">
+        <input type="submit" class="button-primary" value="Schedule" style="margin-right:4px;" />
+        <input type="submit" class="button" onclick="if(confirm('Are you sure you want to cancel posting to Facebook?')) { sharepress_cancel_publish_again(); } else { return false; }" value="Cancel" />
+      </div>
+    </fieldset>
+  <?php } ?>
+
+  <p class="sharepress_show_advanced">
+    <a href="javascript:;" onclick="jQuery(this).parent().hide(); jQuery('.sharepress_advanced').slideDown();">Show Advanced Options</a>
+  </p>
+
+  <div class="sharepress_advanced" style="display:none;">
+  
+    <br />
+    <fieldset>
+      <legend>
+        <label for="sharepress_meta_picture">
+          <b>Picture</b>
+        </label>
+      </legend>
+  
+      <label style="display:block; margin-bottom: 5px;">
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="0" <?php if (!@$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
+        Use this post's <a href="javascript:;" onclick="jQuery('#set-post-thumbnail').click();">Featured Image</a>
+      </label>
+
+      <label style="display:block; margin-bottom: 5px;">
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if (@$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
+        Let Facebook choose a picture
+      </label>
+    </fieldset>
+  
+    <br />
+    <fieldset>
+      <legend>
+        <label for="sharepress_meta_targets">
+          <b>Publishing Targets</b> &nbsp;&nbsp; 
+        </label>
+      </legend>
+    
+      <div style="max-height:150px; overflow:auto;">
         <p>
-          <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
-            <input type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
-            <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
+          <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
+          <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
+            <input type="checkbox" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
+            <?php echo $wall_name ?>
           </label>
         </p>
-      <?php } ?>
-    </div>
-  </fieldset>
+        <?php $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); foreach($pages as $page) { ?>
+          <p>
+            <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
+              <input type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
+              <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
+            </label>
+          </p>
+        <?php } ?>
+      </div>
+    </fieldset>
+    
+    <p>
+      <a class="sharepress_hide_advanced" href="javascript:;" onclick="jQuery('.sharepress_advanced').slideUp(function() { jQuery('.sharepress_show_advanced').fadeIn(); });">Hide Advanced Options</a>
+    </p>
+  </div>
   
-  <p>
-    <a class="sharepress_hide_advanced" href="javascript:;" onclick="jQuery('.sharepress_advanced').slideUp(function() { jQuery('.sharepress_show_advanced').fadeIn(); });">Hide Advanced Options</a>
-  </p>
-</div>
+</div><!-- /#sharepress -->
 
 <script>
 (function($) {
@@ -118,6 +139,18 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     description.keypress(function() {
       $('#sharepress_meta_excerpt_is_description').attr('checked', '');
     });
+    
+    window.sharepress_publish_again = function() {
+      $('#sharepress').show();
+      $('#btn_publish_again').hide();
+      $('#sharepress_meta_cancelled').val(0);
+      $('#sharepress_meta_publish_again').val(1);
+    };
+    
+    window.sharepress_cancel_publish_again = function() {
+      $('#sharepress_meta_cancelled').val(1);
+      $('#sharepress_meta_publish_again').val(0);      
+    };
     
     window.click_use_post_title = function(cb) {
       if (cb.checked) {

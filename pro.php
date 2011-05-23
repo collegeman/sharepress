@@ -42,8 +42,6 @@ if (!defined('ABSPATH')) exit;
  */
 class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   
-  const OPTION_LICENSE_KEY = 'sharepress-pro-license-key';
-  
   // holds the singleton instance of your plugin's core
   static $instance;
   
@@ -67,9 +65,14 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     #
     $parts = explode(DIRECTORY_SEPARATOR, __FILE__);
     $fn = array_pop($parts);
-    $fd = array_pop($parts);
-    $file = $fd != 'plugins' ? "{$fd}/{$fn}" : $fn;
+    $fd = (($fd = array_pop($parts)) != 'plugins' ? $fd : '');
+    $file = $fd ? "{$fd}/{$fn}" : $fn;
     
+    add_action("activate_{$fd}/pro.php", array($this, 'activate'));
+    add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
+    add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
+    add_filter('cron_schedules', array($this, 'cron_schedules'));
+        
     #
     # Setup the update client to be able to receive updates from getwpapps.com
     #
@@ -78,6 +81,52 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
       'plugin' => /*@PLUGIN_PRO_SLUG@*/ 'sharepress', 
       'file' => $file
     ));
+  }
+  
+  function activate() {
+    wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
+  }
+  
+  function deactivate() {
+    wp_clear_scheduled_hook('sharepress_oneminute_cron');
+  }
+  
+  function cron_schedules($schedules) {
+    $schedules['oneminute'] = array(
+      'interval' => 60,
+      'display' => __('Every Minute')
+    );
+    
+    return $schedules;
+  }
+  
+  function oneminute_cron() {
+    // load list of posts that are scheduled and ready to post
+    global $wpdb;
+    $posts = $wpdb->get_results(sprintf("
+      SELECT P.ID
+      FROM $wpdb->posts P 
+      INNER JOIN $wpdb->postmeta M ON (M.post_id = P.ID)
+      WHERE 
+        P.post_status = 'publish'
+        AND M.meta_key = '%s' 
+        AND M.meta_value <= %s
+        AND NOT EXISTS (
+          SELECT * FROM $wpdb->postmeta E
+          WHERE 
+            E.post_id = P.ID
+            AND E.meta_key = '%s'
+            AND E.meta_value IS NOT NULL
+        )
+    ",
+      Sharepress::META_SCHEDULED,
+      current_time('timestamp'),
+      Sharepress::META_POSTED
+    ));
+    
+    foreach($posts as $post) {
+      Sharepress::load()->post_on_facebook($post->ID);
+    }
   }
   
   function init() {
@@ -90,10 +139,21 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     add_filter('sharepress_pages', array($this, 'pages'));
     add_action('sharepress_post', array($this, 'post'), 10, 2);
     // enhancement #3: configure the content of each post individually
-    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 3);
+    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 5);
     add_action('wp_ajax_sharepress_get_excerpt', array($this, 'ajax_get_excerpt'));
-    
+    // enhancement #4: scheduling posts from the posts browser
+    add_filter('post_row_actions', array($this, 'post_row_actions'), 10, 2);
     // add_filter('plugin_action_links_sharepress/pro.php', array(Sharepress::load(), 'plugin_action_links'), 10, 4);
+  }
+  
+  function post_row_actions($actions, $post) {
+    $posted = get_post_meta($post->ID, Sharepress::META_POSTED, true);
+    if ($post->post_status == 'publish') {
+      $label = $posted ? 'Publish on Facebook Again' : 'Publish on Facebook';
+      $actions['sharepress'] = '<a href="post.php?post='.$post->ID.'&action=edit&sharepress=schedule">'.$label.'</a>';
+    }
+    
+    return $actions;
   }
   
   function ajax_get_excerpt() {
@@ -137,7 +197,7 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     }
   }
   
-  function meta_box($meta_box, $post, $meta) {
+  function meta_box($meta_box, $post, $meta, $posted, $scheduled) {
     ob_start();
     require('pro-meta-box.php');
     return ob_get_clean();
@@ -167,6 +227,68 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     } else {
       throw new Exception("Failed to load pages from Facebook.");
     }
+  }
+  
+  function get_publish_time() {
+    $meta = @$_POST[Sharepress::META];
+    if (!$meta) {
+      return false;
+    }
+    
+    if ($mm = @$meta['mm']) {
+      $date = sprintf('%s/%s/%s %s:%s', (int) $meta['aa'], (int) $meta['mm'], (int) $meta['jj'], (int) $meta['hh'], (int) $meta['mn']);
+      return strtotime($date);
+    } else {
+      return false;
+    }
+  }
+  
+  function touch_time($scheduled = null) {
+    global $wp_locale, $post, $comment;
+
+    $tab_index_attribute = '';
+    if ( (int) $tab_index > 0 )
+      $tab_index_attribute = " tabindex=\"$tab_index\"";
+
+    // echo '<label for="timestamp" style="display: block;"><input type="checkbox" class="checkbox" name="edit_date" value="1" id="timestamp"'.$tab_index_attribute.' /> '.__( 'Edit timestamp' ).'</label><br />';
+
+    $time_adj = current_time('timestamp');
+    
+    $jj = ($scheduled) ? date( 'd', $scheduled ) : gmdate( 'd', $time_adj );
+    $mm = ($scheduled) ? date( 'm', $scheduled ) : gmdate( 'm', $time_adj );
+    $aa = ($scheduled) ? date( 'Y', $scheduled ) : gmdate( 'Y', $time_adj );
+    $hh = ($scheduled) ? date( 'H', $scheduled ) : gmdate( 'H', $time_adj );
+    $mn = ($scheduled) ? date( 'i', $scheduled ) : gmdate( 'i', $time_adj );
+    $ss = ($scheduled) ? date( 's', $scheduled ) : gmdate( 's', $time_adj );
+
+    $cur_jj = gmdate( 'd', $time_adj );
+    $cur_mm = gmdate( 'm', $time_adj );
+    $cur_aa = gmdate( 'Y', $time_adj );
+    $cur_hh = gmdate( 'H', $time_adj );
+    $cur_mn = gmdate( 'i', $time_adj );
+
+    $field = Sharepress::META;
+
+    $month = "<select " . ( $multi ? '' : 'id="mm" ' ) . "name=\"{$field}[mm]\"$tab_index_attribute>\n";
+    for ( $i = 1; $i < 13; $i = $i +1 ) {
+      $month .= "\t\t\t" . '<option value="' . zeroise($i, 2) . '"';
+      if ( $i == $mm )
+        $month .= ' selected="selected"';
+      $month .= '>' . $wp_locale->get_month_abbrev( $wp_locale->get_month( $i ) ) . "</option>\n";
+    }
+    $month .= '</select>';
+
+    $day = '<input type="text" name="'.$field.'[jj]" onblur="if(!jQuery.trim(jQuery(this).val())) jQuery(this).val(\''.$jj.'\');" value="' . $jj . '" style="width:30px;" maxlength="2" autocomplete="off" />';
+    $year = '<input type="text" name="'.$field.'[aa]" onblur="if(!jQuery.trim(jQuery(this).val())) jQuery(this).val(\''.$aa.'\');" value="' . $aa . '" style="width:50px;" maxlength="4" autocomplete="off" />';
+    $hour = '<input type="text" name="'.$field.'[hh]" onblur="if(!jQuery.trim(jQuery(this).val())) jQuery(this).val(\''.$hh.'\');" value="' . $hh . '" style="width:30px;" maxlength="2" autocomplete="off" />';
+    $minute = '<input type="text" name="'.$field.'[mn]" onblur="if(!jQuery.trim(jQuery(this).val())) jQuery(this).val(\''.$mn.'\');" value="' . $mn . '" style="width:30px;" maxlength="2" autocomplete="off" />';
+
+    echo '<div class="timestamp-wrap">';
+    /* translators: 1: month input, 2: day input, 3: year input, 4: hour input, 5: minute input */
+    printf(__('%1$s%2$s, %3$s @ %4$s : %5$s'), $month, $day, $year, $hour, $minute);
+
+    echo '</div>';
+
   }
   
 }
