@@ -68,11 +68,6 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     $fd = (($fd = array_pop($parts)) != 'plugins' ? $fd : '');
     $file = $fd ? "{$fd}/{$fn}" : $fn;
     
-    add_action("activate_{$fd}/pro.php", array($this, 'activate'));
-    add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
-    add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
-    add_filter('cron_schedules', array($this, 'cron_schedules'));
-        
     #
     # Setup the update client to be able to receive updates from getwpapps.com
     #
@@ -83,12 +78,82 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     ));
   }
   
+  function init() {
+    // attach a reference to the pro version onto the lite version
+    /*@PLUGIN_LITE_CLASS@*/ Sharepress::$pro = $this;
+    
+    // enhancement #1: post thumbnails are used in messages posted to facebook
+    add_theme_support('post-thumbnails');
+    // enhancement #2: ability to publish to pages
+    add_filter('sharepress_pages', array($this, 'pages'));
+    add_action('sharepress_post', array($this, 'post'), 10, 2);
+    // enhancement #3: configure the content of each post individually
+    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 5);
+    add_action('wp_ajax_sharepress_get_excerpt', array($this, 'ajax_get_excerpt'));
+    // enhancement #4: enhancements to the posts browser
+    add_action('restrict_manage_posts', array($this, 'restrict_manage_posts'));
+    add_action('manage_posts_columns', array($this, 'manage_posts_columns'));
+    add_action('manage_posts_custom_column', array($this, 'manage_posts_custom_column'), 10, 2);
+    // enhancement #5: scheduling 
+    add_action("activate_{$fd}/pro.php", array($this, 'activate'));
+    add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
+    add_filter('cron_schedules', array($this, 'cron_schedules'));
+    add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
+    
+    // add_filter('plugin_action_links_sharepress/pro.php', array(Sharepress::load(), 'plugin_action_links'), 10, 4);
+  }
+  
+  
   function activate() {
     wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
   }
   
   function deactivate() {
     wp_clear_scheduled_hook('sharepress_oneminute_cron');
+  }
+  
+  function manage_posts_columns($cols) {
+    $new_cols = array();
+
+    $new_cols['cb'] = $cols['cb'];
+    $new_cols['title'] = $cols['title'];
+    
+    unset($cols['cb']);
+    unset($cols['title']);
+    
+    $new_cols['sharepress'] = __('Sharepress');
+    return $new_cols + $cols;
+  }
+  
+  function manage_posts_custom_column($column_name, $post_id) {
+    if ($column_name == 'sharepress') {
+      $post = get_post($post_id);
+      $posted = get_post_meta($post_id, Sharepress::META_POSTED, true);
+      $scheduled = get_post_meta($post_id, Sharepress::META_SCHEDULED, true);
+      $edit = get_admin_url()."post.php?post={$post->ID}&action=edit&sharepress=schedule";
+      
+      if ($posted) {
+        echo __('Posted').': '.date('Y/m/d g:ia', strtotime($posted) + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
+      } else if ($scheduled) {
+        echo __('Scheduled').': '.date('Y/m/d g:ia', $scheduled).'<br /><a href="'.$edit.'">Edit Schedule</a>';
+      } else if ($post->post_status != 'publish') {
+        echo 'Post in draft';
+      } else {
+        echo 'Not yet posted<br /><a href="'.$edit.'">Schedule Now</a>';
+      }
+    }
+  }
+  
+  function restrict_manage_posts() {
+    $current = @$_GET['sharepress'];
+    ?>
+      <select name="sharepress">
+        <option value="">Show all posts</option>
+        <option value="all" <?php if ($current == 'all') echo 'selected="selected"' ?>>Show all Sharepressed</option>
+        <option value="posted" <?php if ($current == 'posted') echo 'selected="selected"' ?>>Posted with Sharepress</option>
+        <option value="scheduled" <?php if ($current == 'scheduled') echo 'selected="selected"' ?>>Scheduled with Sharepress</option>
+      </select>
+    <?php
   }
   
   function cron_schedules($schedules) {
@@ -127,33 +192,6 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     foreach($posts as $post) {
       Sharepress::load()->post_on_facebook($post->ID);
     }
-  }
-  
-  function init() {
-    // attach a reference to the pro version onto the lite version
-    /*@PLUGIN_LITE_CLASS@*/ Sharepress::$pro = $this;
-    
-    // enhancement #1: post thumbnails are used in messages posted to facebook
-    add_theme_support('post-thumbnails');
-    // enhancement #2: ability to publish to pages
-    add_filter('sharepress_pages', array($this, 'pages'));
-    add_action('sharepress_post', array($this, 'post'), 10, 2);
-    // enhancement #3: configure the content of each post individually
-    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 5);
-    add_action('wp_ajax_sharepress_get_excerpt', array($this, 'ajax_get_excerpt'));
-    // enhancement #4: scheduling posts from the posts browser
-    add_filter('post_row_actions', array($this, 'post_row_actions'), 10, 2);
-    // add_filter('plugin_action_links_sharepress/pro.php', array(Sharepress::load(), 'plugin_action_links'), 10, 4);
-  }
-  
-  function post_row_actions($actions, $post) {
-    $posted = get_post_meta($post->ID, Sharepress::META_POSTED, true);
-    if ($post->post_status == 'publish') {
-      $label = $posted ? 'Publish on Facebook Again' : 'Publish on Facebook';
-      $actions['sharepress'] = '<a href="post.php?post='.$post->ID.'&action=edit&sharepress=schedule">'.$label.'</a>';
-    }
-    
-    return $actions;
   }
   
   function ajax_get_excerpt() {
