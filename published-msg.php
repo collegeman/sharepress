@@ -4,27 +4,33 @@
   <legend>
     <?php if ($posted) { ?>
       <b>Last Published on Facebook</b>
-    <?php } else { ?>
+    <?php } else if ($scheduled) { ?>
       <b>Scheduled to Post to Facebook</b>
+    <?php } else if ($last_posted) { ?>
+      <b>Last Published on Facebook</b>
     <?php } ?>
   </legend>
   <label style="display:inline-block; width:100%;">
-    <p style="margin-bottom:12px; color:#555;"><?php echo htmlentities($meta['message']) ?></p>
+    <p style="margin-bottom:12px; color:#555;"><?php echo htmlentities($scheduled ? $meta['message'] : $last_result['message']) ?></p>
     <div style="width:100%;">
       <?php if (Sharepress::$pro) { ?>
         <a class="button" id="btn_publish_again" style="float:right; position:relative; top:-6px; margin-bottom:-6px; <?php if (@$_GET['sharepress'] == 'schedule') echo 'display:none;' ?>" href="#" onclick="sharepress_publish_again(); return false;">
           <?php if ($posted) { ?>
             Publish Again
-          <?php } else { ?>
-            Reschedule
+          <?php } else if ($scheduled) { ?>
+            Edit
+          <?php } else if ($last_posted) { ?>
+            Publish Again
           <?php } ?>
         </a>
       <?php } ?>
       <?php if ($posted) { ?>
         <span><?php echo date_i18n('M d, Y @ H:i', ( is_numeric($posted) ? $posted : strtotime($posted) ) + ( get_option( 'gmt_offset' ) * 3600 ), true) ?></span>
-      <?php } else { ?>
+      <?php } else if ($scheduled) { ?>
         <span><?php echo date_i18n('M d, Y @ H:i', ( is_numeric($scheduled) ? $scheduled : strtotime($scheduled) ), true) ?></span>
-      <?php } ?>  
+      <?php } else if ($last_posted) { ?>  
+        <span><?php echo date_i18n('M d, Y @ H:i', $last_posted + ( get_option( 'gmt_offset' ) * 3600 ), true) ?></span>
+      <?php } ?>
     </div>
     <?php if (!Sharepress::$pro) { ?>
       <input type="checkbox" id="sharepress_meta_publish_again" name="sharepress_meta[publish_again]" value="1" /> 

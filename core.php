@@ -283,6 +283,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     
     $posted = get_post_meta($post->ID, self::META_POSTED, true);
     $scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
+    $last_posted = self::get_last_posted($post);
+    $last_result = self::get_last_result($post);
 
     // load the meta data
     $meta = get_post_meta($post->ID, self::META, true);
@@ -312,7 +314,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     // stash $meta globally for access from Sharepress::sort_by_selected
     self::$meta = $meta;
     // allow for pro override
-    $meta_box = apply_filters('sharepress_meta_box', $meta_box, $post, $meta, $posted, $scheduled);
+    $meta_box = apply_filters('sharepress_meta_box', $meta_box, $post, $meta, $posted, $scheduled, $last_posted, $last_result);
     // unstash $meta
     self::$meta = null;
     
@@ -328,7 +330,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       </style>
     <?php
     
-    if ($posted || $scheduled) {
+    if ($posted || $scheduled || $last_posted) {
       require('published-msg.php');
       echo $meta_box;
     } else {
@@ -536,6 +538,42 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     return ($can_post_on_facebook ? $meta : false);
   }
   
+  /**
+   * @return timestamp -- the last time the post was posted to facebook, or false if never
+   */
+  static function get_last_posted($post) {
+    if (!is_object($post)) {
+      $post = get_post($post);
+    }
+    
+    if ($result = self::get_last_result($post)) {
+      return $result['posted'];
+    } else if ($posted = get_post_meta($post->ID, self::META_POSTED)) {
+      return strtotime($posted);
+    } else {
+      return false;
+    }
+  }
+  
+  static function get_last_result($post) {
+    if (!is_object($post)) {
+      $post = get_post($post);
+    }
+    
+    if ($result = get_post_meta($post->ID, self::META_RESULT)) {
+      usort($result, array('Sharepress', 'sort_by_posted_date'));
+      return $result[0];
+    } else {
+      return null;
+    }
+  }
+  
+  function sort_by_posted_date($result1, $result2) {
+    $date1 = $result1['posted'];
+    $date2 = $result2['posted'];
+    return ($date1 == $date2) ? 0 : ( $date1 < $date2 ? 1 : -1);
+  }
+  
   function post_on_facebook($post) {
     if (SHAREPRESS_DEBUG) {
       self::log(sprintf("post_on_facebook(%s)", is_object($post) ? $post->post_title : $post));
@@ -562,7 +600,9 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
           
           self::log(sprintf("posted to the wall: %s", serialize($result)));
           
-          // store the ID for queuing 
+          // store the ID and published date for queuing 
+          $result['published'] = time();
+          $result['message'] = $meta['message'];
           add_post_meta($post->ID, Sharepress::META_RESULT, $result);
         }
         

@@ -7,7 +7,7 @@ You must own a valid licenses to use the Pro version of sharepress.
 
 if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 
-<div id="sharepress" <?php if (($posted || $scheduled) && @$_GET['sharepress'] != 'schedule') echo 'style="display:none;"' ?>>
+<div id="sharepress" <?php if (($posted || $scheduled || $last_posted) && @$_GET['sharepress'] != 'schedule') echo 'style="display:none;"' ?>>
   
   <br />
   <fieldset>

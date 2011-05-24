@@ -88,7 +88,7 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     add_filter('sharepress_pages', array($this, 'pages'));
     add_action('sharepress_post', array($this, 'post'), 10, 2);
     // enhancement #3: configure the content of each post individually
-    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 5);
+    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 7);
     add_action('wp_ajax_sharepress_get_excerpt', array($this, 'ajax_get_excerpt'));
     // enhancement #4: enhancements to the posts browser
     add_action('restrict_manage_posts', array($this, 'restrict_manage_posts'));
@@ -113,22 +113,15 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   }
   
   function manage_posts_columns($cols) {
-    $new_cols = array();
-
-    $new_cols['cb'] = $cols['cb'];
-    $new_cols['title'] = $cols['title'];
-    
-    unset($cols['cb']);
-    unset($cols['title']);
-    
-    $new_cols['sharepress'] = __('Sharepress');
-    return $new_cols + $cols;
+    $cols['sharepress'] = __('Sharepress');
+    return $cols;
   }
   
   function manage_posts_custom_column($column_name, $post_id) {
     if ($column_name == 'sharepress') {
       $post = get_post($post_id);
       $posted = get_post_meta($post_id, Sharepress::META_POSTED, true);
+      $last_posted = Sharepress::get_last_posted($post);
       $scheduled = get_post_meta($post_id, Sharepress::META_SCHEDULED, true);
       $edit = get_admin_url()."post.php?post={$post->ID}&action=edit&sharepress=schedule";
       
@@ -136,6 +129,8 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
         echo __('Posted').': '.date('Y/m/d g:ia', strtotime($posted) + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
       } else if ($scheduled) {
         echo __('Scheduled').': '.date('Y/m/d g:ia', $scheduled).'<br /><a href="'.$edit.'">Edit Schedule</a>';
+      } else if ($last_posted) {
+        echo __('Posted').': '.date('Y/m/d g:ia', $last_posted + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
       } else if ($post->post_status != 'publish') {
         echo 'Post in draft';
       } else {
@@ -230,12 +225,13 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
         Sharepress::log(sprintf("posted to the page(%s): %s", $page['name'], serialize($result)));
         
         // store the ID for queuing 
+        $result['posted'] = time();
         add_post_meta($post->ID, Sharepress::META_RESULT, $result);
       }
     }
   }
   
-  function meta_box($meta_box, $post, $meta, $posted, $scheduled) {
+  function meta_box($meta_box, $post, $meta, $posted, $scheduled, $last_posted, $last_result) {
     ob_start();
     require('pro-meta-box.php');
     return ob_get_clean();
