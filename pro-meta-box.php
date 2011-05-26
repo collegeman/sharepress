@@ -117,6 +117,10 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 
 <script>
 (function($) {
+  if (!$.fn.prop) {
+    $.fn.prop = $.fn.attr;
+  }
+  
   $(function() {
     var editor = null;
     var description_timeout = null;
@@ -133,11 +137,11 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     var suspend = false;
     
     msg.keypress(function() {
-      $('#sharepress_meta_title_is_message').attr('checked', '');
+      $('#sharepress_meta_title_is_message').prop('checked', false);
     })
     
     description.keypress(function() {
-      $('#sharepress_meta_excerpt_is_description').attr('checked', '');
+      $('#sharepress_meta_excerpt_is_description').prop('checked', false);
     });
     
     window.sharepress_publish_again = function() {
@@ -150,6 +154,8 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     window.sharepress_cancel_publish_again = function() {
       $('#sharepress_meta_cancelled').val(1);
       $('#sharepress_meta_publish_again').val(0);      
+      $('#sharepress_meta_enabled_on').prop('checked', false);
+      $('#sharepress_meta_enabled_off').attr('checked', true);
     };
     
     window.click_use_post_title = function(cb) {

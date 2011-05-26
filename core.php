@@ -291,7 +291,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     if (!$meta) {
       // defaults:
       $meta = array(
-        'message' => '',
+        'message' => $post->post_title,
         'title_is_message' => true,
         'picture' => $this->get_default_picture(),
         'let_facebook_pick_pic' => false,
@@ -334,6 +334,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       require('published-msg.php');
       echo $meta_box;
     } else {
+      $enabled = @$_GET['sharepress'] == 'schedule' || ( @$meta['enabled'] == 'on' && $post->post_status != 'publish' );
       require('behavior-picker.php');
     }
   }
