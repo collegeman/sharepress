@@ -530,7 +530,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       && !get_post_meta($post->ID, self::META_POSTED, true)
       
       // on schedule
-      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled < current_time('timestamp')) 
+      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= current_time('timestamp')) 
       
       // post only if no errors precede this posting
       && !get_post_meta($post->ID, self::META_ERROR)
@@ -613,6 +613,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       
         // success:
         update_post_meta($post->ID, self::META_POSTED, date('Y/m/d H:i:s'));
+        delete_post_meta($post->ID, self::META_SCHEDULED);
       
         $this->success($post, $meta);
     
