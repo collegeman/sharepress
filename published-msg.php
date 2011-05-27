@@ -33,8 +33,10 @@
       <?php } ?>
     </div>
     <?php if (!Sharepress::$pro) { ?>
-      <input type="checkbox" id="sharepress_meta_publish_again" name="sharepress_meta[publish_again]" value="1" /> 
-      Publish Again
+      <div style="padding:12px 0 2px;">
+        <input type="checkbox" id="sharepress_meta_publish_again" name="sharepress_meta[publish_again]" value="1" /> 
+        Publish Again
+      </div>
     <?php } else { ?>
       <input type="hidden" id="sharepress_meta_publish_again" name="sharepress_meta[publish_again]" value="<?php echo @$_GET['sharepress'] == 'schedule' ? 1 : 0 ?>" />
       <input type="hidden" id="sharepress_meta_cancelled" name="sharepress_meta[cancelled]" value="0" />
