@@ -94,6 +94,10 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     add_action('restrict_manage_posts', array($this, 'restrict_manage_posts'));
     add_action('manage_posts_columns', array($this, 'manage_posts_columns'));
     add_action('manage_posts_custom_column', array($this, 'manage_posts_custom_column'), 10, 2);
+    if (is_admin()) {
+      add_filter('posts_where', array($this, 'posts_where'));
+      add_filter('posts_orderby', array($this, 'posts_orderby'));
+    }
     // enhancement #5: scheduling 
     add_action("activate_{$fd}/pro.php", array($this, 'activate'));
     add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
@@ -113,7 +117,19 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   }
   
   function manage_posts_columns($cols) {
-    $cols['sharepress'] = __('Sharepress');
+    $current_url = ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    $current_url = remove_query_arg( 'sharepress_sort', $current_url );
+    
+    if ( isset( $_GET['sharepress_sort'] ) && 'desc' == $_GET['sharepress_sort'] )
+      $current_order = 'desc';
+    else
+      $current_order = 'asc';
+      
+    $url = $current_url . '&sharepress_sort='. ( $current_order == 'asc' ? 'desc' : 'asc' );
+    
+    
+    $cols['sharepress'] = '<a href="'.$url.'">'.__('Sharepress').'</a>';
+    
     return $cols;
   }
   
@@ -143,12 +159,161 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     $current = @$_GET['sharepress'];
     ?>
       <select name="sharepress">
-        <option value="">Show all posts</option>
-        <option value="all" <?php if ($current == 'all') echo 'selected="selected"' ?>>Show all Sharepressed</option>
-        <option value="posted" <?php if ($current == 'posted') echo 'selected="selected"' ?>>Posted with Sharepress</option>
-        <option value="scheduled" <?php if ($current == 'scheduled') echo 'selected="selected"' ?>>Scheduled with Sharepress</option>
+        <option value="">Sharepress Filter (Off)</option>
+        <option value="all" <?php if ($current == 'all') echo 'selected="selected"' ?>>Show only Sharepressed</option>
+        <option value="posted" <?php if ($current == 'posted') echo 'selected="selected"' ?>>&mdash; Already posted</option>
+        <option value="scheduled" <?php if ($current == 'scheduled') echo 'selected="selected"' ?>>&mdash; Scheduled to be posted</option>
+        <option value="error" <?php if ($current == 'error') echo 'selected="selected"' ?>>&mdash; Errors</option>
+        <option value="not" <?php if ($current == 'not') echo 'selected="selected"' ?>>Show never Sharepressed</option>
       </select>
     <?php
+  }
+  
+  function posts_where($where) {
+    global $wpdb;
+
+    if (@$_GET['sharepress'] == 'all') {
+      $where .= sprintf(" 
+        AND EXISTS ( 
+          SELECT * FROM {$wpdb->postmeta} 
+          WHERE 
+            post_id = {$wpdb->posts}.ID 
+            AND meta_key IN ('%s', '%s') 
+            AND meta_value IS NOT NULL
+        )
+      ",
+        Sharepress::META_RESULT, Sharepress::META_SCHEDULED
+     );
+    } else if (@$_GET['sharepress'] == 'posted') {
+      $where .= sprintf(" 
+        AND EXISTS ( 
+          SELECT * FROM {$wpdb->postmeta} 
+          WHERE 
+            post_id = {$wpdb->posts}.ID 
+            AND meta_key = '%s' 
+            AND meta_value IS NOT NULL
+        )
+      ",
+        Sharepress::META_RESULT
+     );
+     
+    } else if (@$_GET['sharepress'] == 'scheduled') {
+      $where .= sprintf(" 
+        AND EXISTS ( 
+          SELECT * FROM {$wpdb->postmeta} 
+          WHERE 
+            post_id = {$wpdb->posts}.ID 
+            AND meta_key IN ('%s') 
+            AND meta_value IS NOT NULL
+        )
+      ",
+        Sharepress::META_SCHEDULED
+     );
+     
+    } else if (@$_GET['sharepress'] == 'not') {
+      $where .= sprintf(" 
+        AND NOT EXISTS ( 
+          SELECT * FROM {$wpdb->postmeta} 
+          WHERE 
+            post_id = {$wpdb->posts}.ID 
+            AND meta_key IN ('%s', '%s') 
+            AND meta_value IS NOT NULL
+        )
+      ",
+        Sharepress::META_RESULT, Sharepress::META_SCHEDULED
+     );
+    
+    } else if (@$_GET['sharepress'] == 'error') {
+      $where .= sprintf(" 
+        AND EXISTS ( 
+          SELECT * FROM {$wpdb->postmeta} 
+          WHERE 
+            post_id = {$wpdb->posts}.ID 
+            AND meta_key IN ('%s') 
+            AND meta_value IS NOT NULL
+        )
+      ",
+        Sharepress::META_ERROR
+     );
+      
+    }  
+    
+    return $where;
+  }
+  
+  function posts_orderby($orderby) {
+    global $wpdb;
+    
+    if (@$_GET['sharepress_sort']) {
+      $dir = $_GET['sharepress_sort'] == 'asc' ? 'asc' : 'desc';
+      
+      $cols = array();
+      
+      // these first two are arranged in ascending order -- posted stuff is older than scheduled stuff
+      
+      $cols[] = sprintf("
+        (
+          EXISTS (
+            SELECT * 
+            FROM {$wpdb->postmeta}
+            WHERE 
+              post_id = {$wpdb->posts}.ID
+              AND meta_key = '%s'
+              AND meta_value IS NOT NULL
+          )
+        )
+      ", 
+        Sharepress::META_POSTED
+      );
+      
+      $cols[] = sprintf("
+        (
+          EXISTS (
+            SELECT * 
+            FROM {$wpdb->postmeta}
+            WHERE 
+              post_id = {$wpdb->posts}.ID
+              AND meta_key = '%s'
+              AND meta_value IS NOT NULL
+          )
+        )
+      ", 
+        Sharepress::META_SCHEDULED
+      );
+      
+      // so if descending order is requested, we flip those two
+      if ($dir == 'desc') {
+        rsort($cols);
+      }
+      
+      $cols[] = sprintf("
+        (
+          SELECT CONVERT(meta_value, signed) 
+          FROM {$wpdb->postmeta}
+          WHERE 
+            post_id = {$wpdb->posts}.ID
+            AND meta_key = '%s'
+        ) {$dir}
+      ",
+        Sharepress::META_SCHEDULED
+      );
+      
+      $cols[] = sprintf("
+        (
+          SELECT STR_TO_DATE(meta_value, '%%Y/%%m/%%d %%H:%%i:%%s')
+          FROM {$wpdb->postmeta}
+          WHERE 
+            post_id = {$wpdb->posts}.ID
+            AND meta_key = '%s'
+        ) {$dir}
+      ",
+        Sharepress::META_POSTED
+      );
+        
+      $orderby = implode(', ', $cols);
+    }
+    
+    return $orderby;
   }
   
   function cron_schedules($schedules) {
