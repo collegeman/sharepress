@@ -72,7 +72,6 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       add_action('admin_head', array($this, 'admin_head'));
       add_action('wp_ajax_fb_save_session', array($this, 'ajax_fb_save_session'));
       add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
-      add_filter('contextual_help', array($this, 'contextual_help'));
       add_filter('plugin_action_links_sharepress/lite.php', array($this, 'plugin_action_links'), 10, 4);
     }
     
@@ -623,11 +622,6 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
         $this->error($post, $meta, $e);
       }
     }
-  }
-  
-  function contextual_help($help) {
-    
-    return '';
   }
   
   /**
