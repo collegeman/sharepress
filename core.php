@@ -25,11 +25,9 @@ require('lib/facebook-sdk-2.1.2.php');
 spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
 );
-// debugging
-if (!defined('SHAREPRESS_DEBUG')) {
-  // by default, on if host is sharepress.dev.wp (my local dev name)
-  define('SHAREPRESS_DEBUG', $_SERVER['HTTP_HOST'] == 'dev.getwpapps.com');
-}  
+  
+// by default, on if host is sharepress.dev.wp (my local dev name)
+@define('SHAREPRESS_DEBUG', $_SERVER['HTTP_HOST'] == 'dev.getwpapps.com');
 
 class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   
@@ -80,7 +78,23 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     add_action('future_to_publish', array($this, 'future_to_publish'));
     add_action('publish_post', array($this, 'publish_post'));
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
+
+    //add_action('wp_head', array($this, 'wp_head'));
   }
+  
+  /*
+  function wp_head() {
+    global $wp_query;
+    if ($wp_query->queried_object && ($meta = get_post_meta($wp_query->queried_object->ID, self::META, true))) {
+      if (!$meta['let_facebook_pick_pic']) {
+        echo "<meta property=\"og:image\" content=\"{$meta['picture']}\">\n";
+      }
+      if ($meta['description']) {
+        echo sprintf("<meta property=\"og:description\" content=\"%s\">\n", $meta['description']);
+      }
+    }
+  }
+  */
   
   static function err($message) {
     self::log($message, 'ERROR');
@@ -219,7 +233,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
         return $result;
       }
     } else {
-      throw new Exception("Can't hit FB API without valid session.");
+      throw new SharepressFacebookSessionException();
     }
   }
   
@@ -229,8 +243,24 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
    * @return mixed If $param is defined, only a single value is returned; otherwise, an array - the whole packet
    */
   static function me($param = null) {
-    $me = self::api('/me', 'GET', array(), '10 minutes');
-    return ($param) ? $me[$param] : $me;
+    try {
+      $me = self::api('/me', 'GET', array(), '10 minutes');
+      return ($param) ? $me[$param] : $me;
+    } catch (Exception $e) {
+      return self::handleFacebookException($e);
+    }
+  }
+  
+  static function handleFacebookException($e) {
+    if (is_a($e, 'SharepressFacebookSessionException') || $e->getMessage() == 'Invalid OAuth access token signature.') {
+      update_option(self::OPTION_FB_SESSION, '');
+      wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="admin.php">Dashboard</a>.');
+    } else if (is_admin()) {
+      wp_die('There was a problem with Sharepress: '.$e->getMessage());
+    } else {
+      self::err(sprintf("Exception thrown by Facebook API: %s", $e->getMessage()));
+      throw new Exception("There is a problem with Sharepress. Check the log.");
+    }
   }
   
   static function pages() {
@@ -584,13 +614,13 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     }
     
     if ($meta = $this->can_post_on_facebook($post)) {
-      // prefix the message with the permalink
+      // TODO: make configurable
       $meta['message'] .= ' - ' . get_permalink($post->ID);
     
       try {
         // first, should we post to the wall?
         if (in_array('wall', $meta['targets'])) {
-          $result = self::api(self::me('id').'/feed', 'POST', array(
+          $result = self::api(self::me('id').'/links', 'POST', array(
             'name' => $meta['name'],
             'message' => $meta['message'],
             'description' => $meta['description'],
@@ -662,15 +692,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   function admin_init() {
     // verify our Facebook session
     if (@$_REQUEST['page'] == 'sharepress' && @$_REQUEST['action'] != 'fb_save_session' && ($session = self::session())) {
-      $session_error = 'Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="admin.php">Dashboard</a>.';
-      try {
-        if (self::me('id') != $session['uid']) {
-          update_option(self::OPTION_FB_SESSION, '');
-          wp_die($session_error);
-        }
-      } catch (Exception $e) {
-        update_option(self::OPTION_FB_SESSION, '');
-        wp_die($session_error);
+      if (self::me('id') != $session['uid']) {
+        self::handleFacebookException(new SharepressFacebookSessionException());
       }
     }
     
@@ -800,5 +823,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     return $options ? $options['on_success'] == '1' : true;
   }
 }
+
+class SharepressFacebookSessionException extends Exception {}
 
 /*@PLUGIN_LITE_CLASS@*/ Sharepress::load();

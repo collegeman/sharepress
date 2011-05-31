@@ -224,6 +224,16 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     };
     
     var setupEditor = setInterval(function() {
+      if (!window.tinyMCE) {
+        editor = {
+          getContent: function() {
+            return $('#content').val();
+          }
+        };
+        $('#content').keypress(copy_excerpt_to_description);
+        return;
+      }
+      
       editor = tinyMCE.get('content');
       if (editor) {
         clearInterval(setupEditor);

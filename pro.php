@@ -68,6 +68,9 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     $fd = (($fd = array_pop($parts)) != 'plugins' ? $fd : '');
     $file = $fd ? "{$fd}/{$fn}" : $fn;
     
+    add_action("activate_{$fd}/pro.php", array($this, 'activate'));
+    add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
+    
     #
     # Setup the update client to be able to receive updates from getwpapps.com
     #
@@ -99,16 +102,13 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
       add_filter('posts_orderby', array($this, 'posts_orderby'));
     }
     // enhancement #5: scheduling 
-    add_action("activate_{$fd}/pro.php", array($this, 'activate'));
-    add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
     add_filter('cron_schedules', array($this, 'cron_schedules'));
     add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
-    
-    // add_filter('plugin_action_links_sharepress/pro.php', array(Sharepress::load(), 'plugin_action_links'), 10, 4);
   }
   
   
   function activate() {
+    add_filter('cron_schedules', array($this, 'cron_schedules'));
     wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
   }
   
@@ -140,13 +140,23 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
       $last_posted = Sharepress::get_last_posted($post);
       $scheduled = get_post_meta($post_id, Sharepress::META_SCHEDULED, true);
       $edit = get_admin_url()."post.php?post={$post->ID}&action=edit&sharepress=schedule";
+      $meta = get_post_meta($post_id, Sharepress::META, true);
+      $error = get_post_meta($post_id, Sharepress::META_ERROR, true);
       
-      if ($posted) {
+      if ($error) {
+        echo '<span style="color:red;">'.__('Last Post Failed').': '.__($error).'</span><br /><a href="'.$edit.'">Try Again</a>';
+      } else if ($posted) {
         echo __('Posted').': '.date('Y/m/d g:ia', strtotime($posted) + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
       } else if ($scheduled) {
         echo __('Scheduled').': '.date('Y/m/d g:ia', $scheduled).'<br /><a href="'.$edit.'">Edit Schedule</a>';
       } else if ($last_posted) {
         echo __('Posted').': '.date('Y/m/d g:ia', $last_posted + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
+      } else if ($post->post_status == 'future') {
+        if ($meta['enabled'] == 'on') {
+          echo __('Scheduled').': '.date('Y/m/d g:ia', strtotime( $post->post_date )).'<br /><a href="'.$edit.'">Edit Schedule</a>';
+        } else {
+          'Not scheduled<br /><a href="'.$edit.'">Schedule Now</a>';
+        }
       } else if ($post->post_status != 'publish') {
         echo 'Post in draft';
       } else {
@@ -326,9 +336,16 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   }
   
   function oneminute_cron() {
+    Sharepress::log('SharepressPro::oneminute_cron @ '.date('Y/m/d H:i:s', current_time('timestamp')));
+    foreach($this->get_scheduled_posts() as $post) {
+      Sharepress::load()->post_on_facebook($post->ID);
+    }
+  }
+  
+  function get_scheduled_posts() {
     // load list of posts that are scheduled and ready to post
     global $wpdb;
-    $posts = $wpdb->get_results(sprintf("
+    return $wpdb->get_results(sprintf("
       SELECT P.ID
       FROM $wpdb->posts P 
       INNER JOIN $wpdb->postmeta M ON (M.post_id = P.ID)
@@ -348,10 +365,6 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
       current_time('timestamp'),
       Sharepress::META_POSTED
     ));
-    
-    foreach($posts as $post) {
-      Sharepress::load()->post_on_facebook($post->ID);
-    }
   }
   
   function ajax_get_excerpt() {
@@ -378,7 +391,7 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     // loop over authorized pages
     foreach(self::pages() as $page) {
       if (in_array($page['id'], $meta['targets'])) {        
-        $result = Sharepress::api($page['id'].'/feed', 'POST', array(
+        $result = Sharepress::api($page['id'].'/links', 'POST', array(
           'access_token' => $page['access_token'],
           'name' => $meta['name'],
           'message' => $meta['message'],
@@ -407,7 +420,12 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   }
   
   function pages($default = array()) {
-    $result = Sharepress::api(Sharepress::me('id').'/accounts', 'GET', array(), '1 hour');
+    try {
+      $result = Sharepress::api(Sharepress::me('id').'/accounts', 'GET', array(), '1 hour');
+    } catch (Exception $e) {
+      return self::handleFacebookException($e);
+    }
+
     if ($result) {
       $data = $result['data'];
       
@@ -424,7 +442,7 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
       
       return $default + $pages;
     } else {
-      throw new Exception("Failed to load pages from Facebook.");
+      return false;
     }
   }
   
