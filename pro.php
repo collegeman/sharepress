@@ -104,10 +104,12 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     // enhancement #5: scheduling 
     add_filter('cron_schedules', array($this, 'cron_schedules'));
     add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
+    add_filter('cron_schedules', array($this, 'cron_schedules'));
   }
   
   
   function activate() {
+    // this filter must be here, because init() doesn't fire for activation
     add_filter('cron_schedules', array($this, 'cron_schedules'));
     wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
   }
