@@ -177,6 +177,10 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     };
     
     window.copy_title_to_message = function(synchronize) {
+      if (!$('#sharepress_meta_title_is_message:checked').size()) {
+        return false;
+      }
+      
       clearTimeout(message_timeout);
       setTimeout(function() {
         msg.val(title.val());
