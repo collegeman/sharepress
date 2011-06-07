@@ -78,23 +78,40 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     add_action('future_to_publish', array($this, 'future_to_publish'));
     add_action('publish_post', array($this, 'publish_post'));
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
-
-    //add_action('wp_head', array($this, 'wp_head'));
-  }
+    add_action('wp_head', array($this, 'wp_head'));
+  } 
   
-  /*
   function wp_head() {
-    global $wp_query;
-    if ($wp_query->queried_object && ($meta = get_post_meta($wp_query->queried_object->ID, self::META, true))) {
-      if (!$meta['let_facebook_pick_pic']) {
-        echo "<meta property=\"og:image\" content=\"{$meta['picture']}\">\n";
-      }
-      if ($meta['description']) {
-        echo sprintf("<meta property=\"og:description\" content=\"%s\">\n", $meta['description']);
+    global $wp_query, $post;
+    if (self::setting('og_tags', 'on')) {
+      if (is_single() && $wp_query->queried_object) {
+        if ($meta = get_post_meta($wp_query->queried_object->ID, self::META, true)) {
+          $copy = $post;
+          $post = $wp_query->queried_object;
+          setup_postdata($post);
+          ?>
+            <meta property="og:type" content="<?php echo self::setting('og_type', 'blog') ?>" />
+            <meta property="og:url" content="<?php the_permalink() ?>" />
+            <meta property="og:title" content="<?php the_title() ?>" />
+            <meta property="og:image" content="<?php echo $meta['picture'] ?>" />
+            <meta property="og:description" content="<?php echo strip_tags(get_the_excerpt()) ?>" />
+            <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
+          <?php
+          $post = $copy;
+        } else {
+          // TODO: default for single blog posts?
+        }
+      // all other page types:
+      } else {
+        ?>
+          <meta property="og:type" content="<?php echo self::setting('og_type') ?>" />
+          <meta property="og:url" content="<?php bloginfo('siteurl') ?>" />
+          <meta property="og:image" content="<?php echo $this->get_default_picture() ?>" />
+          <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
+        <?php
       }
     }
   }
-  */
   
   static function err($message) {
     self::log($message, 'ERROR');
@@ -109,7 +126,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       $dir = dirname(__FILE__);
       $filename = $dir.'/sharepress-'.date('Ymd').'.log';
       $message = sprintf("%s %s %-5s %s\n", $thread_id, date('H:i:s'), $level, $message);
-      if (!file_put_contents($filename, $message, FILE_APPEND)) {
+      if (!@file_put_contents($filename, $message, FILE_APPEND)) {
         error_log("Failed to access Sharepress log file [$filename] for writing: add write permissions to directory [$dir]?");
       }
     }
@@ -127,14 +144,16 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     return get_option(self::OPTION_FB_SESSION, '');
   }
   
-  static function setting($name = null) {
+  static function setting($name = null, $default = null) {
     $settings = get_option(self::OPTION_SETTINGS, array(
       'default_behavior' => 'on',
       'excerpt_length' => 20,
-      'excerpt_more' => '...'
+      'excerpt_more' => '...',
+      'og_tags' => 'on',
+      'og_type' => 'blog'
     ));
     
-    return (!is_null($name)) ? @$settings[$name] : $settings;
+    return (!is_null($name)) ? ( @$settings[$name] ? $settings[$name] : $default ) : $settings;
   }
   
   static function targets($id = null) {
@@ -338,6 +357,11 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       if ($meta['excerpt_is_description']) {
         $meta['description'] = $this->get_excerpt($post);
       }
+    }
+    
+    // targets must have at least one... try here, and enforce with javascript
+    if (!$meta['targets']) {
+      $meta['targets'] = array_keys(self::targets());
     }
     
     // stash $meta globally for access from Sharepress::sort_by_selected
@@ -618,6 +642,11 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       $meta['message'] .= ' - ' . get_permalink($post->ID);
     
       try {
+        // no targets? error.
+        if (!$meta['targets']) {
+          throw new Exception("No publishing Targets selected.");
+        }
+        
         // first, should we post to the wall?
         if (in_array('wall', $meta['targets'])) {
           $result = self::api(self::me('id').'/links', 'POST', array(

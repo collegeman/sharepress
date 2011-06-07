@@ -216,7 +216,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           </th>
           <td>
             <input style="width:3em;" type="text" id="<?php echo self::OPTION_SETTINGS ?>_excerpt_length" name="<?php echo self::OPTION_SETTINGS ?>[excerpt_length]" value="<?php echo htmlentities(Sharepress::setting('excerpt_length')) ?>" />
-            &nbsp;Maximum number of words to include in <strong>automatically generated</strong> Descriptions
+            &nbsp;Maximum number of words to include in automatically generated Descriptions
           </td>
         </tr>
         
@@ -230,6 +230,104 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           </td>
         </tr>
       
+      </table>
+      
+      <br />
+      <h3 class="title">Facebook Open Graph Tags</h3>
+      
+      <p>
+        Sharepress adds Facebook open graph tags to your blog posts. These tags are needed to convey
+        images and descriptions in your posts to Facebook. If your theme already does this, you can
+        safely disable this feature of Sharepress.
+      </p>
+      <p>
+        If you want to test the way your blog posts appear to Facebook, you can do so with 
+        Facebook's <a href="http://developers.facebook.com/tools/lint/" target="_blank">URL Linter</a>.
+      </p>
+      
+      <table class="form-table">
+        <tr>
+          <th>Open graph tags</th>
+          <td>
+            <div style="margin-bottom:5px;">
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[og_tags]" value="on" <?php if (Sharepress::setting('og_tags') != 'off') echo 'checked="checked"' ?> />
+                Let Sharepress insert them
+              </label>
+              
+              <span style="margin-left:50px;">
+                <label for="sharepress_og_type" style="cursor:help;" title="Select the Content Type that best express the content of your blog"><code>og:type</code>&nbsp;=</label>
+                <select id="sharepress_og_type" name="<?php echo self::OPTION_SETTINGS ?>[og_type]">
+                  <optgroup label="Activities">
+                    <option value="activity">activity</option>
+                    <option value="sport">sport</option>
+                  </optgroup>
+                  <optgroup label="Businesses">
+                    <option value="bar">bar</option>
+                    <option value="company">company</option>
+                    <option value="cafe">cafe</option>
+                    <option value="hotel">hotel</option>
+                    <option value="restaurant">restaurant</option>
+                  </optgroup>
+                  <optgroup label="Groups">
+                    <option value="cause">cause</option>
+                    <option value="sports_league">sports_league</option>
+                    <option value="sports_team">sports_team</option>
+                  </optgroup>
+                  <optgroup label="Organizations">
+                    <option value="band">band</option>
+                    <option value="government">government</option>
+                    <option value="non_profit">non_profit</option>
+                    <option value="school">school</option>
+                    <option value="university">university</option>
+                  </optgroup>
+                  <optgroup label="People">
+                    <option value="actor">actor</option>
+                    <option value="athlete">athlete</option>
+                    <option value="author">author</option>
+                    <option value="director">director</option>
+                    <option value="musician">musician</option>
+                    <option value="politician">politician</option>
+                    <option value="public_figure">public_figure</option>
+                  </optgroup>
+                  <optgroup label="Places">
+                    <option value="city">city</option>
+                    <option value="country">country</option>
+                    <option value="landmark">landmark</option>
+                    <option value="state_province">state_province</option>
+                  </optgroup>
+                  <optgroup label="Products and Entertainment">
+                    <option value="album">album</option>
+                    <option value="book">book</option>
+                    <option value="drink">drink</option>
+                    <option value="food">food</option>
+                    <option value="game">game</option>
+                    <option value="product">product</option>
+                    <option value="song">song</option>
+                    <option value="movie">movie</option>
+                    <option value="tv_show">tv_show</option>
+                  </optgroup>
+                  <optgroup label="Websites">
+                    <option value="blog">blog</option>
+                    <option value="website">website</option>
+                    <option value="article">article</option>
+                  </optgroup>
+                </select>
+                <script>
+                  (function($) {
+                    $('option[value="<?php echo Sharepress::setting('og_type', 'blog') ?>"]', $('#sharepress_og_type')).attr('selected', true);
+                  })(jQuery);
+                </script>
+              </span>
+            </div>
+            <div>
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[og_tags]" value="off" <?php if (Sharepress::setting('og_tags') == 'off') echo 'checked="checked"' ?> />
+                  My Theme does this for me
+              </label>
+            </div>
+          </td>
+        </tr>
       </table>
       
       <br />

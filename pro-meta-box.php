@@ -23,6 +23,9 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     <textarea style="width:100%; height:75px;" name="sharepress_meta[message]" id="sharepress_meta_message"><?php echo @$meta['message'] ?></textarea>
   </fieldset>
 
+  <?php /* 
+  For now, it seems, I can't pass a description for a link -- it gets pulled automatically
+  from the website. ?>
   <br />
   <fieldset>
     <legend>
@@ -39,6 +42,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     </legend>
     <textarea style="width:100%; height:75px;" name="sharepress_meta[description]" id="sharepress_meta_description"><?php echo htmlentities(@$meta['description']) ?></textarea>
   </fieldset>
+  */ ?>
 
   <?php if ( ($posted || $scheduled) || (!$posted && !$scheduled && $post->post_status == 'publish') ) { ?>
     <br />
@@ -77,7 +81,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 
       <label style="display:block; margin-bottom: 5px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if (@$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
-        Let Facebook choose a picture
+        Let Facebook choose
       </label>
     </fieldset>
   
@@ -90,6 +94,9 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
       </legend>
     
       <div style="max-height:150px; overflow:auto;">
+        <p style="color:red; display:none; padding-top: 0; margin-top: 0;" id="publish_target_error">
+          Choose at least one.
+        </p>
         <p>
           <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
           <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
@@ -100,7 +107,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
         <?php $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); foreach($pages as $page) { ?>
           <p>
             <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
-              <input type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
+              <input class="sharepress_target" type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
               <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
             </label>
           </p>
@@ -140,9 +147,11 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
       $('#sharepress_meta_title_is_message').prop('checked', false);
     })
     
+    <?php/*
     description.keypress(function() {
       $('#sharepress_meta_excerpt_is_description').prop('checked', false);
     });
+    */?>
     
     window.sharepress_publish_again = function() {
       $('#sharepress').show();
@@ -191,6 +200,27 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     title.keypress(copy_title_to_message);
     title.blur(copy_title_to_message);
     
+    $('#post').submit(function() {
+      // are we trying to post with sharepress?
+      if ($('#sharepress_meta_enabled_on:checked').size() || $('#sharepress_meta_publish_again').val() == '1') {
+        // no targets?
+        if (!$('input.sharepress_target:checked').size()) {
+          $('#ajax-loading').hide();
+          $('#publish').removeClass('button-primary-disabled');
+          $('.sharepress_show_advanced').hide(); 
+          $('.sharepress_advanced').slideDown();
+          $('label[for="sharepress_meta_targets"]').css('color', 'red');
+          $('#publish_target_error').show();
+          $(window).scrollTop($('#sharepress_meta').offset().top)
+          return false;
+        } else {
+          $('.sharepress_show_advanced').show(); 
+          $('.sharepress_advanced').hide();
+        }
+      }
+    });
+    
+    <?php/*
     window.copy_excerpt_to_description = function(ed, e) {
       if (suspend) {
         return;
@@ -251,6 +281,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
         excerpt.blur(copy_excerpt_to_description);
       }
     }, 100);
+    */?>
     
   });
 })(jQuery);
