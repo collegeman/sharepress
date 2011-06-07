@@ -4,7 +4,7 @@ Donate link: http://example.com/
 Tags: comments, spam
 Requires at least: 3.0
 Tested up to: 3.0
-Stable tag: 1.0.20110514090320
+Stable tag: 1.0.20110607040425
 
 Sharepress publishes your content to your Facebook Wall. 
 
