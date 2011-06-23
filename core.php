@@ -94,7 +94,6 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
             <meta property="og:url" content="<?php the_permalink() ?>" />
             <meta property="og:title" content="<?php the_title() ?>" />
             <meta property="og:image" content="<?php echo $meta['picture'] ?>" />
-            <meta property="og:description" content="<?php echo strip_tags(get_the_excerpt()) ?>" />
             <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
           <?php
           $post = $copy;
