@@ -48,13 +48,13 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
         <p>Before you continue, you'll need to create your own Facebook Application. <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now &raquo;</a></p>
         
         <p>If you've never created a Facebook application before, you'll be asked to authorize the <b>Developer</b> application. This is very safe.</p>
-        <a href="<?php echo plugins_url('sharepress/img/create_app_step1.jpg'); ?>"><img src="<?php echo plugins_url('sharepress/img/create_app_step1_thumb.jpg') ?>" style="border: 1px solid #ccc;" /></a>
+        <a href="<?php echo plugins_url('img/create_app_step1.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step1_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
         
         <p>To match your blog, you should consider naming your application <b><?php bloginfo('name') ?></b>.</p>
-        <a href="<?php echo plugins_url('sharepress/img/create_app_step2.jpg'); ?>"><img src="<?php echo plugins_url('sharepress/img/create_app_step2_thumb.jpg') ?>" style="border: 1px solid #ccc;" /></a>
+        <a href="<?php echo plugins_url('img/create_app_step2.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step2_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
         
         <p>Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.</p>
-        <a href="<?php echo plugins_url('sharepress/img/create_app_step3.jpg'); ?>"><img src="<?php echo plugins_url('sharepress/img/create_app_step3_thumb.jpg') ?>" style="border: 1px solid #ccc;" /></a>
+        <a href="<?php echo plugins_url('img/create_app_step3.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step3_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
       </div>
       
       <br />
@@ -178,8 +178,8 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
         <tr>
           <th></th>
           <td id="fb_connect">
-            <p class="connect"><a href="#" onclick="fb_connect();" style="display:block; padding-left:22px; background:url('<?php echo plugins_url('sharepress/img/icon16.png') ?>') no-repeat;">Connect to Facebook</a></p>
-            <p class="connecting" style="display:none;"><img src="<?php echo plugins_url('sharepress/img/wait.gif') ?>" /> Connecting...</p>
+            <p class="connect"><a href="#" onclick="fb_connect();" style="display:block; padding-left:22px; background:url('<?php echo plugins_url('img/icon16.png', __FILE__) ?>') no-repeat;">Connect to Facebook</a></p>
+            <p class="connecting" style="display:none;"><img src="<?php echo plugins_url('img/wait.gif', __FILE__) ?>" /> Connecting...</p>
             <p class="connected" style="display:none;">Connected!</p>
           </td>
         </tr>

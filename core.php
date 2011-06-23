@@ -302,7 +302,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     if ($set = get_option(self::OPTION_DEFAULT_PICTURE)) {
       return $set['url'];
     } else {
-      return plugins_url('sharepress/img/wordpress.png');
+      return plugins_url('img/wordpress.png', __FILE__);
     }
   }
   
@@ -757,8 +757,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     register_setting('fb-settings', self::OPTION_NOTIFICATIONS);
     register_setting('fb-settings', self::OPTION_SETTINGS);
 
-    wp_enqueue_style('fancybox', plugins_url('sharepress/lib/fancybox/jquery.fancybox-1.3.4.css'));
-    wp_enqueue_script('fancybox', plugins_url('sharepress/lib/fancybox/jquery.fancybox-1.3.4.pack.js', array('jquery')));
+    wp_enqueue_style('fancybox', plugins_url('lib/fancybox/jquery.fancybox-1.3.4.css', __FILE__));
+    wp_enqueue_script('fancybox', plugins_url('lib/fancybox/jquery.fancybox-1.3.4.pack.js', __FILE__), array('jquery'));
   }
   
   static function installed() {

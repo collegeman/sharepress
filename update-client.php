@@ -101,7 +101,7 @@ if (!class_exists('PluginUpdateClient')):
       $this->server = $server;
       
       // extract version from the file
-      if (!file_exists($path = WP_PLUGIN_DIR.'/'.$file)) {
+      if (!file_exists($path = WP_PLUGIN_DIR.DIRECTORY_SEPARATOR.$file) && !file_exists($path = ABSPATH.DIRECTORY_SEPARATOR.'wp-content'.DIRECTORY_SEPARATOR.'mu-plugins'.DIRECTORY_SEPARATOR.$file)) {
         wp_die("Plugin file [$file] does not exist");
       } else {
         $data = self::get_file_data($path, array('Version' => 'Version'));
