@@ -29,9 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // load the core dependency
 require_once('core.php');
-// load the plugin updater client
-require_once('update-client.php');
-
 // support for setting individual images in options
 require('postimage.php');
 
@@ -66,19 +63,18 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     $parts = explode(DIRECTORY_SEPARATOR, __FILE__);
     $fn = array_pop($parts);
     $fd = (($fd = array_pop($parts)) != 'plugins' ? $fd : '');
-    $file = $fd ? "{$fd}/{$fn}" : $fn;
     
     add_action("activate_{$fd}/pro.php", array($this, 'activate'));
     add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
-    
-    #
-    # Setup the update client to be able to receive updates from getwpapps.com
-    #
-    PluginUpdateClient::init(array(
-      'path' => __FILE__,
-      'plugin' => /*@PLUGIN_PRO_SLUG@*/ 'sharepress', 
-      'file' => $file
-    ));
+    add_action('plugin_action_links_sharepress/pro.php', array($this, 'plugin_action_links'), 10, 4);
+  }
+  
+  /**
+   * Add "Settings" link to the Plugins screen.
+   */
+  function plugin_action_links($actions, $plugin_file, $plugin_data, $context) {
+    $actions['settings'] = '<a href="options-general.php?page=sharepress">Settings</a>';
+    return $actions;
   }
   
   function init() {
