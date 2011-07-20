@@ -388,21 +388,44 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     
     // loop over authorized pages
     foreach(self::pages() as $page) {
-      if (in_array($page['id'], $meta['targets'])) {        
-        $result = Sharepress::api($page['id'].'/links', 'POST', array(
-          'access_token' => $page['access_token'],
-          'name' => $meta['name'],
-          'message' => $meta['message'],
-          'description' => $meta['description'],
-          'picture' => $meta['picture'],
-          'link' => $meta['link']
-        ));
+      if (in_array($page['id'], $meta['targets'])) {
+        /*
+        $session = Sharepress::session();
         
-        Sharepress::log(sprintf("posted to the page(%s): %s", $page['name'], serialize($result)));
+        // get the access token
+        $acl = Sharepress::api($page['id'].'?fields=access_token&access_token='.$session['access_token']);
         
-        // store the ID for queuing 
-        $result['posted'] = time();
-        add_post_meta($post->ID, Sharepress::META_RESULT, $result);
+        if ($acl) {
+        */
+        
+          $result = Sharepress::api($page['id'].'/feed', 'POST', array(
+            'access_token' => $page['access_token'],
+            'message' => $meta['message'],
+            'link' => $meta['link']
+          ));
+          
+          /*
+          $result = Sharepress::api($page['id'].'/links', 'POST', array(
+            'access_token' => $page['access_token'],
+            'name' => $meta['name'],
+            'message' => $meta['message'],
+            'description' => $meta['description'],
+            'picture' => $meta['picture'],
+            'link' => $meta['link']
+          ));
+          */
+        
+          Sharepress::log(sprintf("posted to the page(%s): %s", $page['name'], serialize($result)));
+        
+          // store the ID for queuing 
+          $result['posted'] = time();
+          add_post_meta($post->ID, Sharepress::META_RESULT, $result);
+          
+        /*
+        } else {
+          throw new Exception("Failed to get access_token for page {$page['id']}");
+        }
+        */
       }
     }
   }

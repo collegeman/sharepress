@@ -235,94 +235,66 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
       <br />
       <h3 class="title">Facebook Open Graph Tags</h3>
       
+      <h4 class="title">For individual blog posts</h4>
+      
+      <p>You can configure <code>og:type</code> meta data on a post-by-post basis.
+        Set the default here.</p>
+        
+      <table class="form-table">
+        <tr>
+          <th>Default OG:TYPE for posts</th>
+          <td>
+            <label for="sharepress_post_og_type"><code>og:type</code>&nbsp;=</label></label>
+            <select id="sharepress_post_og_type" name="<?php echo self::OPTION_SETTINGS ?>[default_post_og_type]">
+              <?php require('og-types.php') ?>
+            </select>
+            <script>
+              (function($) {
+                $('option[value="<?php echo Sharepress::setting('default_post_og_type', 'article') ?>"]', $('#sharepress_post_og_type')).attr('selected', true);
+              })(jQuery);
+            </script>
+          </td>
+        </tr>
+      </table>
+      
+      <h4 class="title">For your other pages</h4>
+      
       <p>
-        Sharepress adds Facebook open graph tags to your blog posts. These tags are needed to convey
-        images and descriptions in your posts to Facebook. If your theme already does this, you can
-        safely disable this feature of Sharepress.
+        Optionally, sharepress can add Facebook open graph tags to your other pages.
+      </p>
+      <p> 
+        If your theme already does this, you can safely disable this feature of Sharepress.
       </p>
       <p>
-        If you want to test the way your blog posts appear to Facebook, you can do so with 
-        Facebook's <a href="http://developers.facebook.com/tools/lint/" target="_blank">URL Linter</a>.
+        If you want to test the way your pages appears to Facebook, you can do so with 
+        Facebook's <a href="http://developers.facebook.com/tools/lint/?url=<?php urlencode(bloginfo('siteurl')) ?>" target="_blank">URL Linter</a>.
       </p>
       
       <table class="form-table">
         <tr>
-          <th>Open graph tags</th>
+          <th>OG:TYPE for your pages</th>
           <td>
             <div style="margin-bottom:5px;">
               <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[og_tags]" value="on" <?php if (Sharepress::setting('og_tags') != 'off') echo 'checked="checked"' ?> />
-                Let Sharepress insert them
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="on" <?php if (Sharepress::setting('page_og_tags') != 'off') echo 'checked="checked"' ?> />
+                Let Sharepress insert it
               </label>
               
               <span style="margin-left:50px;">
-                <label for="sharepress_og_type" style="cursor:help;" title="Select the Content Type that best express the content of your blog"><code>og:type</code>&nbsp;=</label>
-                <select id="sharepress_og_type" name="<?php echo self::OPTION_SETTINGS ?>[og_type]">
-                  <optgroup label="Activities">
-                    <option value="activity">activity</option>
-                    <option value="sport">sport</option>
-                  </optgroup>
-                  <optgroup label="Businesses">
-                    <option value="bar">bar</option>
-                    <option value="company">company</option>
-                    <option value="cafe">cafe</option>
-                    <option value="hotel">hotel</option>
-                    <option value="restaurant">restaurant</option>
-                  </optgroup>
-                  <optgroup label="Groups">
-                    <option value="cause">cause</option>
-                    <option value="sports_league">sports_league</option>
-                    <option value="sports_team">sports_team</option>
-                  </optgroup>
-                  <optgroup label="Organizations">
-                    <option value="band">band</option>
-                    <option value="government">government</option>
-                    <option value="non_profit">non_profit</option>
-                    <option value="school">school</option>
-                    <option value="university">university</option>
-                  </optgroup>
-                  <optgroup label="People">
-                    <option value="actor">actor</option>
-                    <option value="athlete">athlete</option>
-                    <option value="author">author</option>
-                    <option value="director">director</option>
-                    <option value="musician">musician</option>
-                    <option value="politician">politician</option>
-                    <option value="public_figure">public_figure</option>
-                  </optgroup>
-                  <optgroup label="Places">
-                    <option value="city">city</option>
-                    <option value="country">country</option>
-                    <option value="landmark">landmark</option>
-                    <option value="state_province">state_province</option>
-                  </optgroup>
-                  <optgroup label="Products and Entertainment">
-                    <option value="album">album</option>
-                    <option value="book">book</option>
-                    <option value="drink">drink</option>
-                    <option value="food">food</option>
-                    <option value="game">game</option>
-                    <option value="product">product</option>
-                    <option value="song">song</option>
-                    <option value="movie">movie</option>
-                    <option value="tv_show">tv_show</option>
-                  </optgroup>
-                  <optgroup label="Websites">
-                    <option value="blog">blog</option>
-                    <option value="website">website</option>
-                    <option value="article">article</option>
-                  </optgroup>
+                <label for="sharepress_home_og_type" style="cursor:help;" title="Select the Content Type that best expresses the content of your site"><code>og:type</code>&nbsp;=</label>
+                <select id="sharepress_home_og_type" name="<?php echo self::OPTION_SETTINGS ?>[page_og_type]">
+                  <?php require('og-types.php') ?>
                 </select>
                 <script>
                   (function($) {
-                    $('option[value="<?php echo Sharepress::setting('og_type', 'blog') ?>"]', $('#sharepress_og_type')).attr('selected', true);
+                    $('option[value="<?php echo Sharepress::setting('page_og_type', 'blog') ?>"]', $('#sharepress_home_og_type')).attr('selected', true);
                   })(jQuery);
                 </script>
               </span>
             </div>
             <div>
               <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[og_tags]" value="off" <?php if (Sharepress::setting('og_tags') == 'off') echo 'checked="checked"' ?> />
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="off" <?php if (Sharepress::setting('page_og_tags') == 'off') echo 'checked="checked"' ?> />
                   My Theme does this for me
               </label>
             </div>

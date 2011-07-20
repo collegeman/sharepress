@@ -69,6 +69,37 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     <br />
     <fieldset>
       <legend>
+        <label for="sharepress_meta_og">
+          <b>Open Graph</b>
+        </label>
+      </legend>
+      
+      <p>If this post describes something other than an article,
+        choose the OG type that best describes it below.</p>
+      
+      <p>
+        <select name="sharepress_meta[og_type]" id="sharepress_meta_og_type">
+          <?php require('og-types.php') ?>
+        </select>
+        <script>
+          (function($) {
+            $('option[value="<?php echo @$meta['og_type'] ? $meta['og_type'] : Sharepress::setting('post_og_type', 'article') ?>"]', $('#sharepress_meta_og_type')).attr('selected', true);
+          })(jQuery);
+        </script>
+      </p>
+      
+      <p>If the subject of this post is titled something <em>other</em>
+        than the title of this post, name it below.</p>
+      
+      <p>
+        <input type="text" style="width:100%;" name="sharepress_meta[og_title]" id="sharepress_meta_og_title" value="<?php echo @htmlentities($meta['og_title']) ?>" />
+      </p>
+    </fieldset>
+        
+  
+    <br />
+    <fieldset>
+      <legend>
         <label for="sharepress_meta_picture">
           <b>Picture</b>
         </label>
@@ -100,7 +131,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
         <p>
           <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
           <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
-            <input type="checkbox" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
+            <input type="checkbox" class="sharepress_target" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
             <?php echo $wall_name ?>
           </label>
         </p>

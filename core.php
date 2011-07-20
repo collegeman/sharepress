@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 if (!defined('ABSPATH')) exit;
 
 // we depend on this...
-require('lib/facebook-sdk-2.1.2.php');
+require('lib/facebook-sdk-3.0.1.php');
 // we don't care about certificate verification
 spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
@@ -83,33 +83,31 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   
   function wp_head() {
     global $wp_query, $post;
-    if (self::setting('og_tags', 'on')) {
-      if (is_single() && $wp_query->queried_object) {
-        if ($meta = get_post_meta($wp_query->queried_object->ID, self::META, true)) {
-          $copy = $post;
-          $post = $wp_query->queried_object;
-          setup_postdata($post);
-          ?>
-            <meta property="og:type" content="<?php echo self::setting('og_type', 'blog') ?>" />
-            <meta property="og:url" content="<?php the_permalink() ?>" />
-            <meta property="og:title" content="<?php the_title() ?>" />
-            <meta property="og:image" content="<?php echo $meta['picture'] ?>" />
-            <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
-          <?php
-          $post = $copy;
-        } else {
-          // TODO: default for single blog posts?
-        }
-      // all other page types:
-      } else {
+    
+    if (is_single() && $wp_query->queried_object) {
+      if ($meta = get_post_meta($wp_query->queried_object->ID, self::META, true)) {
+        $copy = $post;
+        $post = $wp_query->queried_object;
+        setup_postdata($post);
         ?>
-          <meta property="og:type" content="<?php echo self::setting('og_type') ?>" />
-          <meta property="og:url" content="<?php bloginfo('siteurl') ?>" />
-          <meta property="og:image" content="<?php echo $this->get_default_picture() ?>" />
+          <meta property="og:type" content="<?php echo ($og_type = @$meta['og_type']) ? $og_type : self::setting('default_post_og_type', 'article') ?>" />
+          <meta property="og:url" content="<?php the_permalink() ?>" />
+          <meta property="og:title" content="<?php @$meta['og_title'] ? print($meta['og_title']) : the_title() ?>" />
+          <meta property="og:image" content="<?php echo $meta['picture'] ?>" />
           <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
         <?php
-      }
+        $post = $copy;
+      } 
+    
+    } else if (self::setting('page_og_tags')) {
+      ?>
+        <meta property="og:type" content="<?php echo self::setting('page_og_type', 'blog') ?>" />
+        <meta property="og:url" content="<?php bloginfo('siteurl') ?>" />
+        <meta property="og:image" content="<?php echo $this->get_default_picture() ?>" />
+        <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
+      <?php
     }
+
   }
   
   static function err($message) {
@@ -173,7 +171,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
           'secret' => $app_secret
         ));
         
-        self::$facebook->setSession($session, false);
+        self::$facebook->setAccessToken($session['access_token']);
       } else {
         return null;
       }
@@ -641,6 +639,11 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       $meta['message'] .= ' - ' . get_permalink($post->ID);
     
       try {
+        // poke the linter
+        $ch = curl_init(sprintf('http://developers.facebook.com/tools/lint/?url=%s', urlencode($meta['link'])));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        
         // no targets? error.
         if (!$meta['targets']) {
           throw new Exception("No publishing Targets selected.");
