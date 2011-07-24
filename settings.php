@@ -83,9 +83,9 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           var app_secret = $('#<?php echo Sharepress::OPTION_APP_SECRET ?>');
           setInterval(function() {
             if (api_key.val() && app_secret.val()) {
-              $('#btnContinue').attr('disabled', '');
+              $('#btnContinue').attr('disabled', false);
             } else {
-              $('#btnContinue').attr('disabled', 'disabled');
+              $('#btnContinue').attr('disabled', true);
             }
           }, 100);
         })(jQuery);
