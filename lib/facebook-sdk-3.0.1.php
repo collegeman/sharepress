@@ -33,9 +33,7 @@ class spFacebook extends spBaseFacebook
    * @see spBaseFacebook::__construct in facebook.php
    */
   public function __construct($config) {
-    if (!session_id()) {
-      @session_start();
-    }
+    @session_start();
     parent::__construct($config);
   }
 

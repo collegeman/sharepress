@@ -82,31 +82,52 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   } 
   
   function wp_head() {
-    global $wp_query, $post;
+    global $wpdb, $post;
     
-    if (is_single() && $wp_query->queried_object) {
-      if ($meta = get_post_meta($wp_query->queried_object->ID, self::META, true)) {
-        $copy = $post;
-        $post = $wp_query->queried_object;
-        setup_postdata($post);
-        ?>
-          <meta property="og:type" content="<?php echo ($og_type = @$meta['og_type']) ? $og_type : self::setting('default_post_og_type', 'article') ?>" />
-          <meta property="og:url" content="<?php the_permalink() ?>" />
-          <meta property="og:title" content="<?php @$meta['og_title'] ? print($meta['og_title']) : the_title() ?>" />
-          <meta property="og:image" content="<?php echo $meta['picture'] ?>" />
-          <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
-        <?php
-        $post = $copy;
-      } 
+    if (self::setting('page_og_tags', 'on') == 'on') {
+      // get any values stored in meta data
+      $overrides = array();
+      
+      $query = $wpdb->get_results( $wpdb->prepare("
+        SELECT M.meta_key AS K, M.meta_value AS V
+        FROM $wpdb->postmeta M INNER JOIN $wpdb->posts P ON (M.post_ID = P.ID)
+        WHERE P.ID = %d
+      ", $post->ID) );
+      
+      foreach($query as $M) {
+        if (strpos($M->K, 'og:') === 0 || strpos($M->K, 'fb:') === 0) {
+          $overrides[trim($M->K)] = trim($M->V);
+        }
+      }
+      
+      if (is_single() || ( is_page() && !is_front_page() )) {
+        $defaults = array(
+          'og:type' => 'article',
+          'og:url' => get_permalink(),
+          'og:title' => get_the_title(),
+          'og:image' => $meta['picture'],
+          'og:site_name' => get_bloginfo('name'),
+          'fb:app_id' => get_option(self::OPTION_API_KEY)
+        );
+        
+      } else {
+        $defaults = array(
+          'og:type' => self::setting('page_og_type', 'blog'),
+          'og:url' => get_permalink(),
+          'og:title' => get_the_title(),
+          'og:site_name' => get_bloginfo('name'),
+          'og:image' => $meta['picture'],
+          'fb:app_id' => get_option(self::OPTION_API_KEY)
+        );
+        
+      }
+      
+      $og = array_merge($defaults, $overrides);
     
-    } else if (self::setting('page_og_tags')) {
-      ?>
-        <meta property="og:type" content="<?php echo self::setting('page_og_type', 'blog') ?>" />
-        <meta property="og:url" content="<?php bloginfo('siteurl') ?>" />
-        <meta property="og:image" content="<?php echo $this->get_default_picture() ?>" />
-        <meta property="og:site_name" content="<?php bloginfo('name') ?>" />
-      <?php
-    }
+      foreach($og as $property => $content) {
+        echo sprintf("<meta property=\"%s\" content=\"%s\" />\n", htmlentities($property), htmlentities($content));
+      }
+    } 
 
   }
   

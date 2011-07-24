@@ -60,11 +60,11 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
       <br />
       <table class="form-table" style="width:500px; float:left; clear:none;">
         <tr>
-          <th>API Key</th>
+          <th>App ID/API Key</th>
           <td><input type="text" style="width:25em;" id="<?php echo Sharepress::OPTION_API_KEY ?>" name="<?php echo Sharepress::OPTION_API_KEY ?>" value="<?php echo htmlentities(Sharepress::api_key()) ?>" /></td>
         </tr>
         <tr>
-          <th>Application Secret</th>
+          <th>App Secret</th>
           <td><input type="text" style="width:25em;" id="<?php echo Sharepress::OPTION_APP_SECRET ?>" name="<?php echo Sharepress::OPTION_APP_SECRET ?>" value="<?php echo htmlentities(Sharepress::app_secret()) ?>" /></td>
         </tr>
         <tr>
@@ -235,6 +235,8 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
       <br />
       <h3 class="title">Facebook Open Graph Tags</h3>
       
+      <?php /* ?>
+      
       <h4 class="title">For individual blog posts</h4>
       
       <p>You can configure <code>og:type</code> meta data on a post-by-post basis.
@@ -257,13 +259,12 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
         </tr>
       </table>
       
-      <h4 class="title">For your other pages</h4>
+      */ ?>
       
       <p>
-        Optionally, sharepress can add Facebook open graph tags to your other pages.
-      </p>
-      <p> 
-        If your theme already does this, you can safely disable this feature of Sharepress.
+        Open Graph meta data is required for Sharepress to function. If you don't know what this
+        is, leave this feature enabled. If, however, you already have a custom solution for OG
+        meta data, you may disable this feature.
       </p>
       <p>
         If you want to test the way your pages appears to Facebook, you can do so with 
@@ -272,18 +273,19 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
       
       <table class="form-table">
         <tr>
-          <th>OG:TYPE for your pages</th>
+          <th>Open Graph meta data</th>
           <td>
             <div style="margin-bottom:5px;">
               <label>
                 <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="on" <?php if (Sharepress::setting('page_og_tags') != 'off') echo 'checked="checked"' ?> />
-                Let Sharepress insert it
+                Let Sharepress insert it (recommended)
               </label>
               
               <span style="margin-left:50px;">
                 <label for="sharepress_home_og_type" style="cursor:help;" title="Select the Content Type that best expresses the content of your site"><code>og:type</code>&nbsp;=</label>
                 <select id="sharepress_home_og_type" name="<?php echo self::OPTION_SETTINGS ?>[page_og_type]">
-                  <?php require('og-types.php') ?>
+                  <option value="blog">blog</option>
+                  <option value="website">website</option>
                 </select>
                 <script>
                   (function($) {
@@ -301,6 +303,10 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           </td>
         </tr>
       </table>
+      
+      <p><b>Note:</b> you can override any/all of the <code>og:*</code> meta tags for your posts and pages by creating Custom Fields.
+        For example, to set the <code>og:type</code> property, just create a Custom Field named <em>og:type</em> and set its value
+        to the desired type. Learn more about <a href="http://ogp.me">OG meta data</a>. Learn more about <a href="http://codex.wordpress.org/Custom_Fields">Custom Fields</a>.</p>
       
       <br />
       <h3 class="title">Default Publishing Targets</h3>

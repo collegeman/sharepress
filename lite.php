@@ -5,7 +5,7 @@ Plugin URI: http://getwpapps.com/plugins/sharepress
 Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Aaron Collegeman
 Author URI: http://aaroncollegeman.com
-Version: 1.0.20110607040425
+Version: 1.0.5
 License: GPL2
 */
 

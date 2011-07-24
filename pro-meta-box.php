@@ -66,6 +66,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 
   <div class="sharepress_advanced" style="display:none;">
   
+    <?php /*?>
     <br />
     <fieldset>
       <legend>
@@ -95,7 +96,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
         <input type="text" style="width:100%;" name="sharepress_meta[og_title]" id="sharepress_meta_og_title" value="<?php echo @htmlentities($meta['og_title']) ?>" />
       </p>
     </fieldset>
-        
+    */ ?>
   
     <br />
     <fieldset>
