@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
 
 <div class="wrap">
-  <div id="icon-general" class="icon32" style="background:url('<?php echo plugins_url('sharepress/img/icon32.png', __FILE__) ?>') no-repeat;"><br /></div>
+  <div id="icon-general" class="icon32" style="background:url('<?php echo plugins_url('img/icon32.png', __FILE__) ?>') no-repeat;"><br /></div>
   <?php if (@$_REQUEST['step'] != 'config') { ?>
     <h2 style="border-bottom: 1px solid #ccc; height:43px;">
       <span style="margin-right:40px; position:relative; top:-5px;">Sharepress Setup</span>
