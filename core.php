@@ -129,6 +129,12 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       }
       
       $og = array_merge($defaults, $overrides);
+      
+      $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
+      foreach($og as $property => $content) {
+        list($prefix, $tagName) = explode(':', $property);
+        $og[$property] = apply_filters("sharepress_og_tag_{$tagName}", $content);
+      }
     
       foreach($og as $property => $content) {
         echo sprintf("<meta property=\"%s\" content=\"%s\" />\n", htmlentities($property), htmlentities($content));
