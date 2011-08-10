@@ -1,6 +1,16 @@
 <?php 
 /*
-Copyright (C)2011
+Plugin Name: Sharepress
+Plugin URI: http://aaroncollegeman/sharepress
+Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
+Author: Aaron Collegeman
+Author URI: http://aaroncollegeman.com
+Version: 1.9.9.9
+License: GPL2
+*/
+
+/*
+Copyright (C)2011 Fat Panda, LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,9 +37,9 @@ spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
 );
   
 // by default, on if host is sharepress.dev.wp (my local dev name)
-@define('SHAREPRESS_DEBUG', $_SERVER['HTTP_HOST'] == 'dev.getwpapps.com');
+@define('SHAREPRESS_DEBUG', $_SERVER['HTTP_HOST'] == 'localhost');
 
-class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
+class Sharepress {
   
   const OPTION_API_KEY = 'sharepress_api_key';
   const OPTION_APP_SECRET = 'sharepress_app_secret';
@@ -38,7 +48,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   const OPTION_NOTIFICATIONS = 'sharepress_notifications';
   const OPTION_DEFAULT_PICTURE = 'sharepress_default_picture';
   const OPTION_SETTINGS = 'sharepress_settings';
-  
+
   //const META_MESSAGE_ID = 'sharepress_message_id';
   const META_RESULT = 'sharepress_result';
   const META_ERROR = 'sharepress_error';
@@ -53,7 +63,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   
   static function load() {
     if (!self::$instance) {
-      self::$instance = new /*@PLUGIN_LITE_CLASS@*/ Sharepress();
+      self::$instance = new Sharepress();
     }
     return self::$instance;
   }
@@ -101,7 +111,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       }
 
       if (!($picture = $meta['picture'])) {
-        if ($src = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID), 'thumbnail' )) {
+        if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), 'thumbnail' )) {
           $picture = $src[0];
         }
       }
@@ -180,7 +190,8 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
       'excerpt_length' => 20,
       'excerpt_more' => '...',
       'og_tags' => 'on',
-      'og_type' => 'blog'
+      'og_type' => 'blog',
+      'license_key' => null
     ));
     
     return (!is_null($name)) ? ( @$settings[$name] ? $settings[$name] : $default ) : $settings;
@@ -724,7 +735,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
   function plugin_action_links($actions, $plugin_file, $plugin_data, $context) {
     $actions['settings'] = '<a href="options-general.php?page=sharepress">Settings</a>';
     if (!self::$pro && self::session()) {
-      $actions['go-pro'] = '<a href="http://getwpapps.com/plugins/sharepress">Upgrade to Pro Version</a>';
+      $actions['go-pro'] = '<a href="http://aaroncollegeman.com/sharepress">Unlock Pro Version</a>';
     }
     return $actions;
   }
@@ -801,6 +812,10 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     return ( self::api_key() && self::app_secret() && self::session() );
   }
   
+  static function unlocked() {
+    return strlen(self::load()->setting('license_key')) == 32;
+  }
+
   function admin_notices() {
     if (current_user_can('administrator')) {
       if ( !self::installed() && @$_REQUEST['page'] != 'sharepress' ) {
@@ -809,10 +824,10 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
             <p>You haven't finished setting up <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">Sharepress</a>.</p>
           </div>
         <?php
-      } else if (@$_REQUEST['page'] == 'sharepress' && !self::$pro) {
+      } else if (@$_REQUEST['page'] == 'sharepress' && self::session() && !self::$pro) {
         ?>
           <div class="updated">
-            <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://getwpapps.com/plugins/sharepress">Learn more</a>.</p>
+            <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress">Learn more</a>.</p>
           </div>
         <?php
       }
@@ -890,4 +905,10 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
 
 class SharepressFacebookSessionException extends Exception {}
 
-/*@PLUGIN_LITE_CLASS@*/ Sharepress::load();
+Sharepress::load();
+
+#
+# Don't be a dick. I like to eat, too.
+# http://aaroncollegeman/sharepress/
+#
+if (Sharepress::unlocked()) require('pro.php');

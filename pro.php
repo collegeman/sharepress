@@ -1,16 +1,6 @@
 <?php
 /*
-Plugin Name: Sharepress Pro
-Plugin URI: http://getwpapps.com/plugins/sharepress
-Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
-Author: Aaron Collegeman
-Author URI: http://aaroncollegeman.com
-Version: 1.0.5
-License: GPL2
-*/
-
-/*
-Copyright (C)2011
+Copyright (C)2011 Fat Panda, LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,8 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-// load the core dependency
-require_once('core.php');
 // support for setting individual images in options
 require('postimage.php');
 
@@ -37,7 +25,7 @@ if (!defined('ABSPATH')) exit;
 /**
  * This PHP class is a namespace for the pro version of your plugin. 
  */
-class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
+class SharepressPro {
   
   // holds the singleton instance of your plugin's core
   static $instance;
@@ -47,10 +35,7 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
    * not already exist.
    */
   static function load() {
-    if (!self::$instance) {
-      self::$instance = new /*@PLUGIN_PRO_CLASS@*/ SharepressPro();
-    }
-    return self::$instance;
+    return (self::$instance) ? self::$instance : ( self::$instance = new SharepressPro() );
   }
   
   private function __construct() {
@@ -79,7 +64,7 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   
   function init() {
     // attach a reference to the pro version onto the lite version
-    /*@PLUGIN_LITE_CLASS@*/ Sharepress::$pro = $this;
+    Sharepress::$pro = $this;
     
     // enhancement #1: post thumbnails are used in messages posted to facebook
     add_theme_support('post-thumbnails');
@@ -102,7 +87,6 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
     add_filter('cron_schedules', array($this, 'cron_schedules'));
   }
-  
   
   function activate() {
     // this filter must be here, because init() doesn't fire for activation

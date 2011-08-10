@@ -1,116 +1,141 @@
-<?php 
-/*
-sharepress
-Copyright (C)2010-2011  Fat Panda LLC
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-
-if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
+<?php  if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
 
 <div class="wrap">
+
   <div id="icon-general" class="icon32" style="background:url('<?php echo plugins_url('img/icon32.png', __FILE__) ?>') no-repeat;"><br /></div>
-  <?php if (@$_REQUEST['step'] != 'config') { ?>
-    <h2 style="border-bottom: 1px solid #ccc; height:43px;">
-      <span style="margin-right:40px; position:relative; top:-5px;">Sharepress Setup</span>
-      <a href="options-general.php?page=sharepress&amp;step=1" class="nav-tab <?php if (@$_REQUEST['step'] == '1') echo 'nav-tab-active' ?>">Step 1</a>
-      <a href="<?php echo (Sharepress::api_key() && Sharepress::app_secret()) ? 'options-general.php?page=sharepress&amp;step=2' : '#' ?>" class="nav-tab <?php if (@$_REQUEST['step'] == '2') echo 'nav-tab-active' ?>">Step 2</a>
-    </h2>
-  <?php } else { ?>
-    <h2 style="border-bottom: 1px solid #ccc; height:43px;">
-      <span style="margin-right:40px; position:relative; top:-5px;">Sharepress</span>
-      <a href="options-general.php?page=sharepress" class="nav-tab <?php if (@$_REQUEST['action'] != 'upgrade') echo 'nav-tab-active' ?>">Settings</a>
-      <a href="options-general.php?page=sharepress&amp;action=clear_session" class="nav-tab">Run Setup Again</a>
-      <?php if (!Sharepress::$pro) { ?>
-        <a href="http://getwpapps.com/plugins/sharepress" class="nav-tab <?php if (@$_REQUEST['action'] == 'upgrade') echo 'nav-tab-active' ?>" style="float:right;">Upgrade</a>
-      <?php } ?>
-    </h2>
-  <?php } ?>
+  <h2>Sharepress</h2>
+  
   <form method="post" action="options.php" id="settings_form">
     
-    <?php if (empty($_REQUEST['step']) || $_REQUEST['step'] == '1') { ?>
+    <?php if (!self::session()) { ?>
     
       <?php settings_fields('fb-step1') ?>
       
-      <div style="float:left; width:300px; margin-right: 50px;">
-        <p>Before you continue, you'll need to create your own Facebook Application. <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now &raquo;</a></p>
-        
-        <p>If you've never created a Facebook application before, you'll be asked to authorize the <b>Developer</b> application. This is very safe.</p>
-        <a href="<?php echo plugins_url('img/create_app_step1.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step1_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
-        
-        <p>To match your blog, you should consider naming your application <b><?php bloginfo('name') ?></b>.</p>
-        <a href="<?php echo plugins_url('img/create_app_step2.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step2_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
-        
-        <p>Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.</p>
-        <a href="<?php echo plugins_url('img/create_app_step3.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step3_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
-      </div>
+      <h3 class="title">Facebook Application</h3>
       
-      <br />
-      <table class="form-table" style="width:500px; float:left; clear:none;">
+      <p>
+        Before you continue, you'll need to create your own Facebook Application. 
+        <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now</a>.
+        <span>( <a href="#" onclick="jQuery('#sharepress_help').show(); jQuery(this).parent().hide(); return false;">Help me</a>! )</span>
+      </p>
+
+      <p>
+        <b>Note:</b> Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
+        and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
+      </p>   
+      
+      <div id="sharepress_help" style="display:none;">
+        <p>
+          If you've never created a Facebook application before, <a href="http://www.facebook.com/developers/createapp.php" target="_blank">you'll be asked</a>
+          to authorize the <b>Developer</b> application. This is very safe.
+        </p>
+        <p>
+          <a href="<?php echo plugins_url('img/create_app_step1.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step1_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
+        </p>
+        
+        <p>
+          To match your blog, you should consider naming your application <b><?php bloginfo('name') ?></b>.
+        </p>
+        <p>
+          <a href="<?php echo plugins_url('img/create_app_step2.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step2_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>
+        </p>
+        
+        <p>
+          Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
+          and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
+        </p>
+        <p>
+          <a href="<?php echo plugins_url('img/create_app_step3.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step3_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>  
+        </p>
+      </div>
+
+      <table class="form-table">
         <tr>
-          <th>App ID/API Key</th>
-          <td><input type="text" style="width:25em;" id="<?php echo Sharepress::OPTION_API_KEY ?>" name="<?php echo Sharepress::OPTION_API_KEY ?>" value="<?php echo htmlentities(Sharepress::api_key()) ?>" /></td>
+          <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
+          <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_API_KEY ?>" name="<?php echo self::OPTION_API_KEY ?>" value="<?php echo htmlentities(self::api_key()) ?>" /></td>
         </tr>
         <tr>
-          <th>App Secret</th>
-          <td><input type="text" style="width:25em;" id="<?php echo Sharepress::OPTION_APP_SECRET ?>" name="<?php echo Sharepress::OPTION_APP_SECRET ?>" value="<?php echo htmlentities(Sharepress::app_secret()) ?>" /></td>
+          <th><label for="<?php echo self::OPTION_APP_SECRET ?>">App Secret</label></th>
+          <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_APP_SECRET ?>" name="<?php echo self::OPTION_APP_SECRET ?>" value="<?php echo htmlentities(self::app_secret()) ?>" /></td>
         </tr>
         <tr>
           <td></td>
           <td>
             <p class="submit">
-              <input id="btnContinue" type="submit" name="Submit" class="button-primary" value="Continue &raquo;" disabled="disabled" />
+              <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
             </p>
+            <div id="sharepress_fail" style="width:400px; display:none;">
+              <p>
+                It seems like there was a failure to connect to Facebook,
+                here are some things to check.
+              </p>
+              <p>
+                <b>1. Make sure your keys are correct.</b> If you made a mistake,
+                refresh this page, re-enter the keys, and try connecting again.
+              </p>
+              <p>
+                <b>2. Make sure your Facebook Application is configured with the
+                correct values for Site URL and Domain.</b> If you made a mistake,
+                refresh this page, re-enter the keys, and try connecting again.
+              </p>
+              <p>
+                <b>3. Facebook is being stupid.</b> This happens. Nobody is perfect.
+                Please wait a few minutes, refresh this page, and try again.
+              </p>
+              <p>
+                If the problems persist, please <a href="http://aaroncollegeman/sharepress/help">visit the help page</a>.
+              </p>
+            </div>
           </td>
         </tr>
       </table>
       
-      <script>
-        (function($) {
-          var api_key = $('#<?php echo Sharepress::OPTION_API_KEY ?>').focus();
-          var app_secret = $('#<?php echo Sharepress::OPTION_APP_SECRET ?>');
-          setInterval(function() {
-            if (api_key.val() && app_secret.val()) {
-              $('#btnContinue').attr('disabled', false);
-            } else {
-              $('#btnContinue').attr('disabled', true);
-            }
-          }, 100);
-        })(jQuery);
-      </script>
-      
-      
-    <?php } elseif (@$_REQUEST['step'] == '2') { ?> 
-      
       <div id="fb-root"></div>
       <script>
-        window.fbAsyncInit = function() {
-          FB.init({
-            appId: '<?php echo Sharepress::api_key() ?>', 
-            status: true, 
-            cookie: true
-          });
-        };
-        
         (function() {
           var e = document.createElement('script'); e.async = true;
           e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
           document.getElementById('fb-root').appendChild(e);
         }());
-        
+
         (function($) {
+          var api_key = $('#<?php echo self::OPTION_API_KEY ?>').focus();
+          var app_secret = $('#<?php echo self::OPTION_APP_SECRET ?>');
+          var btn = $('#btnConnect');
+
+          var fail_timeout = null;
+
+          $('#settings_form').submit(function() {
+            api_key.val($.trim(api_key.val()));
+            app_secret.val($.trim(app_secret.val()));  
+
+            if (!api_key.val()) {
+              alert('App ID is required.');
+              return false;
+            }
+
+            if (!app_secret.val()) {
+              alert('App Secret is required.');
+              return false;
+            }
+
+            btn.attr('disabled', true).val('Connecting...');
+
+            fail_timeout = setTimeout(function() {
+              $('#sharepress_fail').fadeIn();
+            }, 3000);
+
+            FB.init({
+              appId: $('#<?php echo self::OPTION_API_KEY ?>').val(),
+              status: true, 
+              cookie: true
+            });
+
+            fb_connect();
+
+            return false;
+          });
+     
           function do_with_session(session, dont_retry) {
             if (session) {
               // do we have the permissions we need?
@@ -127,33 +152,26 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
                       do_with_session(response.session, true);
                     }, {perms: 'read_stream,publish_stream,offline_access,manage_pages'});
                   } else {
-                    // didn't have the permissions, and not allowed to retry
-                    $('#fb_connect p').hide();
-                    $('#fb_connect .connect').show();
+                    btn.attr('disabled', false).val('Connect');
                   }
                 } else {
-                  // connected! right on
-                  $('#fb_connect p').hide();
-                  $('#fb_connect .connected').show();
                   // post session data to the back-end and then redirect to the settings screen
                   setTimeout(function() {
                     $.post(ajaxurl, { action: 'fb_save_session', session: session }, function(response) {
+                      btn.attr('disabled', true).val('Connected!');
                       document.location = '<?php echo get_option('siteurl') ?>/wp-admin/options-general.php?page=sharepress';
                     });
                   }, 1000);
                 }
               });
             } else {
-              // didn't get a session...
-              $('#fb_connect p').hide();
-              $('#fb_connect .connect').show();
+              btn.attr('disabled', false).val('Connect');
             }
           }
           
-          window.fb_connect = function() {
-            $('#fb_connect .connect').hide();
-            $('#fb_connect .connecting').show();
+          function fb_connect() {
             FB.getLoginStatus(function(response) {
+              clearTimeout(fail_timeout);
               if (!response.session) {
                 FB.login(function(response) {
                   do_with_session(response.session);
@@ -166,26 +184,8 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
         })(jQuery);
       </script> 
       
-      <?php settings_fields('fb-step2') ?>
       
-      <div style="float:left; width:300px; margin-right: 50px;">
-        <p>Next, you need to connect to your Facebook Application! Click <b>Connect to Facebook</b> to begin.
-          <b>Don't forget to turn off pop-up blockers.</b></p>
-      </div>
-      
-      <br />
-      <table class="form-table" style="width:500px; float:left; clear:none;">
-        <tr>
-          <th></th>
-          <td id="fb_connect">
-            <p class="connect"><a href="#" onclick="fb_connect();" style="display:block; padding-left:22px; background:url('<?php echo plugins_url('img/icon16.png', __FILE__) ?>') no-repeat;">Connect to Facebook</a></p>
-            <p class="connecting" style="display:none;"><img src="<?php echo plugins_url('img/wait.gif', __FILE__) ?>" /> Connecting...</p>
-            <p class="connected" style="display:none;">Connected!</p>
-          </td>
-        </tr>
-      </table>
-      
-    <?php } else { ?>
+    <?php } else { ?> 
       
       <?php settings_fields('fb-settings') ?>
       
@@ -197,69 +197,22 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           <td>
             <div style="margin-bottom:5px;">
               <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[default_behavior]" value="on" <?php if (Sharepress::setting('default_behavior') == 'on') echo 'checked="checked"' ?> />
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[default_behavior]" value="on" <?php if (self::setting('default_behavior') == 'on') echo 'checked="checked"' ?> />
                 Send all of my Posts to Facebook
               </label>
             </div>
             <div>
               <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[default_behavior]" value="off" <?php if (Sharepress::setting('default_behavior') == 'off') echo 'checked="checked"' ?> />
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[default_behavior]" value="off" <?php if (self::setting('default_behavior') == 'off') echo 'checked="checked"' ?> />
                 Send to Facebook only those Posts I tell you to
               </label>
             </div>
           </td>
         </tr>
-          
-        <tr>
-          <th>
-            <label for="<?php echo self::OPTION_SETTINGS ?>_excerpt_length">Description max length</label>
-          </th>
-          <td>
-            <input style="width:3em;" type="text" id="<?php echo self::OPTION_SETTINGS ?>_excerpt_length" name="<?php echo self::OPTION_SETTINGS ?>[excerpt_length]" value="<?php echo htmlentities(Sharepress::setting('excerpt_length')) ?>" />
-            &nbsp;Maximum number of words to include in automatically generated Descriptions
-          </td>
-        </tr>
-        
-        <tr>
-          <th>
-            <label for="<?php echo self::OPTION_SETTINGS ?>_excerpt_more">Description suffix</label>
-          </th>
-          <td>
-            <input style="width:3em;" type="text" id="<?php echo self::OPTION_SETTINGS ?>_excerpt_more" name="<?php echo self::OPTION_SETTINGS ?>[excerpt_more]" value="<?php echo htmlentities(Sharepress::setting('excerpt_more')) ?>" />
-            &nbsp;Symbol(s) to include at the end of <strong>automatically generated</strong> Descriptions, when longer than max length (above)
-          </td>
-        </tr>
-      
       </table>
       
       <br />
       <h3 class="title">Facebook Open Graph Tags</h3>
-      
-      <?php /* ?>
-      
-      <h4 class="title">For individual blog posts</h4>
-      
-      <p>You can configure <code>og:type</code> meta data on a post-by-post basis.
-        Set the default here.</p>
-        
-      <table class="form-table">
-        <tr>
-          <th>Default OG:TYPE for posts</th>
-          <td>
-            <label for="sharepress_post_og_type"><code>og:type</code>&nbsp;=</label></label>
-            <select id="sharepress_post_og_type" name="<?php echo self::OPTION_SETTINGS ?>[default_post_og_type]">
-              <?php require('og-types.php') ?>
-            </select>
-            <script>
-              (function($) {
-                $('option[value="<?php echo Sharepress::setting('default_post_og_type', 'article') ?>"]', $('#sharepress_post_og_type')).attr('selected', true);
-              })(jQuery);
-            </script>
-          </td>
-        </tr>
-      </table>
-      
-      */ ?>
       
       <p>
         Open Graph meta data is required for Sharepress to function. If you don't know what this
@@ -277,7 +230,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           <td>
             <div style="margin-bottom:5px;">
               <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="on" <?php if (Sharepress::setting('page_og_tags') != 'off') echo 'checked="checked"' ?> />
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="on" <?php if (self::setting('page_og_tags') != 'off') echo 'checked="checked"' ?> />
                 Let Sharepress insert it (recommended)
               </label>
               
@@ -289,14 +242,14 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
                 </select>
                 <script>
                   (function($) {
-                    $('option[value="<?php echo Sharepress::setting('page_og_type', 'blog') ?>"]', $('#sharepress_home_og_type')).attr('selected', true);
+                    $('option[value="<?php echo self::setting('page_og_type', 'blog') ?>"]', $('#sharepress_home_og_type')).attr('selected', true);
                   })(jQuery);
                 </script>
               </span>
             </div>
             <div>
               <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="off" <?php if (Sharepress::setting('page_og_tags') == 'off') echo 'checked="checked"' ?> />
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="off" <?php if (self::setting('page_og_tags') == 'off') echo 'checked="checked"' ?> />
                   My Theme does this for me
               </label>
             </div>
@@ -313,10 +266,10 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
       
       <p>
         When you publish a new post, where should we announce it?
-        <?php if (Sharepress::$pro) { ?>
+        <?php if (self::$pro) { ?>
           You'll be able to change this for each post: these are just the defaults.
         <?php } else { ?>
-          If you <a href="http://getwpapps.com/plugins/sharepress">upgrade to Sharepress Pro</a>, you can also choose to post to your Facebook pages.
+          If you <a href="http://aaroncollegeman.com/sharepress">unlock the pro features</a>, you will also be able to select from your Facebook pages.
         <?php } ?>
          
       <div style="max-height: 365px; overflow:auto; border:1px solid #ccc;">
@@ -339,18 +292,18 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
            	<!-- our blog owner's wall -->
            	<tr id="" class="alternate">
               <th scope="row" class="check-column">
-                <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (Sharepress::targets('wall')) echo 'checked="checked"' ?>>
+                <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
               </th>
-              <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo Sharepress::me('id') ?>">
-                <?php echo (preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
+              <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo self::me('id') ?>">
+                <?php echo (preg_match('/s$/i', trim($name = self::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
             </tr>
             <!-- /blog owner's wall -->
           
             <!-- all of the blog owner's pages -->
-            <?php foreach(Sharepress::pages() as $i => $page) { if (Sharepress::$pro && Sharepress::$pro->is_excluded_page($page)) continue; ?>
+            <?php foreach(self::pages() as $i => $page) { if (self::$pro && self::$pro->is_excluded_page($page)) continue; ?>
               <tr class="<?php if ($i % 2) echo 'alternate' ?>">
                 <th scope="row" class="check-column">
-                  <input type="checkbox" name="sharepress_publishing_targets[<?php echo $page['id'] ?>]" value="1" <?php if (Sharepress::targets($page['id'])) echo 'checked="checked"' ?>>
+                  <input type="checkbox" name="sharepress_publishing_targets[<?php echo $page['id'] ?>]" value="1" <?php if (self::targets($page['id'])) echo 'checked="checked"' ?>>
                 </th>
                 <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo $page['id'] ?>"><?php echo $page['name'] ?></a></td>
               </tr>
@@ -370,10 +323,10 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           <th>When errors happen:</th>
           <td>
             <label>
-              <input type="checkbox" id="notify_on_error" onclick="if (this.checked) jQuery('#on_error_email').focus();" name="<?php echo Sharepress::OPTION_NOTIFICATIONS ?>[on_error]" <?php if (Sharepress::notify_on_error()) echo 'checked="checked"' ?> value="1" />
+              <input type="checkbox" id="notify_on_error" onclick="if (this.checked) jQuery('#on_error_email').focus();" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_error]" <?php if (self::notify_on_error()) echo 'checked="checked"' ?> value="1" />
               Send an e-mail to:
             </label>
-            <input style="width:25em;" type="text" id="on_error_email" name="<?php echo Sharepress::OPTION_NOTIFICATIONS ?>[on_error_email]" value="<?php echo htmlentities(Sharepress::get_error_email()) ?>" />
+            <input style="width:25em;" type="text" id="on_error_email" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_error_email]" value="<?php echo htmlentities(self::get_error_email()) ?>" />
             <div style="color:red; display:none;" id="on_error_email_error">Please use a valid e-mail address</div>
           </td>
         </tr>
@@ -382,14 +335,37 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
           <th>When successes happen:</th>
           <td>
             <label>
-              <input type="checkbox" id="notify_on_success" onclick="if (this.checked) jQuery('#on_success_email').focus();" name="<?php echo Sharepress::OPTION_NOTIFICATIONS ?>[on_success]" <?php if (Sharepress::notify_on_success()) echo 'checked="checked"' ?> value="1" />
+              <input type="checkbox" id="notify_on_success" onclick="if (this.checked) jQuery('#on_success_email').focus();" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_success]" <?php if (self::notify_on_success()) echo 'checked="checked"' ?> value="1" />
               Send an e-mail to:
             </label>
-            <input style="width:25em;" type="text" id="on_success_email" name="<?php echo Sharepress::OPTION_NOTIFICATIONS ?>[on_success_email]" value="<?php echo htmlentities(Sharepress::get_success_email()) ?>" />
+            <input style="width:25em;" type="text" id="on_success_email" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_success_email]" value="<?php echo htmlentities(self::get_success_email()) ?>" />
             <div style="color:red; display:none;" id="on_success_email_error">Please use a valid e-mail address</div>
           </td>
         </tr>
       </table>  
+
+      <br />
+      <h3 class="title">License Key</h3>
+
+      <?php 
+        #
+        # Don't be a dick. I like to eat, too.
+        # http://aaroncollegeman/sharepress/
+        #
+        if (!self::unlocked()) { ?>
+        <p>Unlock pro features, get access to documentation and support from the developer of Sharepress! <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.</p>
+      <?php } else { ?>
+        <p>Awesome, tamales! Need support? Need documentation? <a href="http://aaroncollegeman.com/sharepress/help">Go here</a>.
+      <?php } ?>
+
+      <table class="form-table">
+        <tr>
+          <th><label for="sharepress_license_key">License Key:</label></th>
+          <td>
+            <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::setting('license_key')) ?>" />
+          </td>
+        </tr>
+      </table>
       
       <p class="submit">
         <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
@@ -428,19 +404,19 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
     
   </form>
   
-  <?php if (@$_REQUEST['step'] == 'config') { ?>
-  
-    <?php if (Sharepress::$pro) { ?>
+  <?php if (self::session()) { ?>
+
+    <?php if (self::$pro) { ?>
       <br />
       <h3 class="title">Default Picture</h3>
-  
+
       <p>Each message posted to Facebook can be accompanied by a picture. You can set the default below.</p>
       
       <table class="form-table">
         <tr>
           <th>Default picture:</th>
           <td>
-            <?php PostImage::ui('sharepress', Sharepress::OPTION_DEFAULT_PICTURE, null, 90, 90, Sharepress::load()->get_default_picture()) ?>
+            <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 90, 90, self::load()->get_default_picture()) ?>
           </td>
         </tr>
       </table>
@@ -448,16 +424,18 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
     
     <br />
     <h3 class="title">Clear Cache</h3>
-  
-    <p>Most of our conversations with the Facebook API are cached into your WordPress blog. To clear this cache, click the button below.
-      Don't worry - your history and posts are safe!</p>
-  
-    <a id="btnClearCache" href="options-general.php?page=sharepress&amp;action=clear_cache" class="button" onclick="jQuery(this).addClass('disabled');">Clear Cache</a>
-  
-  <?php } else { ?>
-    <div style="clear:left; border-bottom:1px solid #ccc; padding-top:20px;"></div>
+
+    <p>If you become the manager of a new Facebook Page, but do not see it in the list above or in the target list on the Edit Posts screen, reset the cache below.</p>
+
+    <p><a id="btnClearCache" href="options-general.php?page=sharepress&amp;action=clear_cache" class="button" onclick="jQuery(this).addClass('disabled');">Clear Cache</a></p>
+    
+    <br />
+    <h3 class="title">Run Setup Again</h3>
+
+    <p>If you need to change Facebook Application keys, you can run setup again by clicking the button below.</p>
+
+    <p><a href="options-general.php?page=sharepress&amp;action=clear_session" class="button">Run Setup Again</a></p>    
+    
   <?php } ?>
-  
-  <br /><br /><br />
-  
+    
 </div>

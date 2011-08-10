@@ -1,10 +1,10 @@
 === Plugin Name ===
-Contributors: markjaquith, mdawaffe (this should be a list of wordpress.org userid's)
-Donate link: http://example.com/
-Tags: comments, spam
-Requires at least: 3.0
-Tested up to: 3.0
-Stable tag: 1.0.20110607040425
+Contributors: aaroncollegeman
+Donate link: http://aaroncollegeman.com/sharepress
+Tags: social, facebook, publicize, automate, marketing
+Requires at least: 2.9
+Tested up to: 3.2.1
+Stable tag: 2.0
 
 Sharepress publishes your content to your Facebook Wall. 
 
@@ -12,54 +12,34 @@ Sharepress publishes your content to your Facebook Wall.
 
 Sharepress publishes your content to your Facebook Wall. 
 
-Reaching an audience of more than 500,000,000 people, Facebook has become the next
-great stage from which to speak to the world. Rest assured: your customers and your
-readers are there - past, present, and future. 
+Reaching an audience of more than 500,000,000 people, Facebook has become the next great stage from which to speak to the world. Rest assured: your customers and your readers are there - past, present, and future. 
 
-But if you're like us, then posting things on Facebook is somewhere at the bottom of your list.
-After all, you're creating quality content with WordPress, and who has time to keep
-one eye on Facebook all day long? No longer will you have to manually share links to 
-your Posts - just click Publish, and let Sharepress do the rest.
+But if you're like us, then posting things on Facebook is somewhere at the bottom of your list. After all, you're creating quality content with WordPress, and who has time to keep one eye on Facebook all day long? No longer will you have to manually share links to your Posts - just click Publish, and let Sharepress do the rest.
 
-This version of Sharepress does only one thing: posts your content on your Facebook
-Wall, without the distraction of ever laying eyes on those Facebook blues. *Looking
-for more power?* The forthcoming [Sharepress Pro](http://sharepress.fatpandadev.com)
-builds on the success of Sharepress Lite with a number of excellent features:
-
-* Share your Posts not only on your personal Wall, but also on any Facebook Page
-* Share your Post simultaneously on as many pages as you wish, and configure defaults in advance
-* Edit the content of each Share on a Post-by-Post basis, including the Featured Image
-* Track Comments and Liks, allowing you to measure the success of your content
-* Identify the strongest voices in your community, and build your [Tribe](http://sethgodin.typepad.com/seths_blog/2008/01/tribal-manageme.html), one relationship at a time
-
-Sharepress Pro will be available in early 2011, but you can [register now](http://sharepress.fatpandadev.com),
-and we'll let you know when it's ready.
+There are two versions of Sharepress: a lite version, that lets you post to your personal Facebook Wall; and a pro version, that lets you post to any Facebook Page you manage, as well as customize the messages that are posted there.
 
 == Installation ==
 
 1. Get the plugin-in. Download it manually or install through the 'Plugins' menu in WordPress.
 
-1. If you downloaded the plugin as a zip file, extract the plugin into your `wp-content/plugins` 
-folder. This should create within the plugins folder another folder named `sharepress`. If it 
-does not create this folder, you must create the folder yourself, and put the plugin files in it. 
-Sharepress will not work unless it resides in a folder named `sharepress`.
+2. If you downloaded the plugin as a zip file, extract the plugin into your `wp-content/plugins` folder. This should create within the plugins folder another folder named `sharepress`. If it does not create this folder, you must create the folder yourself, and put the plugin files in it. Sharepress will not work unless it resides in a folder named `sharepress`.
 
-1. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Activate the plugin through the 'Plugins' menu in WordPress.
 
-1. Configure through the 'Sharepress' item on the 'Settings' menu. Instructions in the application
-will help you to create your own Facebook Application (required).
+4. Configure through the 'Sharepress' item on the 'Settings' menu. Instructions in the application will help you to create your own Facebook Application (required).
 
 Post questions about installation and usage [in the forum](http://wordpress.org/tags/sharepress?forum_id=10#postform).
 
 == Frequently Asked Questions ==
 
-None yet!
+= How do I get the pro version? =
 
-== Screenshots ==
-
-None yet!
+If you have Sharepress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0 =
+* Sharepress Pro is now available! If you want access to the pro features, you'll need to upgrade Sharepress and then buy a license key. This release also fixes a number of bugs and usability issues, and 
 
 = 1.0.10 =
 * [Jen Russo](http://www.mauitime.com) reported that posts created via e-mailing to Posterous weren't triggering Sharepress. There was a bug that prevented Sharepress from firing in all cases other than the ones wherein the user was manually accessing the admin. This is now fixed.
@@ -96,6 +76,9 @@ None yet!
 * The first release!
 
 == Upgrade Notice ==
+
+= 2.0 =
+Sharepress Pro is now available! If you want access to the pro features, you'll need to upgrade Sharepress and then buy a license key
 
 = 1.0.6 =
 Fixes a bug that results in breaking core JavaScript in the WordPress admin

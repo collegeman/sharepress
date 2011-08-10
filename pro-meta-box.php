@@ -1,11 +1,4 @@
-<?php 
-/*
-sharepress
-Copyright (C)2010-2011  Fat Panda LLC
-You must own a valid licenses to use the Pro version of sharepress.
-*/
-
-if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
+<?php if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
 
 <div id="sharepress" <?php if (($posted || $scheduled || $last_posted) && @$_GET['sharepress'] != 'schedule') echo 'style="display:none;"' ?>>
   
@@ -22,27 +15,6 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
     </legend>
     <textarea style="width:100%; height:75px;" name="sharepress_meta[message]" id="sharepress_meta_message"><?php echo @$meta['message'] ?></textarea>
   </fieldset>
-
-  <?php /* 
-  For now, it seems, I can't pass a description for a link -- it gets pulled automatically
-  from the website. ?>
-  <br />
-  <fieldset>
-    <legend>
-      <label for="sharepress_meta_description" style="position:relative;">
-        <b>Description</b> &nbsp;&nbsp; 
-        <label style="display:inline-block;">
-          <input type="checkbox" id="sharepress_meta_excerpt_is_description" name="sharepress_meta[excerpt_is_description]" value="1" onclick="click_use_excerpt(this);" <?php if (@$meta['excerpt_is_description']) echo 'checked="checked"' ?> /> 
-          same as Excerpt
-        </label> &nbsp;
-        <span id="sharepress_description_wait" style="position:absolute; right: -15px; top: -2px; display:none;">
-          <img src="<?php echo plugins_url('sharepress/img/wait.gif') ?>" />
-        </span>
-      </label>
-    </legend>
-    <textarea style="width:100%; height:75px;" name="sharepress_meta[description]" id="sharepress_meta_description"><?php echo htmlentities(@$meta['description']) ?></textarea>
-  </fieldset>
-  */ ?>
 
   <?php if ( ($posted || $scheduled) || (!$posted && !$scheduled && $post->post_status == 'publish') ) { ?>
     <br />
@@ -65,38 +37,6 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
   </p>
 
   <div class="sharepress_advanced" style="display:none;">
-  
-    <?php /*?>
-    <br />
-    <fieldset>
-      <legend>
-        <label for="sharepress_meta_og">
-          <b>Open Graph</b>
-        </label>
-      </legend>
-      
-      <p>If this post describes something other than an article,
-        choose the OG type that best describes it below.</p>
-      
-      <p>
-        <select name="sharepress_meta[og_type]" id="sharepress_meta_og_type">
-          <?php require('og-types.php') ?>
-        </select>
-        <script>
-          (function($) {
-            $('option[value="<?php echo @$meta['og_type'] ? $meta['og_type'] : Sharepress::setting('post_og_type', 'article') ?>"]', $('#sharepress_meta_og_type')).attr('selected', true);
-          })(jQuery);
-        </script>
-      </p>
-      
-      <p>If the subject of this post is titled something <em>other</em>
-        than the title of this post, name it below.</p>
-      
-      <p>
-        <input type="text" style="width:100%;" name="sharepress_meta[og_title]" id="sharepress_meta_og_title" value="<?php echo @htmlentities($meta['og_title']) ?>" />
-      </p>
-    </fieldset>
-    */ ?>
   
     <br />
     <fieldset>
@@ -187,12 +127,6 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
       $('#sharepress_meta_title_is_message').prop('checked', false);
     })
     
-    <?php/*
-    description.keypress(function() {
-      $('#sharepress_meta_excerpt_is_description').prop('checked', false);
-    });
-    */?>
-    
     window.sharepress_publish_again = function() {
       $('#sharepress').show();
       $('#btn_publish_again').hide();
@@ -261,69 +195,6 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
         }
       }
     });
-    
-    <?php/*
-    window.copy_excerpt_to_description = function(ed, e) {
-      if (suspend) {
-        return;
-      }
-      
-      clearTimeout(description_timeout);
-      description_timeout = setTimeout(function() {
-        if (!$('#sharepress_meta_excerpt_is_description:checked').size()) {
-          return false;
-        }
-        
-        if (content_was != editor.getContent() || excerpt_was != excerpt.val()) {
-          suspend = true;
-          
-          content_was = editor.getContent();
-          excerpt_was = excerpt.val();
-          
-          // show the wait icon
-          $('#sharepress_description_wait').show();
-
-          $.post(ajaxurl, { action: 'sharepress_get_excerpt', post_id: $('#post_ID').val(), content: excerpt_was ? excerpt_was : content_was }, function(excerpt) {
-            // hide the wait icon
-            $('#sharepress_description_wait').hide();
-            // check the checkbox again
-            if (!$('#sharepress_meta_excerpt_is_description:checked').size()) {
-              return;
-            }
-            // update the excerpt
-            description.val(excerpt);
-            
-            suspend = false;
-          });
-        }
-      }, ed === true ? 0 : 1000);
-    };
-    
-    var setupEditor = setInterval(function() {
-      if (!window.tinyMCE) {
-        editor = {
-          getContent: function() {
-            return $('#content').val();
-          }
-        };
-        $('#content').keypress(copy_excerpt_to_description);
-        return;
-      }
-      
-      editor = tinyMCE.get('content');
-      if (editor) {
-        clearInterval(setupEditor);
-        
-        content_was = editor.getContent();
-        
-        editor.onKeyPress.add(copy_excerpt_to_description);
-        editor.onLoadContent.add(copy_excerpt_to_description);
-        editor.onChange.add(copy_excerpt_to_description);
-        excerpt.keypress(copy_excerpt_to_description);
-        excerpt.blur(copy_excerpt_to_description);
-      }
-    }, 100);
-    */?>
     
   });
 })(jQuery);
