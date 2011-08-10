@@ -176,11 +176,29 @@
       return true;
     });
 
+    var check_for_targets = true;
+
+    $('#save-post').click(function() {
+      check_for_targets = false;
+      return true;
+    });
+
+    $('#publish').click(function() {
+      check_for_targets = true;
+      return true;
+    });
+
     $('#post').submit(function() {
+      if (!check_for_targets) {
+        return true;
+      }
+
       // are we trying to post with sharepress?
       if ($('#sharepress_meta_enabled_on:checked').size() || $('#sharepress_meta_publish_again').val() == '1') {
         // no targets?
         if (!$('input.sharepress_target:checked').size()) {
+
+          // reveal the targets selection, and try to focus the screen on it:
           $('#ajax-loading').hide();
           $('#publish').removeClass('button-primary-disabled');
           $('.sharepress_show_advanced').hide(); 
@@ -188,7 +206,10 @@
           $('label[for="sharepress_meta_targets"]').css('color', 'red');
           $('#publish_target_error').show();
           $(window).scrollTop($('#sharepress_meta').offset().top)
+
+          // don't allow submission:
           return false;
+
         } else {
           $('.sharepress_show_advanced').show(); 
           $('.sharepress_advanced').hide();
