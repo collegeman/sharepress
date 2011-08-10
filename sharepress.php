@@ -3,9 +3,9 @@
 Plugin Name: Sharepress
 Plugin URI: http://aaroncollegeman/sharepress
 Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
-Author: Aaron Collegeman
-Author URI: http://aaroncollegeman.com
-Version: 1.9.9.9
+Author: Fat Panda, LLC
+Author URI: http://fatpandadev.com
+Version: 2.0
 License: GPL2
 */
 
