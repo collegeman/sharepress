@@ -80,7 +80,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
     add_action('wp_head', array($this, 'wp_head'));
   } 
-  
+
   function wp_head() {
     global $wpdb, $post;
     
@@ -99,13 +99,19 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
           $overrides[trim($M->K)] = trim($M->V);
         }
       }
+
+      if (!($picture = $meta['picture'])) {
+        if ($src = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID), 'thumbnail' )) {
+          $picture = $src[0];
+        }
+      }
       
       if (is_single() || ( is_page() && !is_front_page() )) {
         $defaults = array(
           'og:type' => 'article',
           'og:url' => get_permalink(),
           'og:title' => get_the_title(),
-          'og:image' => $meta['picture'],
+          'og:image' => $picture,
           'og:site_name' => get_bloginfo('name'),
           'fb:app_id' => get_option(self::OPTION_API_KEY)
         );
@@ -116,7 +122,7 @@ class /*@PLUGIN_LITE_CLASS@*/ Sharepress {
           'og:url' => get_permalink(),
           'og:title' => get_the_title(),
           'og:site_name' => get_bloginfo('name'),
-          'og:image' => $meta['picture'],
+          'og:image' => self::get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY)
         );
         

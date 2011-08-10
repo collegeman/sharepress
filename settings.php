@@ -347,7 +347,7 @@ if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
             <!-- /blog owner's wall -->
           
             <!-- all of the blog owner's pages -->
-            <?php foreach(Sharepress::pages() as $i => $page) { ?>
+            <?php foreach(Sharepress::pages() as $i => $page) { if (Sharepress::$pro && Sharepress::$pro->is_excluded_page($page)) continue; ?>
               <tr class="<?php if ($i % 2) echo 'alternate' ?>">
                 <th scope="row" class="check-column">
                   <input type="checkbox" name="sharepress_publishing_targets[<?php echo $page['id'] ?>]" value="1" <?php if (Sharepress::targets($page['id'])) echo 'checked="checked"' ?>>

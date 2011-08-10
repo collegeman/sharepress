@@ -379,16 +379,37 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
     exit;
   }
   
+  private static $ok_page_names = null;
+
+  static function is_excluded_page($page) {
+    if (is_null(self::$ok_page_names)) {
+      self::$ok_page_names = array_map(array(__CLASS__, '_map_page_names'), self::pages());
+      self::$ok_page_names = apply_filters('sharepress_ok_page_names', self::$ok_page_names, function_exists('get_current_site') ? get_current_site() : null);
+    }
+
+    $page_name = is_array($page) ? $page['name'] : $page;
+
+    return self::$ok_page_names ? !in_array($page_name, self::$ok_page_names) : false;    
+  }
+  
+  private static function _map_page_names($page) {
+    return $page['name'];
+  }
+
   function post($meta, $post) {
     if (SHAREPRESS_DEBUG) {
       Sharepress::log(sprintf('SharepressPro::post(%s, %s)', $meta['message'], is_object($post) ? $post->post_title : $post));
       Sharepress::log(sprintf('SharepressPro::post => count(SharepressPro::pages()) = %s', count(self::pages())));
       Sharepress::log(sprintf('SharperessPro::post => $meta["targets"] = %s', serialize($meta['targets'])));
     }
-    
+
     // loop over authorized pages
     foreach(self::pages() as $page) {
       if (in_array($page['id'], $meta['targets'])) {
+        if (self::is_excluded_page($page)) {
+          continue;
+        }
+
         /*
         $session = Sharepress::session();
         
@@ -531,4 +552,4 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   
 }
 
-/*@PLUGIN_PRO_CLASS@*/ SharepressPro::load();
+SharepressPro::load();

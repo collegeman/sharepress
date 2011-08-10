@@ -136,14 +136,22 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
             <?php echo $wall_name ?>
           </label>
         </p>
-        <?php $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); foreach($pages as $page) { ?>
-          <p>
-            <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
-              <input class="sharepress_target" type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
-              <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
-            </label>
-          </p>
-        <?php } ?>
+        <?php 
+          $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); 
+          foreach($pages as $page) { 
+            if (self::is_excluded_page($page)) {
+              continue; 
+            }
+            ?>
+               <p>
+                <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
+                  <input class="sharepress_target" type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
+                  <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
+                </label>
+              </p>
+            <?php
+          }
+        ?>
       </div>
     </fieldset>
     
@@ -229,9 +237,11 @@ if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
       }, synchronize ? 0 : 1000);
     };
     
-    title.keypress(copy_title_to_message);
-    title.blur(copy_title_to_message);
-    
+    title.bind('keypress blur', function() {
+      copy_title_to_message();
+      return true;
+    });
+
     $('#post').submit(function() {
       // are we trying to post with sharepress?
       if ($('#sharepress_meta_enabled_on:checked').size() || $('#sharepress_meta_publish_again').val() == '1') {
