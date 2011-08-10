@@ -11,7 +11,9 @@
     <?php } ?>
   </legend>
   <label style="display:inline-block; width:100%;">
-    <p style="margin-bottom:12px; color:#555;"><?php echo htmlentities($scheduled ? $meta['message'] : $last_result['message']) ?></p>
+    <p style="margin-bottom:12px; color:#555; width:235px; overflow:hidden;">
+      <?php echo htmlentities($scheduled ? $meta['message'] : $last_result['message']) ?>
+    </p>
     <div style="width:100%;">
       <?php if (Sharepress::$pro) { ?>
         <a class="button" id="btn_publish_again" style="float:right; position:relative; top:-6px; margin-bottom:-6px; <?php if (@$_GET['sharepress'] == 'schedule') echo 'display:none;' ?>" href="#" onclick="sharepress_publish_again(); return false;">

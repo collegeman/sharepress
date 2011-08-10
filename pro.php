@@ -531,4 +531,56 @@ class /*@PLUGIN_PRO_CLASS@*/ SharepressPro {
   
 }
 
+if (!function_exists('like')): 
+
+function like(/* dynamic args */) {
+  $args = func_get_args();
+  
+  if (count($args) == 1) {
+    if (is_array($args[0])) {
+      $args = $args[0];
+    } else if (strpos($args[0], '=') !== false) {
+      parse_str($args[0], $arguments);
+      $args = $arguments;
+    } else {
+      $args = array('href' => $args[0]);
+    }
+  } else {
+    $args = array('href' => get_permalink());
+  }
+  
+  $args = array_merge(array(
+    'href' => get_permalink(),
+    'send' => true,
+    'width' => 450,
+    'show_faces' => true,
+    'layout' => 'standard'
+  ), $args);
+  
+  extract($args);
+  
+  static $script_out;
+  if (!$script_out) {
+    ?>
+      <div id="fb-root"></div>
+      <script src="http://connect.facebook.net/en_US/all.js#appId=<?php echo get_option(Sharepress::OPTION_API_KEY) ?>&amp;xfbml=1"></script>
+    <?php
+    $script_out = true;
+  }
+  
+  ?>
+    <span class="like">
+      <fb:like 
+        href="<?php echo $href ?>"
+        send="<?php echo $send && $send != 'false' ? 'true' : 'false' ?>"
+        width="<?php echo $width ?>"
+        show_faces="<?php echo $show_faces && $show_faces != 'false' ? 'true' : 'false' ?>"
+        layout="<?php echo $layout ?>"
+      ></fb:like>
+    </span>
+  <?php
+}
+
+endif; // !function_exists('like')
+
 /*@PLUGIN_PRO_CLASS@*/ SharepressPro::load();
