@@ -39,7 +39,6 @@ class SharepressPro {
   }
   
   private function __construct() {
-    
     add_action('init', array($this, 'init'), 10, 1);
     
     #
@@ -49,8 +48,6 @@ class SharepressPro {
     $fn = array_pop($parts);
     $fd = (($fd = array_pop($parts)) != 'plugins' ? $fd : '');
     
-    add_action("activate_{$fd}/pro.php", array($this, 'activate'));
-    add_action("deactivate_{$fd}/pro.php", array($this, 'deactivate'));
     add_action('plugin_action_links_sharepress/pro.php', array($this, 'plugin_action_links'), 10, 4);
   }
   
@@ -83,20 +80,9 @@ class SharepressPro {
       add_filter('posts_orderby', array($this, 'posts_orderby'));
     }
     // enhancement #5: scheduling 
-    add_filter('cron_schedules', array($this, 'cron_schedules'));
     add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
-    add_filter('cron_schedules', array($this, 'cron_schedules'));
   }
   
-  function activate() {
-    // this filter must be here, because init() doesn't fire for activation
-    add_filter('cron_schedules', array($this, 'cron_schedules'));
-    wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
-  }
-  
-  function deactivate() {
-    wp_clear_scheduled_hook('sharepress_oneminute_cron');
-  }
   
   function manage_posts_columns($cols) {
     $current_url = ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
@@ -308,15 +294,6 @@ class SharepressPro {
     return $orderby;
   }
   
-  function cron_schedules($schedules) {
-    $schedules['oneminute'] = array(
-      'interval' => 60,
-      'display' => __('Every Minute')
-    );
-    
-    return $schedules;
-  }
-  
   function oneminute_cron() {
     Sharepress::log('SharepressPro::oneminute_cron @ '.date('Y/m/d H:i:s', current_time('timestamp')));
     foreach($this->get_scheduled_posts() as $post) {
@@ -449,7 +426,7 @@ class SharepressPro {
     try {
       $result = Sharepress::api(Sharepress::me('id').'/accounts', 'GET', array(), '1 hour');
     } catch (Exception $e) {
-      return self::handleFacebookException($e);
+      return Sharepress::handleFacebookException($e);
     }
 
     if ($result) {
@@ -457,9 +434,11 @@ class SharepressPro {
       
       // we only care about pages...
       $pages = array();
-      foreach($data as $d) {
-        if (isset($d['name'])) {
-          $pages[] = $d;
+      if ($data) {
+        foreach($data as $d) {
+          if (isset($d['name'])) {
+            $pages[] = $d;
+          }
         }
       }
       

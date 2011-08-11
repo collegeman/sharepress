@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0
+Version: 2.0.1
 License: GPL2
 */
 
@@ -89,8 +89,23 @@ class Sharepress {
     add_action('publish_post', array($this, 'publish_post'));
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
     add_action('wp_head', array($this, 'wp_head'));
+
+    add_filter('cron_schedules', array($this, 'cron_schedules'));
+
+    if (!wp_next_scheduled('sharepress_oneminute_cron')) {
+      wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
+    }
   } 
 
+  function cron_schedules($schedules) {
+    $schedules['oneminute'] = array(
+      'interval' => 60,
+      'display' => __('Every Minute')
+    );
+    
+    return $schedules;
+  }
+  
   function wp_head() {
     global $wpdb, $post;
     
@@ -316,9 +331,9 @@ class Sharepress {
       update_option(self::OPTION_FB_SESSION, '');
       wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="admin.php">Dashboard</a>.');
     } else if (is_admin()) {
-      wp_die('There was a problem with Sharepress: '.$e->getMessage());
+      wp_die('There was a problem with Sharepress: '.$e->getMessage().'; This is probably an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.');
     } else {
-      self::err(sprintf("Exception thrown by Facebook API: %s", $e->getMessage()));
+      self::err(sprintf("Exception thrown by Facebook API: %s; This is definitely an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.", $e->getMessage()));
       throw new Exception("There is a problem with Sharepress. Check the log.");
     }
   }
