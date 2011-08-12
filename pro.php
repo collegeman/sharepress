@@ -49,6 +49,9 @@ class SharepressPro {
     $fd = (($fd = array_pop($parts)) != 'plugins' ? $fd : '');
     
     add_action('plugin_action_links_sharepress/pro.php', array($this, 'plugin_action_links'), 10, 4);
+
+    // enhancement #1: post thumbnails are used in messages posted to facebook
+    add_action('after_setup_theme', array($this, 'after_setup_theme'));
   }
   
   /**
@@ -62,9 +65,6 @@ class SharepressPro {
   function init() {
     // attach a reference to the pro version onto the lite version
     Sharepress::$pro = $this;
-    
-    // enhancement #1: post thumbnails are used in messages posted to facebook
-    add_action('after_setup_theme', array($this, 'after_setup_theme'));
     // enhancement #2: ability to publish to pages
     add_filter('sharepress_pages', array($this, 'pages'));
     add_action('sharepress_post', array($this, 'post'), 10, 2);
