@@ -64,7 +64,7 @@ class SharepressPro {
     Sharepress::$pro = $this;
     
     // enhancement #1: post thumbnails are used in messages posted to facebook
-    add_theme_support('post-thumbnails');
+    add_action('after_setup_theme', array($this, 'after_setup_theme'));
     // enhancement #2: ability to publish to pages
     add_filter('sharepress_pages', array($this, 'pages'));
     add_action('sharepress_post', array($this, 'post'), 10, 2);
@@ -83,6 +83,9 @@ class SharepressPro {
     add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
   }
   
+  function after_setup_theme() {
+    add_theme_support('post-thumbnails');
+  }  
   
   function manage_posts_columns($cols) {
     $current_url = ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];

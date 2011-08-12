@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 
 Sharepress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,9 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have Sharepress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.2 =
+* Fixed: Activating Sharepress when the active theme did not use add_theme_support('post-thumbnails') would result in error messages being displayed in the Media management tool and other places
 
 = 2.0.1 =
 * Fixed: cron job is working again 
@@ -82,6 +85,10 @@ If you have Sharepress installed, all you need to do is [buy a key](http://aaron
 * The first release!
 
 == Upgrade Notice ==
+
+= 2.0.2 =
+
+Critical bug release. Please upgrade soon.
 
 = 2.0 =
 Sharepress Pro is now available! If you want access to the pro features, you'll need to upgrade Sharepress and then buy a license key
