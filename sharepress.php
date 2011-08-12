@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.3
+Version: 2.0.4
 License: GPL2
 */
 
@@ -328,8 +328,9 @@ class Sharepress {
   
   static function handleFacebookException($e) {
     if (is_a($e, 'SharepressFacebookSessionException') || $e->getMessage() == 'Invalid OAuth access token signature.') {
+      $session = get_option(self::OPTION_FB_SESSION);
       update_option(self::OPTION_FB_SESSION, '');
-      wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="admin.php">Dashboard</a>.');
+      wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="index.php">Dashboard</a>.');
     } else if (is_admin()) {
       wp_die('There was a problem with Sharepress: '.$e->getMessage().'; This is probably an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.');
     } else {

@@ -104,8 +104,13 @@
           var btn = $('#btnConnect');
 
           var fail_timeout = null;
+          var session_saved = false;
 
           $('#settings_form').submit(function() {
+            if (session_saved) {
+              return true;
+            }
+
             api_key.val($.trim(api_key.val()));
             app_secret.val($.trim(app_secret.val()));  
 
@@ -157,9 +162,10 @@
                 } else {
                   // post session data to the back-end and then redirect to the settings screen
                   setTimeout(function() {
-                    $.post(ajaxurl, { action: 'fb_save_session', session: session }, function(response) {
+                    $.post(ajaxurl, { action: 'fb_save_session', session: session, api_key: api_key.val(), app_secret: app_secret.val() }, function(response) {
                       btn.attr('disabled', true).val('Connected!');
-                      document.location = '<?php echo get_option('siteurl') ?>/wp-admin/options-general.php?page=sharepress';
+                      session_saved = true;
+                      $('#settings_form').submit();
                     });
                   }, 1000);
                 }
