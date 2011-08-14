@@ -1,9 +1,16 @@
 <?php  if (!defined('ABSPATH')) exit; /* silence is golden */ ?>
 
+<style>
+.wrap h2 span { font-size: 0.75em; padding-left: 20px; }
+</style>
+
 <div class="wrap">
 
   <div id="icon-general" class="icon32" style="background:url('<?php echo plugins_url('img/icon32.png', __FILE__) ?>') no-repeat;"><br /></div>
-  <h2>Sharepress</h2>
+  <h2>
+    SharePress
+    <span>a WordPress plugin from <a href="http://aaroncollegeman.com/fatpanda/" target="_blank">Fat Panda</a></span>
+  </h2>
   
   <form method="post" action="options.php" id="settings_form">
     
@@ -19,12 +26,10 @@
         <span>( <a href="#" onclick="jQuery('#sharepress_help').show(); jQuery(this).parent().hide(); return false;">Help me</a>! )</span>
       </p>
 
-      <p>
-        <b>Note:</b> Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
-        and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
-      </p>   
-      
       <div id="sharepress_help" style="display:none;">
+        <iframe width="480" height="390" src="http://www.youtube.com/embed/pI9IqJFQNF8" frameborder="0" allowfullscreen></iframe>
+
+        <?php /*
         <p>
           If you've never created a Facebook application before, <a href="http://www.facebook.com/developers/createapp.php" target="_blank">you'll be asked</a>
           to authorize the <b>Developer</b> application. This is very safe.
@@ -46,9 +51,16 @@
         </p>
         <p>
           <a href="<?php echo plugins_url('img/create_app_step3.jpg', __FILE__); ?>"><img src="<?php echo plugins_url('img/create_app_step3_thumb.jpg', __FILE__) ?>" style="border: 1px solid #ccc;" /></a>  
-        </p>
+        </p> */ ?>
       </div>
 
+      <p>
+        <b>Note:</b> Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
+        and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
+      </p>  
+      
+      <p><span style="color:red;">Turn off all pop-up blockers before continuing.</span></p> 
+      
       <table class="form-table">
         <tr>
           <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
@@ -195,7 +207,7 @@
       
       <?php settings_fields('fb-settings') ?>
       
-      <h3 class="title">Sharepress Settings</h3>
+      <h3 class="title">SharePress Settings</h3>
       
       <table class="form-table">
         <tr>
@@ -221,7 +233,7 @@
       <h3 class="title">Facebook Open Graph Tags</h3>
       
       <p>
-        Open Graph meta data is required for Sharepress to function. If you don't know what this
+        Open Graph meta data is required for SharePress to function. If you don't know what this
         is, leave this feature enabled. If, however, you already have a custom solution for OG
         meta data, you may disable this feature.
       </p>
@@ -237,7 +249,7 @@
             <div style="margin-bottom:5px;">
               <label>
                 <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="on" <?php if (self::setting('page_og_tags') != 'off') echo 'checked="checked"' ?> />
-                Let Sharepress insert it (recommended)
+                Let SharePress insert it (recommended)
               </label>
               
               <span style="margin-left:50px;">
@@ -322,7 +334,7 @@
       <br />
       <h3 class="title">Notifications</h3>
       
-      <p>Sharepress can e-mail you when errors and/or successes in posting to Facebook happen.</p>
+      <p>SharePress can e-mail you when errors and/or successes in posting to Facebook happen.</p>
       
       <table class="form-table">
         <tr>
@@ -359,9 +371,9 @@
         # http://aaroncollegeman/sharepress/
         #
         if (!self::unlocked()) { ?>
-        <p>Unlock pro features, get access to documentation and support from the developer of Sharepress! <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.</p>
+        <p>Unlock pro features, get access to documentation and support from the developer of SharePress! <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.</p>
       <?php } else { ?>
-        <p>Awesome, tamales! Need support? Need documentation? <a href="http://aaroncollegeman.com/sharepress/help">Go here</a>.
+        <p>Awesome, tamales! Need support? Need documentation? <a href="http://aaroncollegeman.com/sharepress/help/">Go here</a>.
       <?php } ?>
 
       <table class="form-table">

@@ -6,27 +6,27 @@ Requires at least: 2.9
 Tested up to: 3.2.1
 Stable tag: 2.0.4
 
-Sharepress publishes your content to your Facebook Wall. 
+SharePress publishes your content to your Facebook Wall. 
 
 == Description ==
 
-Sharepress publishes your content to your Facebook Wall. 
+SharePress publishes your content to your Facebook Wall. 
 
 Reaching an audience of more than 500,000,000 people, Facebook has become the next great stage from which to speak to the world. Rest assured: your customers and your readers are there - past, present, and future. 
 
-But if you're like us, then posting things on Facebook is somewhere at the bottom of your list. After all, you're creating quality content with WordPress, and who has time to keep one eye on Facebook all day long? No longer will you have to manually share links to your Posts - just click Publish, and let Sharepress do the rest.
+But if you're like us, then posting things on Facebook is somewhere at the bottom of your list. After all, you're creating quality content with WordPress, and who has time to keep one eye on Facebook all day long? No longer will you have to manually share links to your Posts - just click Publish, and let SharePress do the rest.
 
-There are two versions of Sharepress: a lite version, that lets you post to your personal Facebook Wall; and a pro version, that lets you post to any Facebook Page you manage, as well as customize the messages that are posted there.
+There are two versions of SharePress: a lite version, that lets you post to your personal Facebook Wall; and a pro version, that lets you post to any Facebook Page you manage, as well as customize the messages that are posted there.
 
 == Installation ==
 
 1. Get the plugin-in. Download it manually or install through the 'Plugins' menu in WordPress.
 
-2. If you downloaded the plugin as a zip file, extract the plugin into your `wp-content/plugins` folder. This should create within the plugins folder another folder named `sharepress`. If it does not create this folder, you must create the folder yourself, and put the plugin files in it. Sharepress will not work unless it resides in a folder named `sharepress`.
+2. If you downloaded the plugin as a zip file, extract the plugin into your `wp-content/plugins` folder. This should create within the plugins folder another folder named `sharepress`. If it does not create this folder, you must create the folder yourself, and put the plugin files in it. SharePress will not work unless it resides in a folder named `sharepress`.
 
 3. Activate the plugin through the 'Plugins' menu in WordPress.
 
-4. Configure through the 'Sharepress' item on the 'Settings' menu. Instructions in the application will help you to create your own Facebook Application (required).
+4. Configure through the 'SharePress' item on the 'Settings' menu. Instructions in the application will help you to create your own Facebook Application (required).
 
 Post questions about installation and usage [in the forum](http://wordpress.org/tags/sharepress?forum_id=10#postform).
 
@@ -34,7 +34,7 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 
 = How do I get the pro version? =
 
-If you have Sharepress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
+If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
 
@@ -42,10 +42,10 @@ If you have Sharepress installed, all you need to do is [buy a key](http://aaron
 * Fixed: Major bug in setup process, prevented establishing API key and app secret in the database.
 
 = 2.0.3 =
-* Fixed: Featured Image feature of Sharepress was not working unless the activate Theme supported post-thumbnails. 
+* Fixed: Featured Image feature of SharePress was not working unless the activate Theme supported post-thumbnails. 
 
 = 2.0.2 =
-* Fixed: Activating Sharepress when the active theme did not use add_theme_support('post-thumbnails') would result in error messages being displayed in the Media management tool and other places
+* Fixed: Activating SharePress when the active theme did not use add_theme_support('post-thumbnails') would result in error messages being displayed in the Media management tool and other places
 
 = 2.0.1 =
 * Fixed: cron job is working again 
@@ -54,16 +54,16 @@ If you have Sharepress installed, all you need to do is [buy a key](http://aaron
 * Fixed: no inline error when user has no Pages to manage
 
 = 2.0 =
-* Sharepress Pro is now available! If you want access to the pro features, you'll need to upgrade Sharepress and then buy a license key. This release also fixes a number of bugs and usability issues, and 
+* SharePress Pro is now available! If you want access to the pro features, you'll need to upgrade SharePress and then buy a license key. This release also fixes a number of bugs and usability issues, and 
 
 = 1.0.10 =
-* [Jen Russo](http://www.mauitime.com) reported that posts created via e-mailing to Posterous weren't triggering Sharepress. There was a bug that prevented Sharepress from firing in all cases other than the ones wherein the user was manually accessing the admin. This is now fixed.
+* [Jen Russo](http://www.mauitime.com) reported that posts created via e-mailing to Posterous weren't triggering SharePress. There was a bug that prevented SharePress from firing in all cases other than the ones wherein the user was manually accessing the admin. This is now fixed.
 
 = 1.0.9 =
 * [Corey Brown](http://www.twitter.com/coreyweb) reported a bug in the "Publish to Facebook again" feature: not only was it not publishing again, but it was deleting the original meta data. This is now fixed.
 
 = 1.0.8 =
-* Ron Kochanowski reported a strange problem with brand new posts displaying the message "This post is older than the date on which Sharepress was activated." in the editor. I couldn't fix the problem, so I eliminated the "feature." Problem solved.
+* Ron Kochanowski reported a strange problem with brand new posts displaying the message "This post is older than the date on which SharePress was activated." in the editor. I couldn't fix the problem, so I eliminated the "feature." Problem solved.
 
 = 1.0.7 =
 * Added "sp" prefix to the Facebook classes, now "spFacebook" and "spFacebookApiException" - was creating namespace conflicts with other Facebook plugins (thanks [Ben Gillbanks](http://twitter.com/binarymoon) of [WPVOTE](http://www.wpvote.com))
@@ -85,7 +85,7 @@ If you have Sharepress installed, all you need to do is [buy a key](http://aaron
 * Broad update to readme.txt
 
 = 1.0.1 =
-* Added links for learning more about Sharepress Pro
+* Added links for learning more about SharePress Pro
 
 = 1.0 =
 * The first release!
@@ -102,7 +102,7 @@ Critical bug fix release. Please upgrade soon.
 Critical bug release. Please upgrade soon.
 
 = 2.0 =
-Sharepress Pro is now available! If you want access to the pro features, you'll need to upgrade Sharepress and then buy a license key
+SharePress Pro is now available! If you want access to the pro features, you'll need to upgrade SharePress and then buy a license key
 
 = 1.0.6 =
 Fixes a bug that results in breaking core JavaScript in the WordPress admin

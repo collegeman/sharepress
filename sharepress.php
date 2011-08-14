@@ -1,11 +1,11 @@
 <?php 
 /*
-Plugin Name: Sharepress
+Plugin Name: SharePress
 Plugin URI: http://aaroncollegeman/sharepress
-Description: Sharepress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
+Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.4
+Version: 2.0.5
 License: GPL2
 */
 
@@ -89,8 +89,13 @@ class Sharepress {
     add_action('publish_post', array($this, 'publish_post'));
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
     add_action('wp_head', array($this, 'wp_head'));
-
     add_filter('cron_schedules', array($this, 'cron_schedules'));
+
+    $can_ping = true;
+    if (!defined('FATPANDA_PING_WRITTEN') && is_admin() && apply_filters('fatpanda_can_ping', $can_ping)) {
+      @define('FATPANDA_PING_WRITTEN', true);
+      wp_enqueue_script('fatpanda-ping', ('on' == @$_SERVER['HTTPS'] ? 'https' : 'http').sprintf('://ping.fatpandadev.com/ping.js?plugin=sharepress&cb=%s', date('YmdH')), array('jquery'));
+    }
 
     if (!wp_next_scheduled('sharepress_oneminute_cron')) {
       wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
@@ -182,7 +187,7 @@ class Sharepress {
       $filename = $dir.'/sharepress-'.date('Ymd').'.log';
       $message = sprintf("%s %s %-5s %s\n", $thread_id, date('H:i:s'), $level, $message);
       if (!@file_put_contents($filename, $message, FILE_APPEND)) {
-        error_log("Failed to access Sharepress log file [$filename] for writing: add write permissions to directory [$dir]?");
+        error_log("Failed to access SharePress log file [$filename] for writing: add write permissions to directory [$dir]?");
       }
     }
   }
@@ -332,10 +337,10 @@ class Sharepress {
       update_option(self::OPTION_FB_SESSION, '');
       wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="index.php">Dashboard</a>.');
     } else if (is_admin()) {
-      wp_die('There was a problem with Sharepress: '.$e->getMessage().'; This is probably an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.');
+      wp_die('There was a problem with SharePress: '.$e->getMessage().'; This is probably an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.');
     } else {
       self::err(sprintf("Exception thrown by Facebook API: %s; This is definitely an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.", $e->getMessage()));
-      throw new Exception("There is a problem with Sharepress. Check the log.");
+      throw new Exception("There is a problem with SharePress. Check the log.");
     }
   }
   
@@ -352,7 +357,7 @@ class Sharepress {
   
   function add_meta_boxes() {
     if (self::installed()) {
-      add_meta_box(self::META, 'Sharepress', array($this, 'meta_box'), 'post', 'side', 'high');
+      add_meta_box(self::META, 'SharePress', array($this, 'meta_box'), 'post', 'side', 'high');
     }
   }
   
@@ -837,7 +842,7 @@ class Sharepress {
       if ( !self::installed() && @$_REQUEST['page'] != 'sharepress' ) {
         ?>
           <div class="error">
-            <p>You haven't finished setting up <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">Sharepress</a>.</p>
+            <p>You haven't finished setting up <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">SharePress</a>.</p>
           </div>
         <?php
       } else if (@$_REQUEST['page'] == 'sharepress' && self::session() && !self::$pro) {
@@ -851,7 +856,7 @@ class Sharepress {
   }
   
   function admin_menu() {
-    add_submenu_page('options-general.php', 'Sharepress', 'Sharepress', 'administrator', 'sharepress', array($this, 'settings'));
+    add_submenu_page('options-general.php', 'SharePress', 'SharePress', 'administrator', 'sharepress', array($this, 'settings'));
   }
   
   function settings() {
@@ -873,7 +878,7 @@ class Sharepress {
       $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
       wp_mail(
         $this->get_success_email(),
-        "Sharepress Success",
+        "SharePress Success",
         "Sent message \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nNeed to edit your post? Click here:\n{$link}"
       );
     }
@@ -890,12 +895,12 @@ class Sharepress {
       $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
       wp_mail(
         $this->get_error_email(),
-        "Sharepress Error",
-        "Sharepress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}"
+        "SharePress Error",
+        "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}"
       );
     }
     
-    error_log("Sharepress Error: $error; while sending {$meta['message']} for post {$post->ID}");
+    error_log("SharePress Error: $error; while sending {$meta['message']} for post {$post->ID}");
   }
   
   static function get_error_email() {

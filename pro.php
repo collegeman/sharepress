@@ -99,7 +99,7 @@ class SharepressPro {
     $url = $current_url . '&sharepress_sort='. ( $current_order == 'asc' ? 'desc' : 'asc' );
     
     
-    $cols['sharepress'] = '<a href="'.$url.'">'.__('Sharepress').'</a>';
+    $cols['sharepress'] = '<a href="'.$url.'">'.__('SharePress').'</a>';
     
     return $cols;
   }
@@ -140,12 +140,12 @@ class SharepressPro {
     $current = @$_GET['sharepress'];
     ?>
       <select name="sharepress">
-        <option value="">Sharepress Filter (Off)</option>
-        <option value="all" <?php if ($current == 'all') echo 'selected="selected"' ?>>Show only Sharepressed</option>
+        <option value="">SharePress Filter (Off)</option>
+        <option value="all" <?php if ($current == 'all') echo 'selected="selected"' ?>>Show only SharePressed</option>
         <option value="posted" <?php if ($current == 'posted') echo 'selected="selected"' ?>>&mdash; Already posted</option>
         <option value="scheduled" <?php if ($current == 'scheduled') echo 'selected="selected"' ?>>&mdash; Scheduled to be posted</option>
         <option value="error" <?php if ($current == 'error') echo 'selected="selected"' ?>>&mdash; Errors</option>
-        <option value="not" <?php if ($current == 'not') echo 'selected="selected"' ?>>Show never Sharepressed</option>
+        <option value="not" <?php if ($current == 'not') echo 'selected="selected"' ?>>Show never SharePressed</option>
       </select>
     <?php
   }
