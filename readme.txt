@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.4
+Stable tag: 2.0.5
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,10 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.5 =
+* Changed: Renamed "Sharepress" to "SharePress"
+* Added: Tutorial video for setting up SharePress and registering a Facebook Application
 
 = 2.0.4 =
 * Fixed: Major bug in setup process, prevented establishing API key and app secret in the database.
