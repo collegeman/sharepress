@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.5
+Version: 2.0.6
 License: GPL2
 */
 
@@ -92,8 +92,8 @@ class Sharepress {
     add_filter('cron_schedules', array($this, 'cron_schedules'));
 
     $can_ping = true;
-    if (!defined('FATPANDA_PING_WRITTEN') && is_admin() && apply_filters('fatpanda_can_ping', $can_ping)) {
-      @define('FATPANDA_PING_WRITTEN', true);
+    if (!defined('SHAREPRESS_PING_WRITTEN') && is_admin() && apply_filters('fatpanda_can_ping', $can_ping) && apply_filters('fatpanda_can_ping_sharperess', $can_ping)) {
+      @define('SHAREPRESS_PING_WRITTEN', true);
       wp_enqueue_script('fatpanda-ping', ('on' == @$_SERVER['HTTPS'] ? 'https' : 'http').sprintf('://ping.fatpandadev.com/ping.js?plugin=sharepress&cb=%s', date('YmdH')), array('jquery'));
     }
 
@@ -130,13 +130,23 @@ class Sharepress {
         }
       }
 
-      if (!($picture = $meta['picture'])) {
-        if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), 'thumbnail' )) {
-          $picture = $src[0];
-        }
-      }
-      
       if (is_single() || ( is_page() && !is_front_page() )) {
+        $picture = '';
+
+        if (!$meta['let_facebook_pick_pic']) {
+        
+          if (!($picture = $meta['picture'])) {
+            if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), 'thumbnail' )) {
+              $picture = $src[0];
+            }
+          }
+
+          if (!$picture) {
+            $picture = $this->get_default_picture();
+          }
+
+        }
+          
         $defaults = array(
           'og:type' => 'article',
           'og:url' => get_permalink(),
@@ -149,10 +159,10 @@ class Sharepress {
       } else {
         $defaults = array(
           'og:type' => self::setting('page_og_type', 'blog'),
-          'og:url' => get_permalink(),
+          'og:url' => is_front_page() ? get_bloginfo('siteurl') : get_permalink(),
           'og:title' => get_the_title(),
           'og:site_name' => get_bloginfo('name'),
-          'og:image' => self::get_default_picture(),
+          'og:image' => $this->get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY)
         );
         

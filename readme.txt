@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.5
+Stable tag: 2.0.6
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,10 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.6 =
+* Fixed: For sites that don't use a Page for the front door, the og:url meta was using the first permalink of the first post from the loop. This is wrong, it should be using the siteurl on the home page. This is now fixed.
+* Fixed: Default piture was not being used on Posts that didn't set a Featured Image, but weren't set to allow Facebook to pick a picture
 
 = 2.0.5 =
 * Changed: Renamed "Sharepress" to "SharePress"
@@ -95,6 +99,9 @@ If you have SharePress installed, all you need to do is [buy a key](http://aaron
 * The first release!
 
 == Upgrade Notice ==
+
+= 2.0.6 =
+Critical bug fix release. Please upgrade soon.
 
 = 2.0.4 =
 Critical bug fix release. Please upgrade soon.
