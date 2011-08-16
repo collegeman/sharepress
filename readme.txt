@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,9 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.7 =
+* Change: Made it possible to reset the Facebook session from within the text of critical error messages
 
 = 2.0.6 =
 * Fixed: For sites that don't use a Page for the front door, the og:url meta was using the first permalink of the first post from the loop. This is wrong, it should be using the siteurl on the home page. This is now fixed.

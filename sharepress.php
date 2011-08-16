@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.6
+Version: 2.0.7
 License: GPL2
 */
 
@@ -347,7 +347,7 @@ class Sharepress {
       update_option(self::OPTION_FB_SESSION, '');
       wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="index.php">Dashboard</a>.');
     } else if (is_admin()) {
-      wp_die('There was a problem with SharePress: '.$e->getMessage().'; This is probably an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.');
+      wp_die(sprintf('There was a problem with SharePress: %s; This is probably an issue with the Facebook API. Check <a href="http://developers.facebook.com/live_status/" target="_blank">Facebook Live Status</a> for more information. You can also <a href="%s">try resetting SharePress</a>. If the problem persists, please <a href="http://aaroncollegeman.com/sharepress/help/#support_form" target="_blank">report it to Fat Panda</a>.', $e->getMessage(), admin_url('options-general.php?page=sharepress&amp;action=clear_session')));
     } else {
       self::err(sprintf("Exception thrown by Facebook API: %s; This is definitely an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.", $e->getMessage()));
       throw new Exception("There is a problem with SharePress. Check the log.");
@@ -796,13 +796,6 @@ class Sharepress {
   }
   
   function admin_init() {
-    // verify our Facebook session
-    if (@$_REQUEST['page'] == 'sharepress' && @$_REQUEST['action'] != 'fb_save_session' && ($session = self::session())) {
-      if (self::me('id') != $session['uid']) {
-        self::handleFacebookException(new SharepressFacebookSessionException());
-      }
-    }
-    
     if ($action = @$_REQUEST['action']) {
       
       // when the user clicks "Setup" tab on the settings screen:
@@ -827,6 +820,13 @@ class Sharepress {
         }
       }
       
+    }
+
+    // verify our Facebook session
+    if (@$_REQUEST['page'] == 'sharepress' && @$_REQUEST['action'] != 'fb_save_session' && ($session = self::session())) {
+      if (self::me('id') != $session['uid']) {
+        self::handleFacebookException(new SharepressFacebookSessionException());
+      }
     }
     
     register_setting('fb-step1', self::OPTION_API_KEY);
