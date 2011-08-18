@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.7
+Stable tag: 2.0.8
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,9 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.8 =
+* Change: Facebook changed the URL for the linter, so I've updated SharePress to use the new URL
 
 = 2.0.7 =
 * Change: Made it possible to reset the Facebook session from within the text of critical error messages
