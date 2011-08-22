@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.8
+Version: 2.0.9
 License: GPL2
 */
 
@@ -100,6 +100,9 @@ class Sharepress {
     if (!wp_next_scheduled('sharepress_oneminute_cron')) {
       wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
     }
+
+    // triggers sharepress-mu loading, if present:
+    do_action('sharepress_init');
   } 
 
   function cron_schedules($schedules) {
@@ -469,6 +472,7 @@ class Sharepress {
     
     // don't do anything on autosave events
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+      self::log("DOING_AUTOSAVE is true; ignoring save_post($post_id)");
       return false;
     }
     
@@ -476,11 +480,13 @@ class Sharepress {
     
     // make sure we're not working with a revision
     if ($parent_post_id = wp_is_post_revision($post)) {
+      self::log("Post is a revision; ignoring save_post($post_id)");
       return false;
     }
     
     // verify permissions
     if (!current_user_can('edit_post', $post->ID)) {
+      self::log("Current user is not allowed to edit posts; ignoring save_post($post_id)");
       return false;
     }
     
@@ -516,23 +522,40 @@ class Sharepress {
         if ($post->post_status == 'publish') {
           // if lite version or if publish time has already past
           if (!self::$pro || ( ($time = self::$pro->get_publish_time()) < current_time('timestamp') )) {
+            self::log("Posting to Facebook now; save_post($post_id)");
             $this->post_on_facebook($post);
+          
           // otherwise, if $time specified, schedule future publish
           } else if ($time) {
+            self::log("Scheduling future repost at {$time}; save_post($post_id)");
             update_post_meta($post->ID, self::META_SCHEDULED, $time);
+          
+          // otherwise...?
+          } else {
+            self::log("Not time to post or no post schedule time given, so not posting to Facebook; save_post($post_id)");
           }
+        
+        } else {
+          self::log("Post status is not 'publish'; not posting on save_post($post_id)");
+
         }
         
         return true;
         
       } else if (get_post_meta($post->ID, self::META_SCHEDULED, true) && @$_POST[self::META]['cancelled']) {
-        
+        self::log("Scheduled repost canceled by save_post($post_id)");
         delete_post_meta($post->ID, self::META_SCHEDULED);
+
+      } else if (isset($_POST[self::META]['enabled']) && $_POST[self::META]['enabled'] == 'off') {
+        self::log("Use has indicated they do not wish to Post to Facebook; save_post($post_id)");
+        update_post_meta($post->ID, self::META, array('enabled' => 'off'));
         
       } else {
+        self::log("Post is already posted or is not allowed to be posted to facebook; save_post($post_id)");
         return false;
       }
     } else {
+      self::log("SharePress nonce was invalid; ignoring save_post($post_id)");
       return false;
     }
   }
@@ -546,33 +569,36 @@ class Sharepress {
   }
   
   function transition_post_status($new_status, $old_status, $post) {
-    if (@$_POST[self::META]) {
-      // saving operation... don't execute this
-      return;
-    }
-    
     if (SHAREPRESS_DEBUG) {
       self::log(sprintf("transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
     }
 
+    if (@$_POST[self::META]) {
+      if (SHAREPRESS_DEBUG) {
+        self::log(sprintf("Saving operation in progress; ignoring transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
+      }
+      return;
+    }
+    
     // value of $post here is inconsistent
     if (!is_object($post)) {
       $post = get_post($post);
     }
     
     if ($new_status == 'publish' && $old_status != 'publish' && $post) {
+      // TODO: not sure what I was thinking here... this doesn't do anything.
+      self::log(sprintf("Time to implement something here; transition_post_status($new_status, $old_status, %s", is_object($post) ? $post->post_title : $post));
       do_action('post_on_facebook', $post);
     }
   }
   
   function publish_post($post_id) {
+    self::log("publish_post($post_id)");
+    
     if (@$_POST[self::META]) {
+      self::log("Saving operation in progress; ignoring publish_post($post_id)");
       // saving operation... don't execute this
       return;
-    }
-    
-    if (SHAREPRESS_DEBUG) {
-      self::log("publish_post($post_id)");
     }
     
     if ($post = get_post($post_id)) {

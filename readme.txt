@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.8
+Stable tag: 2.0.9
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -38,6 +38,11 @@ If you have SharePress installed, all you need to do is [buy a key](http://aaron
 
 == Changelog ==
 
+= 2.0.9 =
+* Fixed: Choice "No" in SharePress meta box was not being saved
+* Added: sharepress-mu.php "must-use" plugin adapter; drop this file into your wp-content/mu-plugins folder to enable MU-mode. Don't forget you need a MU license!
+* Added: a lot more logging statements, to help debug some problems with scheduled posts
+
 = 2.0.8 =
 * Change: Facebook changed the URL for the linter, so I've updated SharePress to use the new URL
 
@@ -49,7 +54,7 @@ If you have SharePress installed, all you need to do is [buy a key](http://aaron
 * Fixed: Default piture was not being used on Posts that didn't set a Featured Image, but weren't set to allow Facebook to pick a picture
 
 = 2.0.5 =
-* Changed: Renamed "Sharepress" to "SharePress"
+* Change: Renamed "Sharepress" to "SharePress"
 * Added: Tutorial video for setting up SharePress and registering a Facebook Application
 
 = 2.0.4 =
