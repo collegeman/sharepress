@@ -40,7 +40,7 @@ If you have SharePress installed, all you need to do is [buy a key](http://aaron
 
 = 2.0.9 =
 * Fixed: Choice "No" in SharePress meta box was not being saved
-* Added: sharepress-mu.php "must-use" plugin adapter; drop this file into your wp-content/mu-plugins folder to enable MU-mode. Don't forget you need a MU license!
+* Fixed: Took some steps to reduce issues with license keys
 * Added: a lot more logging statements, to help debug some problems with scheduled posts
 
 = 2.0.8 =

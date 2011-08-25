@@ -859,10 +859,19 @@ class Sharepress {
     register_setting('fb-step1', self::OPTION_APP_SECRET);
     register_setting('fb-settings', self::OPTION_PUBLISHING_TARGETS);
     register_setting('fb-settings', self::OPTION_NOTIFICATIONS);
-    register_setting('fb-settings', self::OPTION_SETTINGS);
+    register_setting('fb-settings', self::OPTION_SETTINGS, array($this, 'sanitize_settings'));
 
     wp_enqueue_style('fancybox', plugins_url('lib/fancybox/jquery.fancybox-1.3.4.css', __FILE__));
     wp_enqueue_script('fancybox', plugins_url('lib/fancybox/jquery.fancybox-1.3.4.pack.js', __FILE__), array('jquery'));
+  }
+
+  function sanitize_settings($settings) {
+    
+    if (!empty($settings['license_key'])) {
+      $settings['license_key'] = trim($settings['license_key']);
+    }
+
+    return $settings;
   }
   
   static function installed() {
@@ -882,12 +891,20 @@ class Sharepress {
           </div>
         <?php
       } else if (@$_REQUEST['page'] == 'sharepress' && self::session() && !self::$pro) {
-        ?>
-          <div class="updated">
-            <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress">Learn more</a>.</p>
-          </div>
-        <?php
-      }
+        if ($this->setting('license_key') && strlen($this->setting('license_key')) != 32) {
+          ?>
+            <div class="error">
+              <p>Hmm... looks like there's something wrong with your <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">SharePress</a> license key.</p>
+            </div>
+          <?php
+        } else {
+          ?>
+            <div class="updated">
+              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress">Learn more</a>.</p>
+            </div>
+          <?php
+        }
+      }      
     }
   }
   
