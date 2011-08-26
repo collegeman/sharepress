@@ -296,7 +296,7 @@
             <div style="margin-bottom:5px;">
               <label>
                 <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="on" <?php if (self::setting('page_og_tags') != 'off') echo 'checked="checked"' ?> />
-                Let SharePress insert it (recommended)
+                Let SharePress insert all required tags (recommended)
               </label>
               
               <span style="margin-left:50px;">
@@ -314,8 +314,14 @@
             </div>
             <div>
               <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="imageonly" <?php if (self::setting('page_og_tags') == 'imageonly') echo 'checked="checked"' ?> />
+                  SharePress should only insert the <code>og:image</code> tag
+              </label>
+            </div>
+            <div style="padding-top:8px;">
+              <label>
                 <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="off" <?php if (self::setting('page_og_tags') == 'off') echo 'checked="checked"' ?> />
-                  My Theme does this for me
+                  SharePress should not insert any tags (make sure something else does!)
               </label>
             </div>
           </td>

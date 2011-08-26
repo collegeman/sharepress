@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.9
+Version: 2.0.10
 License: GPL2
 */
 
@@ -117,7 +117,7 @@ class Sharepress {
   function wp_head() {
     global $wpdb, $post;
     
-    if (self::setting('page_og_tags', 'on') == 'on') {
+    if (self::setting('page_og_tags', 'on') == 'on' || self::setting('page_og_tags', 'on') == 'imageonly') {
       // get any values stored in meta data
       $overrides = array();
       
@@ -149,15 +149,22 @@ class Sharepress {
           }
 
         }
-          
-        $defaults = array(
-          'og:type' => 'article',
-          'og:url' => get_permalink(),
-          'og:title' => get_the_title(),
-          'og:image' => $picture,
-          'og:site_name' => get_bloginfo('name'),
-          'fb:app_id' => get_option(self::OPTION_API_KEY)
-        );
+         
+        if (self::setting('page_og_tags') == 'on') { 
+          $defaults = array(
+            'og:type' => 'article',
+            'og:url' => get_permalink(),
+            'og:title' => get_the_title(),
+            'og:image' => $picture,
+            'og:site_name' => get_bloginfo('name'),
+            'fb:app_id' => get_option(self::OPTION_API_KEY)
+          );
+
+        } else if (self::setting('page_og_tags') == 'imageonly') {
+          $defaults = array(
+            'og:image' => $picture
+          );
+        }
         
       } else {
         $defaults = array(
@@ -180,7 +187,11 @@ class Sharepress {
       }
     
       foreach($og as $property => $content) {
-        echo sprintf("<meta property=\"%s\" content=\"%s\" />\n", htmlentities($property), htmlentities($content));
+        echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
+          array('"', '<', '>'), 
+          array('&quot;', '&lt;', '&gt;'), 
+          $content)
+        );
       }
     } 
 
