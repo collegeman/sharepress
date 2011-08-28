@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.10
+Stable tag: 2.0.11
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,9 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.11 =
+* Fixed: I wasn't actually reading the user's per-post configuration when determining what image to identify in the og:image tag
 
 = 2.0.10 =
 * Fixed: Stop escaping unicode characters in og: meta data
