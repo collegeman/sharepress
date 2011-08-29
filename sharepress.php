@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.11
+Version: 2.0.12
 License: GPL2
 */
 
@@ -504,13 +504,17 @@ class Sharepress {
       return false;
     }
     
-    // if the nonce is present, update meta settings for this post
+    $already_posted = get_post_meta($post->ID, self::META_POSTED, true);
+    $is_scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
+
+    // if the nonce is present, update meta settings for this post from $_POST
     if (wp_verify_nonce($_POST['sharepress-nonce'], plugin_basename(__FILE__))) {
+
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
       
       // update meta?
-      if (@$_POST[self::META]['publish_again'] || ( $_POST[self::META]['enabled'] == 'on' && !get_post_meta($post->ID, self::META_POSTED, true) && !get_post_meta($post->ID, self::META_SCHEDULED, true) )) {
+      if (@$_POST[self::META]['publish_again'] || ( $_POST[self::META]['enabled'] == 'on' && !$already_posted && !$is_scheduled )) {
                 
         // if publish_action was set, make sure enabled = 'on'
         if ($_POST[self::META]['publish_again']) {
@@ -563,11 +567,44 @@ class Sharepress {
       } else if (isset($_POST[self::META]['enabled']) && $_POST[self::META]['enabled'] == 'off') {
         self::log("Use has indicated they do not wish to Post to Facebook; save_post($post_id)");
         update_post_meta($post->ID, self::META, array('enabled' => 'off'));
-        
+
       } else {
         self::log("Post is already posted or is not allowed to be posted to facebook; save_post($post_id)");
         return false;
       }
+
+    #
+    # When save_post is invoked by XML-RPC the SharePress nonce won't be 
+    # available to test. So, we evaluate whether or not to post based on several
+    # criteria:
+    # 1. SharePress must be configured to post to Facebook by default
+    # 2. The Post must not already have been posted by SharePress
+    # 3. The Post must not be scheduled for future posting
+    #
+    } else if (XMLRPC_REQUEST && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+      // remove any past failures
+      delete_post_meta($post->ID, self::META_ERROR);
+
+      // setup meta with defaults
+      $meta = apply_filters('filter_'.self::META, array(
+        'message' => $post->post_title,
+        'title_is_message' => true,
+        'picture' => $this->get_default_picture(),
+        'let_facebook_pick_pic' => false,
+        'link' => get_permalink($post),
+        'description' => $this->get_excerpt($post),
+        'excerpt_is_description' => true,
+        'targets' => array_keys(self::targets()),
+        'enabled' => Sharepress::setting('default_behavior')
+      ), $post); 
+
+      update_post_meta($post->ID, self::META, $meta);
+
+      if ($post->post_status == 'publish') {
+        self::log("Posting to Facebook now; save_post($post_id)");
+        $this->post_on_facebook($post);
+      }
+
     } else {
       self::log("SharePress nonce was invalid; ignoring save_post($post_id)");
       return false;
