@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.12
+Version: 2.0.13
 License: GPL2
 */
 
@@ -581,7 +581,7 @@ class Sharepress {
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if (XMLRPC_REQUEST && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if (defined('XMLRPC_REQUEST') && XMLRPC_REQUEST && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
 
@@ -637,9 +637,7 @@ class Sharepress {
     }
     
     if ($new_status == 'publish' && $old_status != 'publish' && $post) {
-      // TODO: not sure what I was thinking here... this doesn't do anything.
-      self::log(sprintf("Time to implement something here; transition_post_status($new_status, $old_status, %s", is_object($post) ? $post->post_title : $post));
-      do_action('post_on_facebook', $post);
+      $this->post_on_facebook($post);
     }
   }
   
