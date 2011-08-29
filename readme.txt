@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.13
+Stable tag: 2.0.14
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,9 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.14 =
+* Fixed: Some minor issues related to calling array_merge without a defined array
 
 = 2.0.13 =
 * Fixed: The bug introduced by 2.0.12 - everything was considered RPC because I forgot to treat the constant like a constant...

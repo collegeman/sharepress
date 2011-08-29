@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.13
+Version: 2.0.14
 License: GPL2
 */
 
@@ -119,6 +119,7 @@ class Sharepress {
     
     if (self::setting('page_og_tags', 'on') == 'on' || self::setting('page_og_tags', 'on') == 'imageonly') {
       // get any values stored in meta data
+      $defaults = array();
       $overrides = array();
       
       $query = $wpdb->get_results( $wpdb->prepare("
@@ -184,17 +185,20 @@ class Sharepress {
       $og = array_merge($defaults, $overrides);
       
       $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
-      foreach($og as $property => $content) {
-        list($prefix, $tagName) = explode(':', $property);
-        $og[$property] = apply_filters("sharepress_og_tag_{$tagName}", $content);
-      }
-    
-      foreach($og as $property => $content) {
-        echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
-          array('"', '<', '>'), 
-          array('&quot;', '&lt;', '&gt;'), 
-          $content)
-        );
+      
+      if ($og) {
+        foreach($og as $property => $content) {
+          list($prefix, $tagName) = explode(':', $property);
+          $og[$property] = apply_filters("sharepress_og_tag_{$tagName}", $content);
+        }
+
+        foreach($og as $property => $content) {
+          echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
+            array('"', '<', '>'), 
+            array('&quot;', '&lt;', '&gt;'), 
+            $content)
+          );
+        }
       }
     } 
 
