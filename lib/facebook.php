@@ -30,10 +30,14 @@ class spFacebook extends spBaseFacebook
    * we discover them.
    *
    * @param Array $config the application configuration.
-   * @see spBaseFacebook::__construct in facebook.php
+   * @see BaseFacebook::__construct in facebook.php
    */
   public function __construct($config) {
-    @session_start();
+    /*
+    if (!session_id()) {
+      session_start();
+    }
+    */
     parent::__construct($config);
   }
 

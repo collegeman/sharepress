@@ -15,11 +15,12 @@
  * under the License.
  */
 
-/*
-if (!function_exists('curl_init')) {
-  throw new Exception('Facebook needs the CURL PHP extension.');
-}
-*/
+/**
+ * This file has been modified to use the WP_Http object instead of cURL.
+ * Also, classes are now prefixed with 'sp' to eliminate namespace collissions
+ * with other plugins.
+ */
+
 if (!function_exists('json_decode')) {
   throw new Exception('Facebook needs the JSON PHP extension.');
 }
@@ -112,7 +113,7 @@ class spFacebookApiException extends Exception
  * Provides access to the Facebook Platform.  This class provides
  * a majority of the functionality needed, but the class is abstract
  * because it is designed to be sub-classed.  The subclass must
- * implement the three abstract methods listed at the bottom of
+ * implement the four abstract methods listed at the bottom of
  * the file.
  *
  * @author Naitik Shah <naitik@facebook.com>
@@ -122,7 +123,7 @@ abstract class spBaseFacebook
   /**
    * Version.
    */
-  const VERSION = '3.0.1';
+  const VERSION = '3.1.1';
 
   /**
    * Default options for curl.
@@ -131,7 +132,7 @@ abstract class spBaseFacebook
     CURLOPT_CONNECTTIMEOUT => 10,
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_TIMEOUT        => 60,
-    CURLOPT_USERAGENT      => 'facebook-php-3.0',
+    CURLOPT_USERAGENT      => 'facebook-php-3.1',
   );
 
   /**
@@ -339,10 +340,22 @@ abstract class spBaseFacebook
     // the access token.
     $signed_request = $this->getSignedRequest();
     if ($signed_request) {
+      // apps.facebook.com hands the access_token in the signed_request
       if (array_key_exists('oauth_token', $signed_request)) {
         $access_token = $signed_request['oauth_token'];
         $this->setPersistentData('access_token', $access_token);
         return $access_token;
+      }
+
+      // the JS SDK puts a code in with the redirect_uri of ''
+      if (array_key_exists('code', $signed_request)) {
+        $code = $signed_request['code'];
+        $access_token = $this->getAccessTokenFromCode($code, '');
+        if ($access_token) {
+          $this->setPersistentData('code', $code);
+          $this->setPersistentData('access_token', $access_token);
+          return $access_token;
+        }
       }
 
       // signed request states there's no access token, so anything
@@ -374,15 +387,19 @@ abstract class spBaseFacebook
   }
 
   /**
-   * Get the data from a signed_request token.
+   * Retrieve the signed request, either from a request parameter or,
+   * if not present, from a cookie.
    *
-   * @return string The base domain
+   * @return string the signed request, if available, or null otherwise.
    */
   public function getSignedRequest() {
     if (!$this->signedRequest) {
       if (isset($_REQUEST['signed_request'])) {
         $this->signedRequest = $this->parseSignedRequest(
           $_REQUEST['signed_request']);
+      } else if (isset($_COOKIE[$this->getSignedRequestCookieName()])) {
+        $this->signedRequest = $this->parseSignedRequest(
+          $_COOKIE[$this->getSignedRequestCookieName()]);
       }
     }
     return $this->signedRequest;
@@ -463,6 +480,13 @@ abstract class spBaseFacebook
   public function getLoginUrl($params=array()) {
     $this->establishCSRFTokenState();
     $currentUrl = $this->getCurrentUrl();
+
+    // if 'scope' is passed as an array, convert to comma separated list
+    $scopeParams = isset($params['scope']) ? $params['scope'] : null;
+    if ($scopeParams && is_array($scopeParams)) {
+      $params['scope'] = implode(',', $scopeParams);
+    }
+
     return $this->getUrl(
       'www',
       'dialog/oauth',
@@ -530,6 +554,19 @@ abstract class spBaseFacebook
     } else {
       return call_user_func_array(array($this, '_graph'), $args);
     }
+  }
+
+  /**
+   * Constructs and returns the name of the cookie that
+   * potentially houses the signed request for the app user.
+   * The cookie is not set by the BaseFacebook class, but
+   * it may be set by the JavaScript SDK.
+   *
+   * @return string the name of the cookie that would house
+   *         the signed request value.
+   */
+  protected function getSignedRequestCookieName() {
+    return 'fbsr_'.$this->getAppId();
   }
 
   /**
@@ -613,9 +650,13 @@ abstract class spBaseFacebook
    * @return mixed An access token exchanged for the authorization code, or
    *               false if an access token could not be generated.
    */
-  protected function getAccessTokenFromCode($code) {
+  protected function getAccessTokenFromCode($code, $redirect_uri = null) {
     if (empty($code)) {
       return false;
+    }
+
+    if ($redirect_uri === null) {
+      $redirect_uri = $this->getCurrentUrl();
     }
 
     try {
@@ -626,7 +667,7 @@ abstract class spBaseFacebook
           $this->getUrl('graph', '/oauth/access_token'),
           $params = array('client_id' => $this->getAppId(),
                           'client_secret' => $this->getApiSecret(),
-                          'redirect_uri' => $this->getCurrentUrl(),
+                          'redirect_uri' => $redirect_uri,
                           'code' => $code));
     } catch (spFacebookApiException $e) {
       // most likely that user very recently revoked authorization.
@@ -741,12 +782,6 @@ abstract class spBaseFacebook
   protected function makeRequest($url, $params, $ch=null) {
     $http = _wp_http_get_object();
 
-    /*
-    if (!$ch) {
-      $ch = curl_init();
-    }
-    */
-
     $args = array();
     $args['method'] = 'POST';
     
@@ -755,16 +790,6 @@ abstract class spBaseFacebook
     } else {
       $args['body'] = http_build_query($params, null, '&');
     } 
-
-    /*
-    $opts = self::$CURL_OPTS;
-    if ($this->useFileUploadSupport()) {
-      $opts[CURLOPT_POSTFIELDS] = $params;
-    } else {
-      $opts[CURLOPT_POSTFIELDS] = http_build_query($params, null, '&');
-    }
-    $opts[CURLOPT_URL] = $url;
-    */
 
     // disable the 'Expect: 100-continue' behaviour. This causes CURL to wait
     // for 2 seconds if the server does not support this header.
@@ -778,22 +803,7 @@ abstract class spBaseFacebook
     }
     $args['headers'] = $opts[CURLOPT_HTTPHEADER];
 
-    /*
-    curl_setopt_array($ch, $opts);
-    $result = curl_exec($ch);
-    */
-
     $args['sslverify'] = false;
-
-    /* 
-    if (curl_errno($ch) == 60) { // CURLE_SSL_CACERT
-      self::errorLog('Invalid or no certificate authority found, '.
-                     'using bundled information');
-      curl_setopt($ch, CURLOPT_CAINFO,
-                  dirname(__FILE__) . '/fb_ca_chain_bundle.crt');
-      $result = curl_exec($ch);
-    }
-    */
 
     $result = $http->request($url, $args);
 
@@ -808,22 +818,6 @@ abstract class spBaseFacebook
     } 
 
     return $result['body'];
-
-    /*
-    if ($result === false) {
-      $e = new spFacebookApiException(array(
-        'error_code' => curl_errno($ch),
-        'error' => array(
-        'message' => curl_error($ch),
-        'type' => 'CurlException',
-        ),
-      ));
-      curl_close($ch);
-      throw $e;
-    }
-    curl_close($ch);
-    return $result;
-    */
   }
 
   /**
@@ -963,9 +957,14 @@ abstract class spBaseFacebook
    * @return string The current URL
    */
   protected function getCurrentUrl() {
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on'
-      ? 'https://'
-      : 'http://';
+    if (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1)
+      || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
+    ) {
+      $protocol = 'https://';
+    }
+    else {
+      $protocol = 'http://';
+    }
     $currentUrl = $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     $parts = parse_url($currentUrl);
 
