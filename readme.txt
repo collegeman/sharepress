@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.14
+Stable tag: 2.0.15
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,12 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.15 =
+* Fixed: Upgraded to Facebook PHP SDK 3.1.1
+* Fixed: Now using oAuth 2.0 for Facebook login
+* Fixed: No longer using JavaScript SDK in the admin, so domain name restrictions no longer matter (i.e., WordPress MU)
+* Fixed: No longer dependent upon cURL, instead using WP_Http (thanks to [Curtiss Grymala](http://www.facebook.com/cgrymala))
 
 = 2.0.14 =
 * Fixed: Some minor issues related to calling array_merge without a defined array
@@ -126,6 +132,9 @@ If you have SharePress installed, all you need to do is [buy a key](http://aaron
 * The first release!
 
 == Upgrade Notice ==
+
+= 2.0.15 =
+Critical bug fix release. Please upgrade before October 1. Also note that when you upgrade, you will need to run SharePress setup again.
 
 = 2.0.6 =
 Critical bug fix release. Please upgrade soon.

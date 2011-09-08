@@ -39,8 +39,6 @@
             and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
           </p>  
           
-          <p><span style="color:red;">Turn off all pop-up blockers before continuing.</span></p> 
-          
           <table class="form-table">
             <tr>
               <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
@@ -56,92 +54,21 @@
                 <p class="submit">
                   <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
                 </p>
-                <div id="sharepress_fail" style="width:400px; display:none;">
-                  <p>
-                    It seems like there was a failure to connect to Facebook,
-                    here are some things to check.
-                  </p>
-                  <p>
-                    <b>1. Make sure your keys are correct.</b> If you made a mistake,
-                    refresh this page, re-enter the keys, and try connecting again.
-                  </p>
-                  <p>
-                    <b>2. Make sure your Facebook Application is configured with the
-                    correct values for Site URL and Domain.</b> If you made a mistake,
-                    refresh this page, re-enter the keys, and try connecting again.
-                  </p>
-                  <p>
-                    <b>3. Facebook is being stupid.</b> This happens. Nobody is perfect.
-                    Please wait a few minutes, refresh this page, and try again.
-                  </p>
-                  <p>
-                    If the problems persist, please <a href="http://aaroncollegeman/sharepress/help">visit the help page</a>.
-                  </p>
-                </div>
               </td>
             </tr>
           </table>
-
-        <?php } else { ?>
-
-          <p><span style="color:red;">Turn off all pop-up blockers before continuing.</span></p> 
           
-          <table class="form-table">
-            <tr>
-              <td></td>
-              <td>
-                <p class="submit">
-                  <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
-                </p>
-                <div id="sharepress_fail" style="width:400px; display:none;">
-                  <p>
-                    It seems like there was a failure to connect to Facebook,
-                    here are some things to check.
-                  </p>
-                  <p>
-                    <b>1. Make sure your keys are correct.</b> If you made a mistake,
-                    refresh this page, re-enter the keys, and try connecting again.
-                  </p>
-                  <p>
-                    <b>2. Make sure your Facebook Application is configured with the
-                    correct values for Site URL and Domain.</b> If you made a mistake,
-                    refresh this page, re-enter the keys, and try connecting again.
-                  </p>
-                  <p>
-                    <b>3. Facebook is being stupid.</b> This happens. Nobody is perfect.
-                    Please wait a few minutes, refresh this page, and try again.
-                  </p>
-                  <p>
-                    If the problems persist, please <a href="http://aaroncollegeman/sharepress/help">visit the help page</a>.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          </table>
-
         <?php } ?>
+
         
-        <div id="fb-root"></div>
         <script>
-          (function() {
-            var e = document.createElement('script'); e.async = true;
-            e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
-            document.getElementById('fb-root').appendChild(e);
-          }());
 
           (function($) {
             var api_key = $('#<?php echo self::OPTION_API_KEY ?>').focus();
             var app_secret = $('#<?php echo self::OPTION_APP_SECRET ?>');
             var btn = $('#btnConnect');
 
-            var fail_timeout = null;
-            var session_saved = false;
-
             $('#settings_form').submit(function() {
-              if (session_saved) {
-                return true;
-              }
-
               api_key.val($.trim(api_key.val()));
               app_secret.val($.trim(app_secret.val()));  
 
@@ -159,96 +86,23 @@
 
               <?php } ?>
 
-              btn.attr('disabled', true).val('Connecting...');
-
-              fail_timeout = setTimeout(function() {
-                $('#sharepress_fail').fadeIn();
-              }, 3000);
-
-              FB.init({
-                appId: $('#<?php echo self::OPTION_API_KEY ?>').val(),
-                status: true, 
-                cookie: true
+              $.post(ajaxurl, { action: 'fb_save_keys', current_url: '<?php echo self::facebook()->getCurrentUrl() ?>', api_key: api_key.val(), app_secret: app_secret.val() }, function(url) {
+                btn.attr('disabled', true).val('Connecting...');
+                document.location = url;  
               });
-
-              fb_connect();
 
               return false;
             });
        
-            function do_with_session(session, dont_retry) {
-              if (session) {
-                // do we have the permissions we need?
-                var q = FB.Data.query("SELECT read_stream, publish_stream, offline_access, manage_pages FROM permissions WHERE uid = {0}", session.uid);
-                // wait for the query to load
-                q.wait(function(rows) {
-                  // check the permissions
-                  if (rows[0].offline_access != '1' || rows[0].publish_stream != '1' || rows[0].read_stream != '1' || rows[0].manage_pages != '1') {
-                    // unless we're not allowed to retry
-                    if (!dont_retry) {
-                      // try logging in again
-                      FB.login(function(response) {
-                        // but this time, don't allow a retry
-                        do_with_session(response.session, true);
-                      }, {perms: 'read_stream,publish_stream,offline_access,manage_pages'});
-                    } else {
-                      btn.attr('disabled', false).val('Connect');
-                    }
-                  } else {
-                    // post session data to the back-end and then redirect to the settings screen
-                    setTimeout(function() {
-                      <?php if (!defined('SHAREPRESS_MU') || !SHAREPRESS_MU || current_user_can('manage_network')) { ?>
-                        
-                        var data = {
-                          session: session, 
-                          api_key: api_key.val(), 
-                          app_secret: app_secret.val()
-                        };
-                      
-                      <?php } else { ?>
-                      
-                        var data = {
-                          session: session
-                        };
-                      
-                      <?php } ?>
-
-                      data.action = 'fb_save_session';
-
-                      $.post(ajaxurl, data, function(response) {
-                        btn.attr('disabled', true).val('Connected!');
-                        session_saved = true;
-                        $('#settings_form').submit();
-                      });
-                    }, 1000);
-                  }
-                });
-              } else {
-                btn.attr('disabled', false).val('Connect');
-              }
-            }
             
-            function fb_connect() {
-              FB.getLoginStatus(function(response) {
-                clearTimeout(fail_timeout);
-                if (!response.session) {
-                  FB.login(function(response) {
-                    do_with_session(response.session);
-                  }, {perms: 'read_stream,publish_stream,offline_access,manage_pages'});
-                } else {
-                  do_with_session(response.session);
-                }
-              });
-            }
           })(jQuery);
         </script> 
 
       <?php } else { ?>
 
-        <p>Blah, blah, blah. Contact network admin.
+        <p>Blah, blah, blah. Contact network admin.</p>
 
       <?php } ?>
-      
       
     <?php } else { ?> 
       

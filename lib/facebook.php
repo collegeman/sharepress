@@ -33,11 +33,6 @@ class spFacebook extends spBaseFacebook
    * @see BaseFacebook::__construct in facebook.php
    */
   public function __construct($config) {
-    /*
-    if (!session_id()) {
-      session_start();
-    }
-    */
     parent::__construct($config);
   }
 
@@ -57,7 +52,7 @@ class spFacebook extends spBaseFacebook
     }
 
     $session_var_name = $this->constructSessionVariableName($key);
-    $_SESSION[$session_var_name] = $value;
+    update_option($session_var_name, $value);
   }
 
   protected function getPersistentData($key, $default = false) {
@@ -67,8 +62,7 @@ class spFacebook extends spBaseFacebook
     }
 
     $session_var_name = $this->constructSessionVariableName($key);
-    return isset($_SESSION[$session_var_name]) ?
-      $_SESSION[$session_var_name] : $default;
+    return get_option($session_var_name, $default);
   }
 
   protected function clearPersistentData($key) {
@@ -78,18 +72,19 @@ class spFacebook extends spBaseFacebook
     }
 
     $session_var_name = $this->constructSessionVariableName($key);
-    unset($_SESSION[$session_var_name]);
+    delete_option($session_var_name);
   }
 
-  protected function clearAllPersistentData() {
+  function clearAllPersistentData() {
     foreach (self::$kSupportedKeys as $key) {
       $this->clearPersistentData($key);
     }
   }
 
   protected function constructSessionVariableName($key) {
-    return implode('_', array('fb',
+    $arg = implode('_', array('fb',
                               $this->getAppId(),
                               $key));
+    return sprintf(Sharepress::OPTION_SESSION_ARG, $arg);
   }
 }

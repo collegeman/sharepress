@@ -43,11 +43,11 @@ class Sharepress {
   
   const OPTION_API_KEY = 'sharepress_api_key';
   const OPTION_APP_SECRET = 'sharepress_app_secret';
-  const OPTION_FB_SESSION = 'sharepress_session';
   const OPTION_PUBLISHING_TARGETS = 'sharepress_publishing_targets';
   const OPTION_NOTIFICATIONS = 'sharepress_notifications';
   const OPTION_DEFAULT_PICTURE = 'sharepress_default_picture';
   const OPTION_SETTINGS = 'sharepress_settings';
+  const OPTION_SESSION_ARG = 'sharepress_%s';
 
   //const META_MESSAGE_ID = 'sharepress_message_id';
   const META_RESULT = 'sharepress_result';
@@ -78,7 +78,7 @@ class Sharepress {
       add_action('admin_menu', array($this, 'admin_menu'));
       add_action('admin_init', array($this, 'admin_init'));
       add_action('admin_head', array($this, 'admin_head'));
-      add_action('wp_ajax_fb_save_session', array($this, 'ajax_fb_save_session'));
+      add_action('wp_ajax_fb_save_keys', array($this, 'ajax_fb_save_keys'));
       add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
       add_filter('plugin_action_links_sharepress/lite.php', array($this, 'plugin_action_links'), 10, 4);
     }
@@ -232,7 +232,15 @@ class Sharepress {
   }
   
   static function session() {
-    return get_option(self::OPTION_FB_SESSION, '');
+    if (!self::api_key() || !self::app_secret()) {
+      return false;
+    }
+
+    try {
+      return self::api('/me', 'GET', null, '1 hour');
+    } catch (Exception $e) {
+      return false;
+    }
   }
   
   static function setting($name = null, $default = null) {
@@ -260,13 +268,11 @@ class Sharepress {
   static $facebook;
   static function facebook() {
     if (!self::$facebook) {
-      if (($api_key = self::api_key()) && ($app_secret = self::app_secret()) && ($session = self::session())) {
+      if (($api_key = self::api_key()) && ($app_secret = self::app_secret())) {
         self::$facebook = new spFacebook(array(
           'appId' => $api_key,
           'secret' => $app_secret
         ));
-        
-        self::$facebook->setAccessToken($session['access_token']);
       } else {
         return null;
       }
@@ -364,8 +370,9 @@ class Sharepress {
   
   static function handleFacebookException($e) {
     if (is_a($e, 'SharepressFacebookSessionException') || $e->getMessage() == 'Invalid OAuth access token signature.') {
-      $session = get_option(self::OPTION_FB_SESSION);
-      update_option(self::OPTION_FB_SESSION, '');
+      if ($client = self::facebook()) {
+        $client->clearAllPersistentData();
+      }
       wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="index.php">Dashboard</a>.');
     } else if (is_admin()) {
       wp_die(sprintf('There was a problem with SharePress: %s; This is probably an issue with the Facebook API. Check <a href="http://developers.facebook.com/live_status/" target="_blank">Facebook Live Status</a> for more information. You can also <a href="%s">try resetting SharePress</a>. If the problem persists, please <a href="http://aaroncollegeman.com/sharepress/help/#support_form" target="_blank">report it to Fat Panda</a>.', $e->getMessage(), admin_url('options-general.php?page=sharepress&amp;action=clear_session')));
@@ -843,7 +850,7 @@ class Sharepress {
   function plugin_action_links($actions, $plugin_file, $plugin_data, $context) {
     $actions['settings'] = '<a href="options-general.php?page=sharepress">Settings</a>';
     if (!self::$pro && self::session()) {
-      $actions['go-pro'] = '<a href="http://aaroncollegeman.com/sharepress">Unlock Pro Version</a>';
+      $actions['go-pro'] = '<a href="http://aaroncollegeman.com/sharepress?utm_source=plugin&utm_medium=in-app-promo&utm_campaign=unlock-pro-version">Unlock Pro Version</a>';
     }
     return $actions;
   }
@@ -851,9 +858,15 @@ class Sharepress {
   /**
    * As part of setup, save the client-side session data - we don't trust cookies
    */
-  function ajax_fb_save_session() {
+  function ajax_fb_save_keys() {
     if (current_user_can('activate_plugins')) {
-      update_option(self::OPTION_FB_SESSION, $_REQUEST['session']);
+      update_option(self::OPTION_API_KEY, $_REQUEST['api_key']);
+      update_option(self::OPTION_APP_SECRET, $_REQUEST['app_secret']);
+      echo self::facebook()->getLoginUrl(array(
+        'redirect_uri' => $_REQUEST['current_url'],
+        'scope' => 'read_stream,publish_stream,offline_access,manage_pages'
+      ));
+        
     } else {
       header('Status: 403 Not Allowed');
     }
@@ -878,7 +891,7 @@ class Sharepress {
       // when the user clicks "Setup" tab on the settings screen:
       if ($action == 'clear_session') {      
         if (current_user_can('administrator')) {
-          delete_option(self::OPTION_FB_SESSION);
+          self::facebook()->clearAllPersistentData();
           self::clear_cache();
           wp_redirect('options-general.php?page=sharepress&step=1');
           exit;
@@ -899,13 +912,6 @@ class Sharepress {
       
     }
 
-    // verify our Facebook session
-    if (@$_REQUEST['page'] == 'sharepress' && @$_REQUEST['action'] != 'fb_save_session' && ($session = self::session())) {
-      if (self::me('id') != $session['uid']) {
-        self::handleFacebookException(new SharepressFacebookSessionException());
-      }
-    }
-    
     register_setting('fb-step1', self::OPTION_API_KEY);
     register_setting('fb-step1', self::OPTION_APP_SECRET);
     register_setting('fb-settings', self::OPTION_PUBLISHING_TARGETS);
@@ -951,7 +957,7 @@ class Sharepress {
         } else {
           ?>
             <div class="updated">
-              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress">Learn more</a>.</p>
+              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress?utm_source=plugin&utm_medium=in-app-promo&utm_campaign=learn-more">Learn more</a>.</p>
             </div>
           <?php
         }
@@ -967,11 +973,13 @@ class Sharepress {
     if (empty($_REQUEST['step']) || isset($_REQUEST['updated'])) {
       if (!self::api_key() || !self::app_secret()) {
         $_REQUEST['step'] = '1';
-      } else if (!self::session()) {
-        $_REQUEST['step'] = '2';
       } else {
         $_REQUEST['step'] = 'config';
       }
+    }
+
+    if (self::api_key() && self::app_secret() && self::session()) {
+      $_REQUEST['step'] = 'config';
     }
     
     require('settings.php');
