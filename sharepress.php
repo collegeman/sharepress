@@ -1,11 +1,11 @@
 <?php 
 /*
 Plugin Name: SharePress
-Plugin URI: http://aaroncollegeman/sharepress
+Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.14
+Version: 2.0.15
 License: GPL2
 */
 
@@ -794,9 +794,7 @@ class Sharepress {
     
       try {
         // poke the linter
-        $ch = curl_init(sprintf('http://developers.facebook.com/tools/debug/og/object?q=%s', urlencode($meta['link'])));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_exec($ch);
+        _wp_http_get_object()->request(sprintf('http://developers.facebook.com/tools/debug/og/object?q=%s', urlencode($meta['link'])));
         
         // no targets? error.
         if (!$meta['targets']) {

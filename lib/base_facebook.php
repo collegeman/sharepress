@@ -15,9 +15,11 @@
  * under the License.
  */
 
+/*
 if (!function_exists('curl_init')) {
   throw new Exception('Facebook needs the CURL PHP extension.');
 }
+*/
 if (!function_exists('json_decode')) {
   throw new Exception('Facebook needs the JSON PHP extension.');
 }
@@ -737,10 +739,24 @@ abstract class spBaseFacebook
    * @return string The response text
    */
   protected function makeRequest($url, $params, $ch=null) {
+    $http = _wp_http_get_object();
+
+    /*
     if (!$ch) {
       $ch = curl_init();
     }
+    */
 
+    $args = array();
+    $args['method'] = 'POST';
+    
+    if ($this->useFileUploadSupport()) {
+      // TODO
+    } else {
+      $args['body'] = http_build_query($params, null, '&');
+    } 
+
+    /*
     $opts = self::$CURL_OPTS;
     if ($this->useFileUploadSupport()) {
       $opts[CURLOPT_POSTFIELDS] = $params;
@@ -748,9 +764,11 @@ abstract class spBaseFacebook
       $opts[CURLOPT_POSTFIELDS] = http_build_query($params, null, '&');
     }
     $opts[CURLOPT_URL] = $url;
+    */
 
     // disable the 'Expect: 100-continue' behaviour. This causes CURL to wait
     // for 2 seconds if the server does not support this header.
+    $opts = self::$CURL_OPTS;
     if (isset($opts[CURLOPT_HTTPHEADER])) {
       $existing_headers = $opts[CURLOPT_HTTPHEADER];
       $existing_headers[] = 'Expect:';
@@ -758,10 +776,16 @@ abstract class spBaseFacebook
     } else {
       $opts[CURLOPT_HTTPHEADER] = array('Expect:');
     }
+    $args['headers'] = $opts[CURLOPT_HTTPHEADER];
 
+    /*
     curl_setopt_array($ch, $opts);
     $result = curl_exec($ch);
+    */
 
+    $args['sslverify'] = false;
+
+    /* 
     if (curl_errno($ch) == 60) { // CURLE_SSL_CACERT
       self::errorLog('Invalid or no certificate authority found, '.
                      'using bundled information');
@@ -769,7 +793,23 @@ abstract class spBaseFacebook
                   dirname(__FILE__) . '/fb_ca_chain_bundle.crt');
       $result = curl_exec($ch);
     }
+    */
 
+    $result = $http->request($url, $args);
+
+    if (is_wp_error($result)) {
+      throw new spFacebookApiException(array(
+        'error_code' => (int) $result->get_error_code(),
+        'error' => array(
+          'message' => $result->get_error_message(),
+          'type' => 'WP_Error'
+        )
+      ));
+    } 
+
+    return $result['body'];
+
+    /*
     if ($result === false) {
       $e = new spFacebookApiException(array(
         'error_code' => curl_errno($ch),
@@ -783,6 +823,7 @@ abstract class spBaseFacebook
     }
     curl_close($ch);
     return $result;
+    */
   }
 
   /**
