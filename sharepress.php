@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 if (!defined('ABSPATH')) exit;
 
 // we depend on this...
-require('lib/facebook-sdk-3.0.1.php');
+require('lib/facebook.php');
 // we don't care about certificate verification
 spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
