@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.15
+Version: 2.0.16
 License: GPL2
 */
 
@@ -36,8 +36,8 @@ spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
 );
   
-// by default, on if host is sharepress.dev.wp (my local dev name)
-@define('SHAREPRESS_DEBUG', $_SERVER['HTTP_HOST'] == 'localhost');
+// override this in functions.php
+@define('SHAREPRESS_DEBUG', false);
 
 class Sharepress {
   
@@ -81,6 +81,10 @@ class Sharepress {
       add_action('wp_ajax_fb_save_keys', array($this, 'ajax_fb_save_keys'));
       add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
       add_filter('plugin_action_links_sharepress/lite.php', array($this, 'plugin_action_links'), 10, 4);
+
+      if ($_REQUEST['page'] == 'sharepress' && isset($_REQUEST['log'])) {
+        wp_enqueue_style('theme-editor');
+      }
     }
     
     add_action('save_post', array($this, 'save_post'));
@@ -215,8 +219,8 @@ class Sharepress {
         $thread_id = substr(md5(uniqid()), 0, 6);
       }
       $dir = dirname(__FILE__);
-      $filename = $dir.'/sharepress-'.date('Ymd').'.log';
-      $message = sprintf("%s %s %-5s %s\n", $thread_id, date('H:i:s'), $level, $message);
+      $filename = $dir.'/sharepress-'.gmdate('Ymd').'.log';
+      $message = sprintf("%s %s %-5s %s\n", $thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), $level, $message);
       if (!@file_put_contents($filename, $message, FILE_APPEND)) {
         error_log("Failed to access SharePress log file [$filename] for writing: add write permissions to directory [$dir]?");
       }
@@ -970,6 +974,11 @@ class Sharepress {
   }
   
   function settings() {
+    if (isset($_REQUEST['log'])) {
+      require('console.php');
+      return;
+    }
+
     if (empty($_REQUEST['step']) || isset($_REQUEST['updated'])) {
       if (!self::api_key() || !self::app_secret()) {
         $_REQUEST['step'] = '1';

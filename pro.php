@@ -298,7 +298,7 @@ class SharepressPro {
   }
   
   function oneminute_cron() {
-    Sharepress::log('SharepressPro::oneminute_cron @ '.date('Y/m/d H:i:s', current_time('timestamp')));
+    Sharepress::log('SharepressPro::oneminute_cron');
     foreach($this->get_scheduled_posts() as $post) {
       Sharepress::load()->post_on_facebook($post->ID);
     }
