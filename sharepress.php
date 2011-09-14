@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.16
+Version: 2.0.17
 License: GPL2
 */
 
@@ -157,37 +157,69 @@ class Sharepress {
           }
 
         }
-         
-        if (self::setting('page_og_tags') == 'on') { 
-          $defaults = array(
-            'og:type' => 'article',
-            'og:url' => get_permalink(),
-            'og:title' => get_the_title(),
-            'og:image' => $picture,
-            'og:site_name' => get_bloginfo('name')
-            //,'fb:app_id' => get_option(self::OPTION_API_KEY)
-          );
 
-        } else if (self::setting('page_og_tags') == 'imageonly') {
-          $defaults = array(
-            'og:image' => $picture
-          );
+        global $post;
+        if (!($excerpt = $post->post_excerpt)) {
+          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s+/", ' ', strip_tags($post->post_content)), $matches) ? $matches[0].'...' : get_bloginfo('descrption');
         }
-        
+
+        $defaults = array(
+          'og:type' => 'article',
+          'og:url' => get_permalink(),
+          'og:title' => get_the_title(),
+          'og:image' => $picture,
+          'og:site_name' => get_bloginfo('name'),
+          'fb:app_id' => get_option(self::OPTION_API_KEY),
+          'og:description' => $excerpt
+        );
+
       } else {
         $defaults = array(
           'og:type' => self::setting('page_og_type', 'blog'),
           'og:url' => is_front_page() ? get_bloginfo('siteurl') : get_permalink(),
           'og:title' => get_the_title(),
           'og:site_name' => get_bloginfo('name'),
-          'og:image' => $this->get_default_picture()
-          //,'fb:app_id' => get_option(self::OPTION_API_KEY)
+          'og:image' => $this->get_default_picture(),
+          'fb:app_id' => get_option(self::OPTION_API_KEY),
+          'og:description' => get_bloginfo('description')
         );
         
       }
       
       $og = array_merge($defaults, $overrides);
       
+      #
+      # poke out the ones that aren't allowed
+      #
+
+      // old way:
+      if ($page_og_tags = $this->setting('page_og_tags')) {
+        if ($page_og_tags == 'imageonly') {
+          $og = array('og:image' => $og['og:image']);
+        } else if ($page_og_tags == 'off') {
+          $og = array();
+        }
+
+      // new way:
+      } else {
+        $allowable = array_merge(array(
+          'og:title' => false,
+          'og:type' => false,
+          'og:image' => false,
+          'og:url' => false,
+          'fb:app_id' => false,
+          'og:site_name' => false,
+          'og:description' => false
+        ), $this->setting('page_og_tag', array()));
+
+        foreach($allowable as $tag => $allowed) {
+          if (!$allowed) {
+            unset($og[$tag]);
+          }
+        }
+      }
+      
+
       $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
       
       if ($og) {

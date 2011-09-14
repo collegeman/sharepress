@@ -132,59 +132,92 @@
       
       <br />
       <h3 class="title">Facebook Open Graph Tags</h3>
-      
+      <p>Which OG meta tags should SharePress insert into your site?</p>            
       <p>
         Open Graph meta data is required for SharePress to function. If you don't know what this
         is, leave this feature enabled. If, however, you already have a custom solution for OG
-        meta data, you may disable this feature.
+        meta data, you may selectively enable/disable any tag.
       </p>
+      <p>You can override any/all of the <code>og:*</code> meta tags on a case-by-case basis by creating Custom Fields.
+        For example, to set the <code>og:type</code> property, just create a Custom Field named <em>og:type</em> and set its value
+        to the desired type.</p>
       <p>
-        If you want to test the way your pages appears to Facebook, you can do so with 
-        Facebook's <a href="http://developers.facebook.com/tools/lint/?url=<?php urlencode(bloginfo('siteurl')) ?>" target="_blank">URL Linter</a>.
+        Learn more about <a href="http://codex.wordpress.org/Custom_Fields">Custom Fields</a>.
+        Learn more about <a href="http://ogp.me">OG meta data</a>.
+        Test the way your pages will appear on Facebook with Facebook's <a href="http://developers.facebook.com/tools/lint/?url=<?php urlencode(bloginfo('siteurl')) ?>" target="_blank">URL Linter</a>.
       </p>
       
       <table class="form-table">
         <tr>
           <th>Open Graph meta data</th>
           <td>
-            <div style="margin-bottom:5px;">
-              <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="on" <?php if (self::setting('page_og_tags') != 'off') echo 'checked="checked"' ?> />
-                Let SharePress insert all required tags (recommended)
-              </label>
-              
-              <span style="margin-left:50px;">
-                <label for="sharepress_home_og_type" style="cursor:help;" title="Select the Content Type that best expresses the content of your site"><code>og:type</code>&nbsp;=</label>
-                <select id="sharepress_home_og_type" name="<?php echo self::OPTION_SETTINGS ?>[page_og_type]">
-                  <option value="blog">blog</option>
-                  <option value="website">website</option>
-                </select>
-                <script>
-                  (function($) {
-                    $('option[value="<?php echo self::setting('page_og_type', 'blog') ?>"]', $('#sharepress_home_og_type')).attr('selected', true);
-                  })(jQuery);
-                </script>
-              </span>
-            </div>
-            <div>
-              <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="imageonly" <?php if (self::setting('page_og_tags') == 'imageonly') echo 'checked="checked"' ?> />
-                  SharePress should only insert the <code>og:image</code> tag
-              </label>
-            </div>
-            <div style="padding-top:8px;">
-              <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="off" <?php if (self::setting('page_og_tags') == 'off') echo 'checked="checked"' ?> />
-                  SharePress should not insert any tags (make sure something else does!)
-              </label>
-            </div>
+            <?php
+              // backward-compat with old page_og_tags setting
+              if ($page_og_tags = $this->setting('page_og_tags')) {
+                $page_og_tag = $this->setting('page_og_tag', array(
+                  'og:title' => true,
+                  'og:type' => true,
+                  'og:image' => true,
+                  'og:url' => true,
+                  'fb:app_id' => true,
+                  'og:site_name' => true,
+                  'og:description' => true
+                ));
+
+                if ($page_og_tags == 'imageonly') {
+                  $page_og_tag = array(
+                    'og:image' => true
+                  );
+                } else if ($page_og_tags == 'off') {
+                  $page_og_tag = array();
+                }
+              } else {
+                $page_og_tag = $this->setting('page_og_tag', array(
+                  'og:title' => false,
+                  'og:type' => false,
+                  'og:image' => false,
+                  'og:url' => false,
+                  'fb:app_id' => false,
+                  'og:site_name' => false,
+                  'og:description' => false
+                ));
+              }
+
+              $page_og_tag = array_merge(array(
+                'og:title' => false,
+                'og:type' => false,
+                'og:image' => false,
+                'og:url' => false,
+                'fb:app_id' => false,
+                'og:site_name' => false,
+                'og:description' => false
+              ), $page_og_tag);
+            ?>
+            <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="" />
+            
+            <?php foreach($page_og_tag as $tag => $checked) { ?>
+              <div <?php if ($tag != 'og:type') echo 'style="margin-bottom:5px;"' ?>>
+                <input type="checkbox" id="page_og_tag_<?php echo $tag ?>" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tag][<?php echo $tag ?>]" value="1" <?php if ($checked) echo 'checked="checked"' ?> />
+                <label for="page_og_tag_<?php echo $tag ?>"><code><?php echo $tag ?></code></label>
+                <?php if ($tag == 'og:type') { ?>
+                  <span style="margin-left:50px;">
+                    <label for="sharepress_home_og_type" style="cursor:help;" title="Select the Content Type that best expresses the content of your site">=</label>
+                    <select id="sharepress_home_og_type" name="<?php echo self::OPTION_SETTINGS ?>[page_og_type]">
+                      <option value="blog">blog</option>
+                      <option value="website">website</option>
+                    </select>
+                    <script>
+                      (function($) {
+                        $('option[value="<?php echo self::setting('page_og_type', 'blog') ?>"]', $('#sharepress_home_og_type')).attr('selected', true);
+                      })(jQuery);
+                    </script>
+                  </span>
+                <?php } ?>
+              </div>
+            <?php } ?>
           </td>
         </tr>
       </table>
-      
-      <p><b>Note:</b> you can override any/all of the <code>og:*</code> meta tags for your posts and pages by creating Custom Fields.
-        For example, to set the <code>og:type</code> property, just create a Custom Field named <em>og:type</em> and set its value
-        to the desired type. Learn more about <a href="http://ogp.me">OG meta data</a>. Learn more about <a href="http://codex.wordpress.org/Custom_Fields">Custom Fields</a>.</p>
       
       <br />
       <h3 class="title">Default Publishing Targets</h3>

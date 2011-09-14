@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.16
+Stable tag: 2.0.17
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,11 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.17 =
+* Change: The Open Graph tags SharePress is allowed to insert can now be independently turned on and off, instead of in bulky groups
+* Added: fb:app_id can be inserted automatically 
+* Added: og:description can be inserted automatically
 
 = 2.0.16 =
 * Added: Log file viewer
