@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.17
+Version: 2.0.18
 License: GPL2
 */
 
@@ -51,9 +51,11 @@ class Sharepress {
 
   //const META_MESSAGE_ID = 'sharepress_message_id';
   const META_RESULT = 'sharepress_result';
+  const META_TWITTER_RESULT = 'sharepress_twitter_result';
   const META_ERROR = 'sharepress_error';
   const META_POSTED = 'sharepress_posted';
   const META = 'sharepress_meta';
+  const META_TWITTER = 'sharepress_twitter_meta';
   const META_SCHEDULED = 'sharepress_scheduled';
   
   // holds the singleton instance of your plugin's core
@@ -238,6 +240,14 @@ class Sharepress {
       }
     } 
 
+  }
+
+  static function twitter_ready() {
+    return self::unlocked() 
+      && self::setting('twitter_consumer_key') 
+      && self::setting('twitter_consumer_secret') 
+      && self::setting('twitter_access_token') 
+      && self::setting('twitter_access_token_secret');
   }
   
   static function err($message) {
@@ -467,7 +477,7 @@ class Sharepress {
     
     $posted = get_post_meta($post->ID, self::META_POSTED, true);
     $scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
-    $last_posted = self::get_last_posted($post);
+    $last_posted = $last_posted_on_facebook = self::get_last_posted($post);
     $last_result = self::get_last_result($post);
 
     // load the meta data
@@ -482,7 +492,7 @@ class Sharepress {
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => array_keys(self::targets()),
-        'enabled' => Sharepress::setting('default_behavior')
+        'enabled' => self::setting('default_behavior')
       );
     } else {
       // overrides:
@@ -500,10 +510,31 @@ class Sharepress {
       $meta['targets'] = array_keys(self::targets());
     }
     
+    // load the meta data
+    $twitter_meta = get_post_meta($post->ID, Sharepress::META_TWITTER, true);
+    
+    if (!$twitter_meta) {
+      // defaults:
+      $twitter_meta = array(
+        'enabled' => Sharepress::setting('twitter_behavior', 'on')
+      );
+    }
+
+    $twitter_enabled = $twitter_meta['enabled'] == 'on';
+
     // stash $meta globally for access from Sharepress::sort_by_selected
     self::$meta = $meta;
     // allow for pro override
-    $meta_box = apply_filters('sharepress_meta_box', $meta_box, $post, $meta, $posted, $scheduled, $last_posted, $last_result);
+    $meta_box = apply_filters('sharepress_meta_box', $meta_box, array(
+      'post' => $post, 
+      'meta' => $meta, 
+      'posted' => $posted, 
+      'scheduled' => $scheduled, 
+      'last_posted' => $last_posted, 
+      'last_result' => $last_result,
+      'twitter_meta' => $twitter_meta,
+      'twitter_enabled' => $twitter_enabled
+    ));
     // unstash $meta
     self::$meta = null;
     
@@ -518,7 +549,7 @@ class Sharepress {
         #sharepress_meta legend { padding: 0px 4px; }
       </style>
     <?php
-    
+
     if ($posted || $scheduled || $last_posted) {
       require('published-msg.php');
       echo $meta_box;
@@ -559,8 +590,8 @@ class Sharepress {
 
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
-      
-      // update meta?
+
+      // update facebook meta?
       if (@$_POST[self::META]['publish_again'] || ( $_POST[self::META]['enabled'] == 'on' && !$already_posted && !$is_scheduled )) {
                 
         // if publish_action was set, make sure enabled = 'on'
@@ -582,14 +613,28 @@ class Sharepress {
         
         // save the meta data
         update_post_meta($post->ID, self::META, $meta);
+
+        // filter the twitter meta
+        if (!$_POST[self::META_TWITTER]) {
+          $twitter_meta = get_post_meta($post->ID, self::META_TWITTER, true);
+        } else {
+          $twitter_meta = apply_filters('filter_'.self::META_TWITTER, $_POST[self::META_TWITTER], $post);  
+        }
+
+        if (empty($twitter_meta['enabled'])) {
+          $twitter_meta['enabled'] = 'off';
+        }
+
+        // save the twitter meta data
+        update_post_meta($post->ID, self::META_TWITTER, $twitter_meta);
         
         // if the post is published, then consider posting to facebook immediately
         if ($post->post_status == 'publish') {
           // if lite version or if publish time has already past
           if (!self::$pro || ( ($time = self::$pro->get_publish_time()) < current_time('timestamp') )) {
             self::log("Posting to Facebook now; save_post($post_id)");
-            $this->post_on_facebook($post);
-          
+            $this->share($post);
+            
           // otherwise, if $time specified, schedule future publish
           } else if ($time) {
             self::log("Scheduling future repost at {$time}; save_post($post_id)");
@@ -601,24 +646,24 @@ class Sharepress {
           }
         
         } else {
-          self::log("Post status is not 'publish'; not posting on save_post($post_id)");
+          self::log("Post status is not 'publish'; not posting to Facebook on save_post($post_id)");
 
         }
-        
-        return true;
         
       } else if (get_post_meta($post->ID, self::META_SCHEDULED, true) && @$_POST[self::META]['cancelled']) {
         self::log("Scheduled repost canceled by save_post($post_id)");
         delete_post_meta($post->ID, self::META_SCHEDULED);
 
       } else if (isset($_POST[self::META]['enabled']) && $_POST[self::META]['enabled'] == 'off') {
-        self::log("Use has indicated they do not wish to Post to Facebook; save_post($post_id)");
+        self::log("User has indicated they do not wish to Post to Facebook; save_post($post_id)");
         update_post_meta($post->ID, self::META, array('enabled' => 'off'));
+        update_post_meta($post->ID, self::META_TWITTER, array('enabled' => 'off'));
 
       } else {
         self::log("Post is already posted or is not allowed to be posted to facebook; save_post($post_id)");
-        return false;
       }
+
+      
 
     #
     # When save_post is invoked by XML-RPC the SharePress nonce won't be 
@@ -647,14 +692,20 @@ class Sharepress {
 
       update_post_meta($post->ID, self::META, $meta);
 
+      $meta = apply_filters('filter_'.self::META_TWITTER, array(
+        'enabled' => Sharepress::setting('twitter_behavior')
+      ));
+
+      update_post_meta($post->ID, self::META_TWITTER, $meta);
+
       if ($post->post_status == 'publish') {
-        self::log("Posting to Facebook now; save_post($post_id)");
-        $this->post_on_facebook($post);
+        self::log("Sharing with SharePress now; save_post($post_id)");
+        $this->share($post);
       }
 
     } else {
       self::log("SharePress nonce was invalid; ignoring save_post($post_id)");
-      return false;
+      
     }
   }
   
@@ -684,7 +735,7 @@ class Sharepress {
     }
     
     if ($new_status == 'publish' && $old_status != 'publish' && $post) {
-      $this->post_on_facebook($post);
+      $this->share($post);
     }
   }
   
@@ -698,7 +749,7 @@ class Sharepress {
     }
     
     if ($post = get_post($post_id)) {
-      $this->post_on_facebook($post);
+      $this->share($post);
     }
   }
   
@@ -785,6 +836,33 @@ class Sharepress {
     
     return ($can_post_on_facebook ? $meta : false);
   }
+
+  private function can_post_on_twitter($post) {
+    $can_post_on_twitter = (
+      // has twitter been configured?
+      self::twitter_ready()
+
+      // post only if defined
+      && $post 
+      
+      // post only if sharepress meta data is available
+      && ($meta = get_post_meta($post->ID, self::META_TWITTER, true)) 
+      
+      // post only if enabled
+      && ($meta['enabled'] == 'on') 
+      
+      // post only if never posted before
+      && !get_post_meta($post->ID, self::META_POSTED, true)
+      
+      // on schedule
+      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= current_time('timestamp')) 
+      
+      // post only if no errors precede this posting
+      && !get_post_meta($post->ID, self::META_ERROR)
+    );
+
+    return ($can_post_on_twitter ? $meta : false);
+  }
   
   /**
    * @return timestamp -- the last time the post was posted to facebook, or false if never
@@ -822,9 +900,9 @@ class Sharepress {
     return ($date1 == $date2) ? 0 : ( $date1 < $date2 ? 1 : -1);
   }
   
-  function post_on_facebook($post) {
+  function share($post) {
     if (SHAREPRESS_DEBUG) {
-      self::log(sprintf("post_on_facebook(%s)", is_object($post) ? $post->post_title : $post));
+      self::log(sprintf("share(%s)", is_object($post) ? $post->post_title : $post));
     }
     
     if (!is_object($post)) {
@@ -866,20 +944,34 @@ class Sharepress {
         // the pro version picks this up
         do_action('sharepress_post', $meta, $post);
       
+        if ($twitter_meta = $this->can_post_on_twitter($post)) {
+       
+          $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
+          $result = $client->post(sprintf('%s %s', $post->post_title, get_permalink($post)));
+          add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
+
+        }
+
         // success:
-        update_post_meta($post->ID, self::META_POSTED, date('Y/m/d H:i:s'));
+        update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));
         delete_post_meta($post->ID, self::META_SCHEDULED);
-      
+        
         $this->success($post, $meta);
+
+            
+        
     
       } catch (Exception $e) {
-        self::err(sprintf("Exception thrown while in post_on_facebook: %s", $e->getMessage()));
+        self::err(sprintf("Exception thrown while in share: %s", $e->getMessage()));
         
         $this->error($post, $meta, $e);
       }
+ 
     }
+    
+   
   }
-  
+
   /**
    * Add "Settings" link to the Plugins screen.
    */
@@ -930,6 +1022,19 @@ class Sharepress {
           self::facebook()->clearAllPersistentData();
           self::clear_cache();
           wp_redirect('options-general.php?page=sharepress&step=1');
+          exit;
+        } else {
+          wp_die("You're not allowed to do that.");
+        }
+      }
+
+      if ($action == 'reset_twitter_settings') {
+        if (current_user_can('administrator')) {
+          $settings = get_option(self::OPTION_SETTINGS);
+          unset($settings['twitter_access_token']);
+          unset($settings['twitter_access_token_secret']);
+          update_option(self::OPTION_SETTINGS, $settings);
+          wp_redirect('options-general.php?page=sharepress');
           exit;
         } else {
           wp_die("You're not allowed to do that.");
@@ -1078,6 +1183,328 @@ class Sharepress {
 }
 
 class SharepressFacebookSessionException extends Exception {}
+
+class SharePress_TwitterClient {
+
+  private $consumer_key;
+  private $consumer_secret;
+  private $access_token;
+  private $access_token_secret;
+  private $host = 'https://api.twitter.com/1';
+  
+  function __construct($settings) {
+    $this->consumer_key = $settings['twitter_consumer_key'];
+    $this->consumer_secret = $settings['twitter_consumer_secret'];
+    $this->access_token = $settings['twitter_access_token'];
+    $this->access_token_secret = $settings['twitter_access_token_secret'];
+  }
+
+  /**
+   * @return String a Text message indicating success or failure and reason
+   */
+  function test() {
+    $result = SharePress_WordPressOAuth::get($this->host.'/help/test.json', self::build_params());
+    if (!is_wp_error($result)) {
+      if ($result['body'] == '"ok"') {
+        return "Success! Don't forget to save settings.";
+      } else {
+        $response = json_decode($result['body']);
+        return "Twitter says there's a problem: {$response->error} Make sure all of your keys are correct, and double-check your Twitter app's settings.";
+      }
+    } else {
+      return "Connection error. Please try again.";
+    }
+  }
+
+  /**
+   * @return mixed false on connection failure; otherwise, an object representing the success or failure state as reported by the Twitter API
+   */
+  function post($status = '') {
+    $result = Sharepress_WordPressOAuth::post($this->host.'/statuses/update.json', self::build_params(array(
+      'status' => $status,
+      'wrap_links' => true
+    )));
+
+    if (is_wp_error($result)) {
+      return false;
+    } else {
+      $response = json_decode($result['body']);
+      return $response;
+    }
+  }
+
+  function build_params($params = array()) {
+    return array_merge(
+      array(
+        'oauth_version' => '1.0',
+        'oauth_nonce' => self::generate_nonce(),
+        'oauth_timestamp' => self::generate_timestamp(),
+        'oauth_consumer_key' => $this->consumer_key,
+        'oauth_token' => $this->access_token
+      ),
+      $params, 
+      array(
+        'consumer_secret' => $this->consumer_secret,
+        'access_token_secret' => $this->access_token_secret
+      )
+    );
+  }
+
+  private static function generate_timestamp() {
+    return time();
+  }
+
+  /**
+   * util function: current nonce
+   */
+  private static function generate_nonce() {
+    $mt = microtime();
+    $rand = mt_rand();
+    return md5($mt . $rand); // md5s look nicer than numbers
+  }
+
+
+}
+
+/*
+ * This is based by-and-large upon Abraham's fantastic Twitter OAuth library:
+ * Abraham Williams (abraham@abrah.am) http://abrah.am
+ *
+ * The first PHP Library to support OAuth for Twitter's REST API.
+ * https://github.com/abraham/twitteroauth
+ */
+
+class SharePress_WordPressOAuth {
+
+  public static function get($url, $params = array()) {
+    extract($params);
+    unset($params['consumer_secret']);
+    unset($params['access_token_secret']);
+
+    $params = array_merge( self::parse_parameters(parse_url($url, PHP_URL_QUERY)), $params );
+    $params['oauth_signature_method'] = 'HMAC-SHA1';
+    $params['oauth_signature'] = self::build_signature('GET', $url, $params, $params['oauth_consumer_key'], $consumer_secret, $params['oauth_token'], $access_token_secret);
+
+    return wp_remote_get(self::get_normalized_http_url($url).'?'.self::build_http_query($params), array(
+      'sslverify' => false,
+      'headers' => array(
+        'Expect:'
+      )
+    ));
+  }
+
+  public static function post($url, $params = array()) {
+    extract($params);
+    unset($params['consumer_secret']);
+    unset($params['access_token_secret']);
+
+    $params = array_merge( self::parse_parameters(parse_url($url, PHP_URL_QUERY)), $params );
+    $params['oauth_signature_method'] = 'HMAC-SHA1';
+    $params['oauth_signature'] = self::build_signature('POST', $url, $params, $params['oauth_consumer_key'], $consumer_secret, $params['oauth_token'], $access_token_secret);
+
+    return wp_remote_post(self::get_normalized_http_url($url), array(
+      'body' => self::build_http_query($params),
+      'sslverify' => false,
+      'headers' => array(
+        'Expect:'
+      )
+    ));
+  }
+
+  public static function build_signature($method, $url, $params = array(), $consumer_key, $consumer_secret, $access_token, $access_token_secret) {
+    $normalized_http_method = strtoupper($method);
+    $normalized_http_url = self::get_normalized_http_url($url);
+    $signable_params = self::get_signable_params($params);
+
+    $parts = self::urlencode_rfc3986(array(
+      $normalized_http_method,
+      $normalized_http_url,
+      $signable_params
+    ));
+
+    $base_string = implode('&', $parts);    
+    $key_parts = self::urlencode_rfc3986(array( $consumer_secret, $access_token_secret ));
+    $key = implode('&', $key_parts);
+
+    return base64_encode(hash_hmac('sha1', $base_string, $key, true));
+  }
+
+  public static function get_signable_params($params = array()) {
+    if (isset($params['oauth_signature'])) {
+      unset($params['oauth_signature']);
+    }
+
+    return self::build_http_query($params);
+  }
+
+  public static function get_normalized_http_url($url) {
+    $parts = parse_url($url);
+    $port = @$parts['port'];
+    $scheme = $parts['scheme'];
+    $host = $parts['host'];
+    $path = @$parts['path'];
+    $port or $port = ($scheme == 'https') ? '443' : '80';
+    if (($scheme == 'https' && $port != '443')
+        || ($scheme == 'http' && $port != '80')) {
+      $host = "$host:$port";
+    }
+    return "$scheme://$host$path";
+  }
+
+  public static function urlencode_rfc3986($input) {
+    if (is_array($input)) {
+      return array_map(array('self', 'urlencode_rfc3986'), $input);
+    } else if (is_scalar($input)) {
+      return str_replace(
+        '+',
+        ' ',
+        str_replace('%7E', '~', rawurlencode($input))
+      );
+    } else {
+      return '';
+    }
+  }
+
+
+  // This decode function isn't taking into consideration the above
+  // modifications to the encoding process. However, this method doesn't
+  // seem to be used anywhere so leaving it as is.
+  public static function urldecode_rfc3986($string) {
+    return urldecode($string);
+  }
+
+  // Utility function for turning the Authorization: header into
+  // parameters, has to do some unescaping
+  // Can filter out any non-oauth parameters if needed (default behaviour)
+  public static function split_header($header, $only_allow_oauth_parameters = true) {
+    $pattern = '/(([-_a-z]*)=("([^"]*)"|([^,]*)),?)/';
+    $offset = 0;
+    $params = array();
+    while (preg_match($pattern, $header, $matches, PREG_OFFSET_CAPTURE, $offset) > 0) {
+      $match = $matches[0];
+      $header_name = $matches[2][0];
+      $header_content = (isset($matches[5])) ? $matches[5][0] : $matches[4][0];
+      if (preg_match('/^oauth_/', $header_name) || !$only_allow_oauth_parameters) {
+        $params[$header_name] = self::urldecode_rfc3986($header_content);
+      }
+      $offset = $match[1] + strlen($match[0]);
+    }
+
+    if (isset($params['realm'])) {
+      unset($params['realm']);
+    }
+
+    return $params;
+  }
+
+  // helper to try to sort out headers for people who aren't running apache
+  public static function get_headers() {
+    if (function_exists('apache_request_headers')) {
+      // we need this to get the actual Authorization: header
+      // because apache tends to tell us it doesn't exist
+      $headers = apache_request_headers();
+
+      // sanitize the output of apache_request_headers because
+      // we always want the keys to be Cased-Like-This and arh()
+      // returns the headers in the same case as they are in the
+      // request
+      $out = array();
+      foreach( $headers AS $key => $value ) {
+        $key = str_replace(
+            " ",
+            "-",
+            ucwords(strtolower(str_replace("-", " ", $key)))
+          );
+        $out[$key] = $value;
+      }
+    } else {
+      // otherwise we don't have apache and are just going to have to hope
+      // that $_SERVER actually contains what we need
+      $out = array();
+      if( isset($_SERVER['CONTENT_TYPE']) )
+        $out['Content-Type'] = $_SERVER['CONTENT_TYPE'];
+      if( isset($_ENV['CONTENT_TYPE']) )
+        $out['Content-Type'] = $_ENV['CONTENT_TYPE'];
+
+      foreach ($_SERVER as $key => $value) {
+        if (substr($key, 0, 5) == "HTTP_") {
+          // this is chaos, basically it is just there to capitalize the first
+          // letter of every word that is not an initial HTTP and strip HTTP
+          // code from przemek
+          $key = str_replace(
+            " ",
+            "-",
+            ucwords(strtolower(str_replace("_", " ", substr($key, 5))))
+          );
+          $out[$key] = $value;
+        }
+      }
+    }
+    return $out;
+  }
+
+  // This function takes a input like a=b&a=c&d=e and returns the parsed
+  // parameters like this
+  // array('a' => array('b','c'), 'd' => 'e')
+  public static function parse_parameters( $input ) {
+    if (!isset($input) || !$input) return array();
+
+    $pairs = explode('&', $input);
+
+    $parsed_parameters = array();
+    foreach ($pairs as $pair) {
+      $split = explode('=', $pair, 2);
+      $parameter = self::urldecode_rfc3986($split[0]);
+      $value = isset($split[1]) ? self::urldecode_rfc3986($split[1]) : '';
+
+      if (isset($parsed_parameters[$parameter])) {
+        // We have already recieved parameter(s) with this name, so add to the list
+        // of parameters with this name
+
+        if (is_scalar($parsed_parameters[$parameter])) {
+          // This is the first duplicate, so transform scalar (string) into an array
+          // so we can add the duplicates
+          $parsed_parameters[$parameter] = array($parsed_parameters[$parameter]);
+        }
+
+        $parsed_parameters[$parameter][] = $value;
+      } else {
+        $parsed_parameters[$parameter] = $value;
+      }
+    }
+    return $parsed_parameters;
+  }
+
+  public static function build_http_query($params) {
+    if (!$params) return '';
+
+    // Urlencode both keys and values
+    $keys = self::urlencode_rfc3986(array_keys($params));
+    $values = self::urlencode_rfc3986(array_values($params));
+    $params = array_combine($keys, $values);
+
+    // Parameters are sorted by name, using lexicographical byte value ordering.
+    // Ref: Spec: 9.1.1 (1)
+    uksort($params, 'strcmp');
+
+    $pairs = array();
+    foreach ($params as $parameter => $value) {
+      if (is_array($value)) {
+        // If two or more parameters share the same name, they are sorted by their value
+        // Ref: Spec: 9.1.1 (1)
+        natsort($value);
+        foreach ($value as $duplicate_value) {
+          $pairs[] = $parameter . '=' . $duplicate_value;
+        }
+      } else {
+        $pairs[] = $parameter . '=' . $value;
+      }
+    }
+    // For each parameter, the name is separated from the corresponding value by an '=' character (ASCII code 61)
+    // Each name-value pair is separated by an '&' character (ASCII code 38)
+    return implode('&', $pairs);
+  }
+}
 
 Sharepress::load();
 

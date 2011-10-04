@@ -69,7 +69,7 @@ class SharepressPro {
     add_filter('sharepress_pages', array($this, 'pages'));
     add_action('sharepress_post', array($this, 'post'), 10, 2);
     // enhancement #3: configure the content of each post individually
-    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 7);
+    add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 2);
     add_action('wp_ajax_sharepress_get_excerpt', array($this, 'ajax_get_excerpt'));
     // enhancement #4: enhancements to the posts browser
     add_action('restrict_manage_posts', array($this, 'restrict_manage_posts'));
@@ -81,12 +81,47 @@ class SharepressPro {
     }
     // enhancement #5: scheduling 
     add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
+    // enhancement #6: twitter support
+    add_action('wp_ajax_sharepress_test_twitter_settings', array($this, 'ajax_test_twitter_settings'));
   }
   
   function after_setup_theme() {
     add_theme_support('post-thumbnails');
   }  
   
+  function ajax_test_twitter_settings() {
+    if ( current_user_can('administrator') ) {
+      
+      extract($settings = array_map('trim', $_POST[SharePress::OPTION_SETTINGS]));
+
+      if (!$twitter_consumer_key) {
+        echo 'Consumer key is required.';
+        exit;
+      }
+
+      if (!$twitter_consumer_secret) {
+        echo 'Consumer secret is required.';
+        exit;
+      }
+
+      if (!$twitter_access_token) {
+        echo 'Access token is required.';
+        exit;
+      }
+
+      if (!$twitter_access_token_secret) {
+        echo 'Access token secret is required.';
+        exit;
+      }
+
+      $client = new SharePress_TwitterClient($settings);
+      echo $client->test();
+     
+    }
+
+    exit;
+  }
+
   function manage_posts_columns($cols) {
     $current_url = ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     $current_url = remove_query_arg( 'sharepress_sort', $current_url );
@@ -299,8 +334,18 @@ class SharepressPro {
   
   function oneminute_cron() {
     Sharepress::log('SharepressPro::oneminute_cron');
+
+    // make sure we don't allow more than one instance of this per minute
+    $fh = fopen(__FILE__, 'r');
+    if (!$fh) {
+      Sharepress::log('SharepressPro::oneminute_cron - failed to open file handle for process locking');
+    } else if (!flock($fh, LOCK_EX)) {
+      Sharepress::log('SharepressPro::oneminute_cron - is already running, or failed to lock process');
+      return false;
+    }
+
     foreach($this->get_scheduled_posts() as $post) {
-      Sharepress::load()->post_on_facebook($post->ID);
+      Sharepress::load()->share($post->ID);
     }
   }
   
@@ -389,7 +434,9 @@ class SharepressPro {
     }
   }
   
-  function meta_box($meta_box, $post, $meta, $posted, $scheduled, $last_posted, $last_result) {
+  function meta_box($meta_box, $args) {
+    extract($args);
+
     ob_start();
     require('pro-meta-box.php');
     return ob_get_clean();

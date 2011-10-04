@@ -1,28 +1,34 @@
 <?php if (!defined('ABSPATH')) exit; ?>
 
-<fieldset>
+<fieldset style="margin:10px 0 5px;">
   <legend>
     <?php if ($posted) { ?>
-      <b>Last Published on Facebook</b>
+      <b>Last Shared</b>
     <?php } else if ($scheduled) { ?>
-      <b>Scheduled to Post to Facebook</b>
+      <b>Scheduled to be Shared</b>
     <?php } else if ($last_posted) { ?>
-      <b>Last Published on Facebook</b>
+      <b>Last Shared</b>
     <?php } ?>
   </legend>
   <label style="display:inline-block; width:100%;">
     <p style="margin-bottom:12px; color:#555; width:235px; overflow:hidden;">
-      <?php echo htmlentities($scheduled ? $meta['message'] : $last_result['message']) ?>
+      <?php 
+        echo str_replace(
+          array('"', '<', '>'), 
+          array('&quot;', '&lt;', '&gt;'), 
+          $scheduled ? $meta['message'] : $last_result['message']
+        )
+      ?>
     </p>
     <div style="width:100%;">
       <?php if (Sharepress::$pro) { ?>
         <a class="button" id="btn_publish_again" style="float:right; position:relative; top:-6px; margin-bottom:-6px; <?php if (@$_GET['sharepress'] == 'schedule') echo 'display:none;' ?>" href="#" onclick="sharepress_publish_again(); return false;">
           <?php if ($posted) { ?>
-            Publish Again
+            Share Again
           <?php } else if ($scheduled) { ?>
             Edit
           <?php } else if ($last_posted) { ?>
-            Publish Again
+            Share Again
           <?php } ?>
         </a>
       <?php } ?>

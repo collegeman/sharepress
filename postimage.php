@@ -116,15 +116,12 @@ class PostImage {
           <div id="error_<?php echo $store_as ?>" style="padding:10px; color:red;"></div>
         </div>
         <div style="position:absolute; top:0; left:0;">
-          <form target="" action="admin.php?page=<?php echo $page ?>&amp;fx=postimage&amp;callback=<?php echo $store_as ?>" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="wp_handle_upload" />
-            <input type="hidden" name="width" value="<?php echo $max_width ?>" />
-            <input type="hidden" name="height" value="<?php echo $max_height ?>" />
-            <?php if ($ref_post) { ?>
-              <input type="hidden" name="post_id" value="<?php echo $ref_post->ID ?>" />
-            <?php } ?>
-            <input id="file_<?php echo $store_as ?>" name="file" type="file" style="opacity: 0; filter: alpha(opacity=0);" />
-          </form>
+          <input type="hidden" name="width" value="<?php echo $max_width ?>" />
+          <input type="hidden" name="height" value="<?php echo $max_height ?>" />
+          <?php if ($ref_post) { ?>
+            <input type="hidden" name="post_id" value="<?php echo $ref_post->ID ?>" />
+          <?php } ?>
+          <input id="file_<?php echo $store_as ?>" name="file" type="file" style="opacity: 0; filter: alpha(opacity=0);" />
         </div>
       </div>
       <script>
@@ -135,28 +132,65 @@ class PostImage {
           var btn_none = $('#postimage_none_<?php echo $store_as ?>');
           // monitor file element for value change
           var old_val = file.val();
-          setInterval(function() {
+          var form = file.closest('form');
+
+          if (!form.find('input[name="action"]').size()) {
+            form.append('<input type="hidden" name="action" value="" />');
+          }
+
+          var action = form.find('input[name="action"]');
+          var interval = null;
+          var monit = function() {
             var new_val = file.val();
             if (new_val != old_val) {
+              clearInterval(interval);
               if (new_val) {
                 // disable the button and implement uploading status
                 btn_change.addClass('disabled').text('Uploading');
+                
                 // increment the iframe instance count
                 instance++;
+                
                 // hide any error messages
                 $('#error_<?php echo $store_as ?>').hide();
+                
                 // embed the fresh iframe
                 $('body').append('<iframe width="1" height="1" style="position:absolute; top: 0; left: 0; visibility:hidden;" name="iframe_<?php echo $store_as ?>'+instance+'"></iframe>');
+                
+                // stash the current action and target
+                form.data('action', form.attr('action'));
+                form.data('target', form.attr('target'));
+                form.data('method', form.attr('method'));
+                form.data('encType', form.attr('encType'));
+                form.data('encoding', form.attr('encoding'));
+                action.data('value', action.val());
+                
+                // set the new action and target
+                form.attr('action', 'admin.php?page=<?php echo $page ?>&fx=postimage&callback=<?php echo $store_as ?>');
+                form.attr('target', 'iframe_<?php echo $store_as ?>'+instance);
+                form.data('method', 'post');
+                form.attr('encType', 'multipart/form-data');
+                form.attr('encoding', 'multipart/form-data');
+                action.val('wp_handle_upload');
+
                 // submit the file input's form with target set to the iframe
-                file.parent().attr('target', 'iframe_<?php echo $store_as ?>'+instance).submit();
-                // don't repeat for this value
+                form.submit();
               }
-              
               old_val = new_val;
             }
-          }, 100);
+          };
+
+          interval = setInterval(monit, 100);
           
           window['callback_<?php echo $store_as ?>'] = function(url, error) {
+            // reset the form's attributes
+            form.attr('action', form.data('action') == undefined ? '' : form.data('action'));
+            form.attr('target', form.data('target') == undefined ? '' : form.data('target'));
+            form.attr('encType', form.data('encType') == undefined ? '' : form.data('encType'));
+            form.attr('encoding', form.data('encoding') == undefined ? '' : form.data('encoding'));
+            form.attr('method', form.data('method') == undefined ? '' : form.data('method'));
+            action.val(action.data('value'));
+                    
             if (error) {
               $('#error_<?php echo $store_as ?>').text(error).show();
             } else {
@@ -166,7 +200,10 @@ class PostImage {
                 
               }
             }
+
             btn_change.removeClass('disabled').text('Change...');
+
+            interval = setInterval(monit, 100);
           }
         })(jQuery);
       </script>

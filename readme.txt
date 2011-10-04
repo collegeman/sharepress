@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.17
+Stable tag: 2.0.18
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -37,6 +37,13 @@ Post questions about installation and usage [in the forum](http://wordpress.org/
 If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
 
 == Changelog ==
+
+= 2.0.18 =
+* Fixed: If a Facebook connection error occurs on the Edit Post screen, the error message is hidden in the collapsed "Advanced" section of the meta box
+* Fixed: Sometimes WP fires SharePress' one-minute cron job more than once a minute, resulting in multiple posts to Facebook
+* Fixed: OG meta tags not turned on by default
+* Fixed: A bunch of usability issues in the Settings screens
+* Added: You can now elect to have your Posts shared on Twitter - no messaging customization yet: just post title and permalink
 
 = 2.0.17 =
 * Change: The Open Graph tags SharePress is allowed to insert can now be independently turned on and off, instead of in bulky groups

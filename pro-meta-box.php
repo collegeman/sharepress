@@ -6,10 +6,10 @@
   <fieldset>
     <legend>
       <label for="sharepress_meta_message">
-        <b>Message</b> &nbsp;&nbsp; 
+        <b>Facebook Message</b> &nbsp;&nbsp; 
         <label style="display:inline-block;">
           <input type="checkbox" id="sharepress_meta_title_is_message" name="sharepress_meta[title_is_message]" value="1" onclick="click_use_post_title(this);" <?php if (@$meta['title_is_message']) echo 'checked="checked"' ?> /> 
-          same as Post Title
+          same as Title
         </label>
       </label>
     </legend>
@@ -26,17 +26,17 @@
       </legend>
       <?php Sharepress::$pro->touch_time($scheduled); ?>
       <div style="padding:10px 0 2px 0;">
-        <input type="submit" class="button-primary" value="Schedule" style="margin-right:4px;" />
+        <input type="submit" class="button-primary" value="<?php echo ($scheduled) ? 'Update' : 'Schedule' ?>" style="margin-right:4px;" />
         <input type="submit" class="button" onclick="if(confirm('Are you sure you want to cancel posting to Facebook?')) { sharepress_cancel_publish_again(); } else { return false; }" value="Cancel" />
       </div>
     </fieldset>
   <?php } ?>
 
-  <p class="sharepress_show_advanced">
+  <p class="sharepress_show_advanced" style="margin:5px; text-align:center;">
     <a href="javascript:;" onclick="jQuery(this).parent().hide(); jQuery('.sharepress_advanced').slideDown();">Show Advanced Options</a>
   </p>
 
-  <div class="sharepress_advanced" style="display:none;">
+  <div class="sharepress_advanced">
   
     <br />
     <fieldset>
@@ -94,11 +94,30 @@
         ?>
       </div>
     </fieldset>
-    
-    <p>
+
+    <p style="margin:5px; text-align:center;">
       <a class="sharepress_hide_advanced" href="javascript:;" onclick="jQuery('.sharepress_advanced').slideUp(function() { jQuery('.sharepress_show_advanced').fadeIn(); });">Hide Advanced Options</a>
     </p>
   </div>
+  <script>
+    jQuery('.sharepress_advanced').hide();
+  </script>
+
+  <?php if (SharePress::twitter_ready()) { ?>
+
+    <input type="hidden" name="<?php echo Sharepress::META_TWITTER ?>[__PLACEHOLDER__]" value="" />
+    <fieldset id="<?php echo Sharepress::META_TWITTER ?>" style="margin-top:15px;">
+      <legend><b>Also Share With...</b></legend>
+      
+      <div class="tools">
+        <label>
+          <input type="checkbox" value="on" name="<?php echo Sharepress::META_TWITTER ?>[enabled]" <?php if ($twitter_enabled) echo 'checked="checked"' ?> />
+          &nbsp; Twitter
+        </label>
+      </div>
+    </fieldset>
+
+  <?php } ?>
   
 </div><!-- /#sharepress -->
 

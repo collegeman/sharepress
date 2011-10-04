@@ -107,23 +107,51 @@
     <?php } else { ?> 
       
       <?php settings_fields('fb-settings') ?>
-      
-      <h3 class="title">SharePress Settings</h3>
+
+      <h3 class="title">Your License Key</h3>
+
+      <?php 
+        #
+        # Don't be a dick. I like to eat, too.
+        # http://aaroncollegeman/sharepress/
+        #
+        if (!self::unlocked()) { ?>
+        <p>
+          <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.
+          Unlock pro features, get access to documentation and support from the developer of SharePress!
+        </p>
+      <?php } else { ?>
+        <p>Awesome, tamales! Need support? <a href="http://aaroncollegeman.com/sharepress/help/">Go here</a>.
+      <?php } ?>
+
+      <table class="form-table">
+        <tr>
+          <th><label for="sharepress_license_key">License Key:</label></th>
+          <td>
+            <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::setting('license_key')) ?>" />
+          </td>
+        </tr>
+      </table>
+
+      <br />
+      <h3 class="title">Share by Default?</h3>
+
+      <p>You always get to choose whether or not a post gets shared. This setting sets up the default choice.</p>
       
       <table class="form-table">
         <tr>
-          <th>Default behavior</th>
           <td>
             <div style="margin-bottom:5px;">
               <label>
                 <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[default_behavior]" value="on" <?php if (self::setting('default_behavior') == 'on') echo 'checked="checked"' ?> />
-                Send all of my Posts to Facebook
+                Yes, share by default
+                &nbsp; &nbsp; <span class="description">Use this setting if you rely on XML-RPC, e.g., the WordPress iPhone/iPad apps</span>
               </label>
             </div>
             <div>
               <label>
                 <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[default_behavior]" value="off" <?php if (self::setting('default_behavior') == 'off') echo 'checked="checked"' ?> />
-                Send to Facebook only those Posts I tell you to
+                No, do not share by default
               </label>
             </div>
           </td>
@@ -131,29 +159,30 @@
       </table>
       
       <br />
-      <h3 class="title">Facebook Open Graph Tags</h3>
-      <p>Which OG meta tags should SharePress insert into your site?</p>            
+      <h3 class="title">Open Graph Tags</h3>
       <p>
-        Open Graph meta data is required for SharePress to function. If you don't know what this
-        is, leave this feature enabled. If, however, you already have a custom solution for OG
-        meta data, you may selectively enable/disable any tag.
+        <a href="http://ogp.me" target="_blank">Open Graph</a> meta data tells Facebook what your content is all about. If you don't know what this
+        is, leave theses features enabled.</p>
+      <p> 
+        If your Theme or another plugin already inserts Open Graph tags, you may want to disable certain tags by unchecking them below.
       </p>
-      <p>You can override any/all of the <code>og:*</code> meta tags on a case-by-case basis by creating Custom Fields.
-        For example, to set the <code>og:type</code> property, just create a Custom Field named <em>og:type</em> and set its value
-        to the desired type.</p>
-      <p>
-        Learn more about <a href="http://codex.wordpress.org/Custom_Fields">Custom Fields</a>.
-        Learn more about <a href="http://ogp.me">OG meta data</a>.
-        Test the way your pages will appear on Facebook with Facebook's <a href="http://developers.facebook.com/tools/lint/?url=<?php urlencode(bloginfo('siteurl')) ?>" target="_blank">URL Linter</a>.
-      </p>
+      <p>You can override any of the tags by creating <a href="http://codex.wordpress.org/Custom_Fields" target="_blank">Custom Fields</a> in your posts.
+        For example, to override the <code>og:type</code> property, just create a Custom Field named <code>og:type</code> and give it the desired value.</p>
       
       <table class="form-table">
         <tr>
-          <th>Open Graph meta data</th>
           <td>
             <?php
               // backward-compat with old page_og_tags setting
-              if ($page_og_tags = $this->setting('page_og_tags')) {
+              if (($page_og_tags = $this->setting('page_og_tags')) && ($page_og_tags == 'imageonly' || $page_og_tags == 'off')) {
+                if ($page_og_tags == 'imageonly') {
+                  $page_og_tag = array(
+                    'og:image' => true
+                  );
+                } else { // off
+                  $page_og_tag = array();
+                } 
+              } else {
                 $page_og_tag = $this->setting('page_og_tag', array(
                   'og:title' => true,
                   'og:type' => true,
@@ -162,24 +191,6 @@
                   'fb:app_id' => true,
                   'og:site_name' => true,
                   'og:description' => true
-                ));
-
-                if ($page_og_tags == 'imageonly') {
-                  $page_og_tag = array(
-                    'og:image' => true
-                  );
-                } else if ($page_og_tags == 'off') {
-                  $page_og_tag = array();
-                }
-              } else {
-                $page_og_tag = $this->setting('page_og_tag', array(
-                  'og:title' => false,
-                  'og:type' => false,
-                  'og:image' => false,
-                  'og:url' => false,
-                  'fb:app_id' => false,
-                  'og:site_name' => false,
-                  'og:description' => false
                 ));
               }
 
@@ -193,10 +204,10 @@
                 'og:description' => false
               ), $page_og_tag);
             ?>
-            <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tags]" value="" />
+            <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tag][__PLACEHOLDER__]" value="__PLACEHOLDER__" />
             
-            <?php foreach($page_og_tag as $tag => $checked) { ?>
-              <div <?php if ($tag != 'og:type') echo 'style="margin-bottom:5px;"' ?>>
+            <?php foreach($page_og_tag as $tag => $checked) { if ($tag == '__PLACEHOLDER__') continue; ?>
+              <div style="height:<?php echo $tag == 'og:type' ? 35 : 30 ?>px;">
                 <input type="checkbox" id="page_og_tag_<?php echo $tag ?>" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tag][<?php echo $tag ?>]" value="1" <?php if ($checked) echo 'checked="checked"' ?> />
                 <label for="page_og_tag_<?php echo $tag ?>"><code><?php echo $tag ?></code></label>
                 <?php if ($tag == 'og:type') { ?>
@@ -206,6 +217,7 @@
                       <option value="blog">blog</option>
                       <option value="website">website</option>
                     </select>
+                    &nbsp; &nbsp; <span class="description">The homepage gets this type; all other pages are considered <b>articles</b></span>
                     <script>
                       (function($) {
                         $('option[value="<?php echo self::setting('page_og_type', 'blog') ?>"]', $('#sharepress_home_og_type')).attr('selected', true);
@@ -220,10 +232,10 @@
       </table>
       
       <br />
-      <h3 class="title">Default Publishing Targets</h3>
+      <h3 class="title">Facebook Pages and Walls</h3>
       
       <p>
-        When you publish a new post, where should we announce it?
+        When you publish new post, where should it be announced?
         <?php if (self::$pro) { ?>
           You'll be able to change this for each post: these are just the defaults.
         <?php } else { ?>
@@ -270,11 +282,166 @@
         
         </table>
       </div>
+
+      <br />
+      <h3 class="title">Twitter</h3>
+
+      <?php if (!self::unlocked()) { ?>
+     
+        <p>If you <a href="http://aaroncollegeman.com/sharepress">unlock the pro features</a>, you'll be able to post to Twitter, too.</p>
+     
+        <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_key]" value="<?php echo esc_attr(self::setting('twitter_consumer_key')) ?>" />
+        <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_secret]" value="<?php echo esc_attr(self::setting('twitter_consumer_secret')) ?>" />
+        <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token]" value="<?php echo esc_attr(self::setting('twitter_access_token')) ?>" />
+        <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token_secret]" value="<?php echo esc_attr(self::setting('twitter_access_token_secret')) ?>" />
       
+      <?php } else { ?>
+
+        <?php if (self::twitter_ready()) { ?>
+        
+          <table class="form-table">
+            <tr>
+              <td>
+                <div style="margin-bottom:5px;">
+                  <label>
+                    <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[twitter_behavior]" value="on" <?php if (self::setting('twitter_behavior', 'on') == 'on') echo 'checked="checked"' ?> />
+                    Share all of my Posts to Twitter by default
+                    &nbsp; &nbsp; <span class="description">Use this setting if you rely on XML-RPC</span>
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[twitter_behavior]" value="off" <?php if (self::setting('twitter_behavior', 'on') == 'off') echo 'checked="checked"' ?> />
+                    No, do not share to Twitter by default
+                  </label>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <br />
+
+          <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_key]" value="<?php echo esc_attr(self::setting('twitter_consumer_key')) ?>" />
+          <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_secret]" value="<?php echo esc_attr(self::setting('twitter_consumer_secret')) ?>" />
+          <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token]" value="<?php echo esc_attr(self::setting('twitter_access_token')) ?>" />
+          <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token_secret]" value="<?php echo esc_attr(self::setting('twitter_access_token_secret')) ?>" />
+          
+        <?php } else { ?>
+
+          <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[twitter_behavior]" value="<?php echo esc_attr(self::setting('twitter_behavior', 'on')) ?>" />
+
+          <p>Want to be able to post to Twitter at the same time you post to Facebook? <a href="#" onclick="jQuery('.twitter_help').show(); return false;">Follow these steps</a>.</p>
+
+          <div class="twitter_help" style="display:none;">
+            <ol>
+              <li>
+                <a href="http://twitter.com" target="_blank">Log into Twitter</a> using the Twitter account you want to post to.
+                <br />
+              </li>
+              <li>
+                <a href="https://dev.twitter.com/apps/new" target="_blank">Create a Twitter application</a> using the values below:
+                <table class="form-table">
+                  <tr>
+                    <td style="width:160px;">Name</td>
+                    <td>
+                      <input type="text" class="regular-text" value="<?php echo esc_attr(get_bloginfo('sitename')) ?>" />
+                      &nbsp; <span class="description">Just a suggestion, it can be whatever you like...</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Description</td>
+                    <td>
+                      <input type="text" class="regular-text" value="<?php echo esc_attr(get_bloginfo('description')) ?>" />
+                      &nbsp; <span class="description">Just another suggestion...</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>WebSite</td>
+                    <td>
+                      <input type="text" class="regular-text" value="<?php echo esc_attr(get_bloginfo('home')) ?>" readonly="readonly" />
+                      &nbsp; <span class="description">You should use this.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Callback URL</td>
+                    <td>
+                      <input type="text" class="regular-text" style="width:500px;" value="<?php echo esc_attr(admin_url('options-general.php')) ?>?page=sharepress" readonly="readonly" />
+                      &nbsp; <span class="description">You must use this.</span>
+                    </td>
+                  </tr>
+                </table>
+                <br />
+              </li>
+              <li>
+                <a href="https://dev.twitter.com/apps" target="_blank">Go to your control panel</a>, and click on your newly minted Twitter application.
+                <br />
+              </li>
+              <li>
+                Click on the <b>Settings</b> tab, scroll down to <b>Application Type</b>, check the box labeled <b>Read and Write</b>, 
+                check the box labeled <b>t.co links wrapping for all URLs</b>, then scroll down and click the <b>Update this Twitter
+                application's settings</b>.
+                <br />
+              </li>
+              <li>
+                Click on the <b>Details</b> tab, scroll down to and click on <b>Create my access token</b>. After the page reloads, wait 30 seconds or so,
+                and refresh the page. Scroll back down to <b>Your access token</b>, then complete the form below.
+                <br />
+              </li>
+            </ol>
+            <br />
+          </div>
+
+          <table class="form-table">
+            <tr>
+              <td style="width:160px;">Consumer key</td>
+              <td>
+                <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_key]" value="<?php echo esc_attr(self::setting('twitter_consumer_key')) ?>" />
+              </td>
+            </tr>
+            <tr>
+              <td>Consumer secret</td>
+              <td>
+                <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_secret]" value="<?php echo esc_attr(self::setting('twitter_consumer_secret')) ?>" />
+              </td>
+            </tr>
+            <tr>
+              <td>Access token</td>
+              <td>
+                <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token]" value="<?php echo esc_attr(self::setting('twitter_access_token')) ?>" />
+              </td>
+            </tr>
+            <tr>
+              <td>Access token secret</td>
+              <td>
+                <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token_secret]" value="<?php echo esc_attr(self::setting('twitter_access_token_secret')) ?>" />
+              </td>
+            </tr>
+          </table>
+          <br />
+
+        <?php } ?>
+
+        <p>
+          <a href="#" onclick="test_twitter_settings(); return false;" class="button">Test Twitter Settings</a>
+          <?php if (self::twitter_ready()) { ?>
+            &nbsp; <a href="<?php echo admin_url('options-general.php?page=sharepress&action=reset_twitter_settings') ?>" onclick="return confirm('Are you sure you want to clear your Twitter settings and start over?');" class="button">Reset Settings</a>
+          <?php } ?>
+        </p>
+        <script>
+          (function($) {
+            window.test_twitter_settings = function() {
+              var data = $('input.twitter_setting').serialize();
+              data += '&action=sharepress_test_twitter_settings';
+              $.post(ajaxurl, data, function(result) {
+                alert(result);
+              });
+            }
+          })(jQuery);
+        </script>
+      
+      <?php }  ?>
+
       <br />
       <h3 class="title">Notifications</h3>
-      
-      <p>SharePress can e-mail you when errors and/or successes in posting to Facebook happen.</p>
       
       <table class="form-table">
         <tr>
@@ -302,33 +469,6 @@
         </tr>
       </table>  
 
-      <br />
-      <h3 class="title">License Key</h3>
-
-      <?php 
-        #
-        # Don't be a dick. I like to eat, too.
-        # http://aaroncollegeman/sharepress/
-        #
-        if (!self::unlocked()) { ?>
-        <p>Unlock pro features, get access to documentation and support from the developer of SharePress! <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.</p>
-      <?php } else { ?>
-        <p>Awesome, tamales! Need support? Need documentation? <a href="http://aaroncollegeman.com/sharepress/help/">Go here</a>.
-      <?php } ?>
-
-      <table class="form-table">
-        <tr>
-          <th><label for="sharepress_license_key">License Key:</label></th>
-          <td>
-            <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::setting('license_key')) ?>" />
-          </td>
-        </tr>
-      </table>
-      
-      <p class="submit">
-        <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
-      </p>
-      
       <script>
         (function($) {
           $(function() {
@@ -358,46 +498,54 @@
         })(jQuery);
       </script>
       
-    <?php } ?>
     
-  </form>
-  
-  <?php if (self::session()) { ?>
+      <?php if (self::$pro) { ?>
+        <br />
+        <h3 class="title">Default Picture</h3>
 
-    <?php if (self::$pro) { ?>
-      <br />
-      <h3 class="title">Default Picture</h3>
-
-      <p>Each message posted to Facebook can be accompanied by a picture. You can set the default below.</p>
+        <p>Each message posted to Facebook can be accompanied by a picture. You can set the default below.</p>
+        
+        <table class="form-table">
+          <tr>
+            <td>
+              <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 90, 90, self::load()->get_default_picture()) ?>
+            </td>
+          </tr>
+        </table>
+      <?php } ?>
       
-      <table class="form-table">
-        <tr>
-          <th>Default picture:</th>
-          <td>
-            <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 90, 90, self::load()->get_default_picture()) ?>
-          </td>
-        </tr>
-      </table>
-    <?php } ?>
-    
-    <br />
-    <h3 class="title">Clear Cache</h3>
-
-    <p>If you become the manager of a new Facebook Page, but do not see it in the list above or in the target list on the Edit Posts screen, reset the cache below.</p>
-
-    <p><a id="btnClearCache" href="options-general.php?page=sharepress&amp;action=clear_cache" class="button" onclick="jQuery(this).addClass('disabled');">Clear Cache</a></p>
-    
-    <?php if (!defined('SHAREPRESS_MU_SHARED_ACCESS_TOKEN') || !SHAREPRESS_MU_SHARED_ACCESS_TOKEN) { ?>
-    
       <br />
-      <h3 class="title">Run Setup Again</h3>
+      <h3 class="title">Clear Cache</h3>
 
-      <p>If you need to change Facebook Application keys, you can run setup again by clicking the button below.</p>
+      <p>
+        If you become the manager of a new Facebook Page, but do not see it in the list
+        above or in the <em>target</em> list on the Edit Posts screen, clear the cache.
+      </p>
 
-      <p><a href="options-general.php?page=sharepress&amp;action=clear_session" class="button">Run Setup Again</a></p>    
+      <p><a id="btnClearCache" href="options-general.php?page=sharepress&amp;action=clear_cache" class="button" onclick="jQuery(this).addClass('disabled');">Clear Cache</a>  </p>
 
+      <?php if (!defined('SHAREPRESS_MU_SHARED_ACCESS_TOKEN') || !SHAREPRESS_MU_SHARED_ACCESS_TOKEN) { ?>
+      
+        <br />
+        <h3 class="title">Run Setup Again</h3>
+
+        <p>If you need to change Facebook Application keys, run setup again.</p>        
+
+        <p>
+          <a href="options-general.php?page=sharepress&amp;action=clear_session" class="button">Run Setup Again</a>
+        </p>
+
+      <?php } ?>
+
+      <br />
+      <p class="submit">
+        <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
+      </p>
+      
+      
     <?php } ?>
-    
-  <?php } ?>
+
+
+  </form>  
     
 </div>
