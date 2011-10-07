@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.18
+Version: 2.0.19
 License: GPL2
 */
 
@@ -988,8 +988,10 @@ class Sharepress {
    */
   function ajax_fb_save_keys() {
     if (current_user_can('activate_plugins')) {
-      update_option(self::OPTION_API_KEY, $_REQUEST['api_key']);
-      update_option(self::OPTION_APP_SECRET, $_REQUEST['app_secret']);
+      if (!self::is_mu()) {
+        update_option(self::OPTION_API_KEY, $_REQUEST['api_key']);
+        update_option(self::OPTION_APP_SECRET, $_REQUEST['app_secret']);
+      }
       echo self::facebook()->getLoginUrl(array(
         'redirect_uri' => $_REQUEST['current_url'],
         'scope' => 'read_stream,publish_stream,offline_access,manage_pages'
@@ -1071,13 +1073,25 @@ class Sharepress {
 
     return $settings;
   }
-  
-  static function installed() {
-    return ( self::api_key() && self::app_secret() && self::session() );
+
+  static function has_keys() {
+    return ( self::api_key() && self::app_secret() );
   }
   
+  static function installed() {
+    return ( self::has_keys() && self::session() );
+  }
+  
+  static function is_mu() {
+    return defined('MULTISITE') && MULTISITE && defined('SHAREPRESS_MU') && SHAREPRESS_MU;
+  }
+
   static function unlocked() {
-    return strlen(self::load()->setting('license_key')) == 32;
+    $license_key = self::load()->setting('license_key');
+    if (self::is_mu()) {
+      $license_key = defined('SHAREPRESS_MU_LICENSE_KEY') ? SHAREPRESS_MU_LICENSE_KEY : null;
+    }
+    return strlen($license_key) == 32;
   }
 
   function admin_notices() {

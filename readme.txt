@@ -38,6 +38,9 @@ If you have SharePress installed, all you need to do is [buy a key](http://aaron
 
 == Changelog ==
 
+= 2.0.19 =
+* Fixed: The sharepress-mu.php file was all kinds of broken. Now works for the purpose of setting your license key, App Id, and App Secret in one place. Also, it's no longer part of the distribution. Sent only to people who buy the license.
+
 = 2.0.18 =
 * Fixed: If a Facebook connection error occurs on the Edit Post screen, the error message is hidden in the collapsed "Advanced" section of the meta box
 * Fixed: Sometimes WP fires SharePress' one-minute cron job more than once a minute, resulting in multiple posts to Facebook

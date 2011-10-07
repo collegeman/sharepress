@@ -16,122 +16,143 @@
     
     <?php if (!self::session()) { ?>
 
-      <?php if (!defined('SHAREPRESS_MU_SHARED_ACCESS_TOKEN') || !SHAREPRESS_MU_SHARED_ACCESS_TOKEN) { ?>
-    
-        <?php settings_fields('fb-step1') ?>
-        
+      <?php settings_fields('fb-step1') ?>
+      
+      <?php if (!self::is_mu()) { ?>
+
         <h3 class="title">Facebook Application</h3>
+      
+        <p>
+          Before you continue, you'll need to create your own Facebook Application. 
+          <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now</a>.
+          <span>( <a href="#" onclick="jQuery('#sharepress_help').show(); jQuery(this).parent().hide(); return false;">Help me</a>! )</span>
+        </p>
+
+        <div id="sharepress_help" style="display:none;">
+          <iframe width="480" height="390" src="http://www.youtube.com/embed/pI9IqJFQNF8" frameborder="0" allowfullscreen></iframe>
+        </div>
+
+        <p>
+          <b>Note:</b> Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
+          and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
+        </p>  
         
-        <?php if (!defined('SHAREPRESS_MU') || !SHAREPRESS_MU || current_user_can('manage_network')) { ?>
+        <table class="form-table">
+          <tr>
+            <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
+            <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_API_KEY ?>" name="<?php echo self::OPTION_API_KEY ?>" value="<?php echo htmlentities(self::api_key()) ?>" /></td>
+          </tr>
+          <tr>
+            <th><label for="<?php echo self::OPTION_APP_SECRET ?>">App Secret</label></th>
+            <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_APP_SECRET ?>" name="<?php echo self::OPTION_APP_SECRET ?>" value="<?php echo htmlentities(self::app_secret()) ?>" /></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <p class="submit">
+                <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
+              </p>
+            </td>
+          </tr>
+        </table>
 
-          <p>
-            Before you continue, you'll need to create your own Facebook Application. 
-            <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now</a>.
-            <span>( <a href="#" onclick="jQuery('#sharepress_help').show(); jQuery(this).parent().hide(); return false;">Help me</a>! )</span>
-          </p>
+      <?php } else if (self::has_keys()) { ?>
 
-          <div id="sharepress_help" style="display:none;">
-            <iframe width="480" height="390" src="http://www.youtube.com/embed/pI9IqJFQNF8" frameborder="0" allowfullscreen></iframe>
-          </div>
+        <h3 class="title">Connect to Facebook</h3>
+      
+        <p>Click the button below, authorize the Facebook application, and you're in.</p>
 
-          <p>
-            <b>Note:</b> Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
-            and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
-          </p>  
-          
-          <table class="form-table">
-            <tr>
-              <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
-              <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_API_KEY ?>" name="<?php echo self::OPTION_API_KEY ?>" value="<?php echo htmlentities(self::api_key()) ?>" /></td>
-            </tr>
-            <tr>
-              <th><label for="<?php echo self::OPTION_APP_SECRET ?>">App Secret</label></th>
-              <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_APP_SECRET ?>" name="<?php echo self::OPTION_APP_SECRET ?>" value="<?php echo htmlentities(self::app_secret()) ?>" /></td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>
-                <p class="submit">
-                  <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
-                </p>
-              </td>
-            </tr>
-          </table>
-          
-        <?php } ?>
-
-        
-        <script>
-
-          (function($) {
-            var api_key = $('#<?php echo self::OPTION_API_KEY ?>').focus();
-            var app_secret = $('#<?php echo self::OPTION_APP_SECRET ?>');
-            var btn = $('#btnConnect');
-
-            $('#settings_form').submit(function() {
-              api_key.val($.trim(api_key.val()));
-              app_secret.val($.trim(app_secret.val()));  
-
-              <?php if (!defined('SHAREPRESS_MU') || !SHAREPRESS_MU || current_user_can('manage_network')) { ?>
-
-                if (!api_key.val()) {
-                  alert('App ID is required.');
-                  return false;
-                }
-
-                if (!app_secret.val()) {
-                  alert('App Secret is required.');
-                  return false;
-                }
-
-              <?php } ?>
-
-              $.post(ajaxurl, { action: 'fb_save_keys', current_url: '<?php echo self::facebook()->getCurrentUrl() ?>', api_key: api_key.val(), app_secret: app_secret.val() }, function(url) {
-                btn.attr('disabled', true).val('Connecting...');
-                document.location = url;  
-              });
-
-              return false;
-            });
-       
-            
-          })(jQuery);
-        </script> 
+        <table class="form-table">
+          <tr>
+            <td></td>
+            <td>
+              <p class="submit">
+                <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
+              </p>
+            </td>
+          </tr>
+        </table>
 
       <?php } else { ?>
 
-        <p>Blah, blah, blah. Contact network admin.</p>
+        <h3 class="title">SharePress is not setup properly.</h3>
 
+        <p>This copy of SharePress is running in MU mode, but the Facebook App Id and App Secret have not been configured.</p>
+
+        <p>Please contact your network admin.</p>
+        
       <?php } ?>
+
       
+      <script>
+
+        (function($) {
+          var api_key = $('#<?php echo self::OPTION_API_KEY ?>').focus();
+          var app_secret = $('#<?php echo self::OPTION_APP_SECRET ?>');
+          var btn = $('#btnConnect');
+
+          $('#settings_form').submit(function() {
+            api_key.val($.trim(api_key.val()));
+            app_secret.val($.trim(app_secret.val()));  
+
+            <?php if (!self::is_mu()) { ?>
+
+              if (!api_key.val()) {
+                alert('App ID is required.');
+                return false;
+              }
+
+              if (!app_secret.val()) {
+                alert('App Secret is required.');
+                return false;
+              }
+
+            <?php } ?>
+
+            $.post(ajaxurl, { action: 'fb_save_keys', current_url: '<?php echo self::facebook()->getCurrentUrl() ?>', api_key: api_key.val(), app_secret: app_secret.val() }, function(url) {
+              btn.attr('disabled', true).val('Connecting...');
+              document.location = url;  
+            });
+
+            return false;
+          });
+     
+          
+        })(jQuery);
+      </script> 
+
     <?php } else { ?> 
       
       <?php settings_fields('fb-settings') ?>
 
-      <h3 class="title">Your License Key</h3>
+      <?php if (!self::is_mu()) { ?>
 
-      <?php 
-        #
-        # Don't be a dick. I like to eat, too.
-        # http://aaroncollegeman/sharepress/
-        #
-        if (!self::unlocked()) { ?>
-        <p>
-          <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.
-          Unlock pro features, get access to documentation and support from the developer of SharePress!
-        </p>
-      <?php } else { ?>
-        <p>Awesome, tamales! Need support? <a href="http://aaroncollegeman.com/sharepress/help/">Go here</a>.
+        <h3 class="title">Your License Key</h3>
+
+        <?php 
+          #
+          # Don't be a dick. I like to eat, too.
+          # http://aaroncollegeman/sharepress/
+          #
+          if (!self::unlocked()) { ?>
+          <p>
+            <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.
+            Unlock pro features, get access to documentation and support from the developer of SharePress!
+          </p>
+        <?php } else { ?>
+          <p>Awesome, tamales! Need support? <a href="http://aaroncollegeman.com/sharepress/help/">Go here</a>.
+        <?php } ?>
+
+        <table class="form-table">
+          <tr>
+            <th><label for="sharepress_license_key">License Key:</label></th>
+            <td>
+              <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::setting('license_key')) ?>" />
+            </td>
+          </tr>
+        </table>
+
       <?php } ?>
-
-      <table class="form-table">
-        <tr>
-          <th><label for="sharepress_license_key">License Key:</label></th>
-          <td>
-            <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::setting('license_key')) ?>" />
-          </td>
-        </tr>
-      </table>
 
       <br />
       <h3 class="title">Share by Default?</h3>
