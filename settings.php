@@ -499,7 +499,7 @@
       </script>
       
     
-      <?php if (self::$pro) { ?>
+      <?php if (self::unlocked()) { ?>
         <br />
         <h3 class="title">Default Picture</h3>
 
@@ -512,6 +512,7 @@
             </td>
           </tr>
         </table>
+
       <?php } ?>
       
       <br />
