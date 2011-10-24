@@ -23,7 +23,7 @@ With SharePress you'll be able to
 * Publish while you sleep: social messaging is published when posts go live
 * Schedule reposts of your content: keep traffic flowing to your site day and night
 
-Want to read what our customers say about SharePress? [Check this out](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=testimonials).
+Want to read what our customers have said about SharePress? [Check this out](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=testimonials).
 
 == Installation ==
 
