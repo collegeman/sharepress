@@ -57,6 +57,8 @@ class Sharepress {
   const META = 'sharepress_meta';
   const META_TWITTER = 'sharepress_twitter_meta';
   const META_SCHEDULED = 'sharepress_scheduled';
+
+  const TRANSIENT_IS_BUSINESS = 'sharepress_is_business';
   
   // holds the singleton instance of your plugin's core
   static $instance;
@@ -75,6 +77,40 @@ class Sharepress {
   }
   
   function init() {
+    /*
+    register_post_type('sharepress', array(
+      'labels' => array(
+        'name' => 'SharePress',
+        'singular_name' => 'Share',
+        'add_new' => 'Schedule New Share',
+        'all_items' => 'Sharing History',
+        'add_new_item' => 'Schedule New Share',
+        'edit_item' => 'Edit Share',
+        'new_item' => 'Share New',
+        'view_item' => 'View Share',
+        'search_items' => 'Search Shares',
+        'not_found' => 'Share Not Found',
+        'not_found_in_share' => 'No Shares found in Trash',
+        'menu_name' => 'SharePress'
+      ),
+      'description' => 'Share with the social Web',
+      'public' => false,
+      'show_ui' => true,
+      'show_in_menu' => true,
+      'menu_position' => 2,
+      'supports' => array(
+        'title',
+        'author',
+        'thumbnail',
+        'excerpt',
+        'custom-fields',
+        'comments'
+      ),
+      'register_meta_box_cb' => 'sharepress_meta_boxes',
+      'can_export' => true
+    ));
+    */
+      
     if (is_admin()) {
       add_action('admin_notices', array($this, 'admin_notices'));
       add_action('admin_menu', array($this, 'admin_menu'));
@@ -172,7 +208,7 @@ class Sharepress {
           'og:image' => $picture,
           'og:site_name' => get_bloginfo('name'),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
-          'og:description' => $excerpt
+          'og:description' => strip_shortcodes($excerpt)
         );
 
       } else {
@@ -183,7 +219,7 @@ class Sharepress {
           'og:site_name' => get_bloginfo('name'),
           'og:image' => $this->get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
-          'og:description' => get_bloginfo('description')
+          'og:description' => strip_shortcodes(get_bloginfo('description'))
         );
         
       }
@@ -276,15 +312,16 @@ class Sharepress {
   static function app_secret() {
     return get_option(self::OPTION_APP_SECRET, '');
   }
-  
+
   static function session() {
     if (!self::api_key() || !self::app_secret()) {
       return false;
     }
 
     try {
-      return self::api('/me', 'GET', null, '1 hour');
+      return self::me(null, true);
     } catch (Exception $e) {
+      // log this...?
       return false;
     }
   }
@@ -401,16 +438,38 @@ class Sharepress {
   }
   
   /** 
-   * Facebook Query: /me - returns the user data for the blog owner
+   * Unify user data: standard and business accounts.
    * @param string $param (optional) Return only the value at $param
+   * @param boolean $rethrow If set to true, rethrow an exception triggered by the API call
    * @return mixed If $param is defined, only a single value is returned; otherwise, an array - the whole packet
    */
-  static function me($param = null) {
+  static function me($param = null, $rethrow = false) {
     try {
-      $me = self::api('/me', 'GET', array(), '10 minutes');
-      return ($param) ? $me[$param] : $me;
+      if (self::is_business()) {
+        $accounts = self::api('/me/accounts', 'GET', array(), '10 minutes');
+        $me = $accounts['data'][0];
+        return ($param) ? $me[$param] : $me;
+      } else {
+        $me = self::api('/me', 'GET', array(), '10 minutes');
+        return ($param) ? $me[$param] : $me;
+      } 
     } catch (Exception $e) {
-      return self::handleFacebookException($e);
+      if ($rethrow) {
+        throw $e;
+      } else {
+        return self::handleFacebookException($e);
+      }
+    }
+  }
+
+  static function is_business() {
+    if (is_string($is_business = get_transient(self::TRANSIENT_IS_BUSINESS))) {
+      return $is_business == '1';
+    } else {
+      $me = self::api('/me');
+      $is_business = !$me;
+      set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600); 
+      return $is_business;
     }
   }
   
@@ -419,6 +478,7 @@ class Sharepress {
       if ($client = self::facebook()) {
         $client->clearAllPersistentData();
       }
+      delete_transient(self::TRANSIENT_IS_BUSINESS);
       wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="index.php">Dashboard</a>.');
     } else if (is_admin()) {
       wp_die(sprintf('There was a problem with SharePress: %s; This is probably an issue with the Facebook API. Check <a href="http://developers.facebook.com/live_status/" target="_blank">Facebook Live Status</a> for more information. You can also <a href="%s">try resetting SharePress</a>. If the problem persists, please <a href="http://aaroncollegeman.com/sharepress/help/#support_form" target="_blank">report it to Fat Panda</a>.', $e->getMessage(), admin_url('options-general.php?page=sharepress&amp;action=clear_session')));
@@ -577,7 +637,7 @@ class Sharepress {
     }
     
     // verify permissions
-    if (!current_user_can('edit_post', $post->ID)) {
+    if (!current_user_can('edit_post', $post->ID) && !defined('DOING_CRON') && !DOING_CRON) {
       self::log("Current user is not allowed to edit posts; ignoring save_post($post_id)");
       return false;
     }
@@ -918,12 +978,12 @@ class Sharepress {
         _wp_http_get_object()->request(sprintf('http://developers.facebook.com/tools/debug/og/object?q=%s', urlencode($meta['link'])));
         
         // no targets? error.
-        if (!$meta['targets']) {
+        if (!$meta['targets'] && !self::is_business()) {
           throw new Exception("No publishing Targets selected.");
         }
         
         // first, should we post to the wall?
-        if (in_array('wall', $meta['targets'])) {
+        if (self::is_business() || in_array('wall', $meta['targets'])) {
           $result = self::api(self::me('id').'/links', 'POST', array(
             'name' => $meta['name'],
             'message' => $meta['message'],
@@ -947,7 +1007,12 @@ class Sharepress {
         if ($twitter_meta = $this->can_post_on_twitter($post)) {
        
           $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
-          $result = $client->post(sprintf('%s %s', $post->post_title, get_permalink($post)));
+          $tweet = sprintf('%s %s', $post->post_title, get_permalink($post));
+          if ($hash_tag = trim($twitter_meta['hash_tag'])) {
+            $tweet .= ' '.$hash_tag;
+          }
+
+          $result = $client->post($tweet);
           add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
 
         }
@@ -978,7 +1043,7 @@ class Sharepress {
   function plugin_action_links($actions, $plugin_file, $plugin_data, $context) {
     $actions['settings'] = '<a href="options-general.php?page=sharepress">Settings</a>';
     if (!self::$pro && self::session()) {
-      $actions['go-pro'] = '<a href="http://aaroncollegeman.com/sharepress?utm_source=plugin&utm_medium=in-app-promo&utm_campaign=unlock-pro-version">Unlock Pro Version</a>';
+      $actions['go-pro'] = '<a href="http://aaroncollegeman.com/sharepress?utm_source=sharepress&utm_medium=in-app-promo&utm_campaign=unlock-pro-version">Unlock Pro Version</a>';
     }
     return $actions;
   }
@@ -1022,6 +1087,7 @@ class Sharepress {
       if ($action == 'clear_session') {      
         if (current_user_can('administrator')) {
           self::facebook()->clearAllPersistentData();
+          delete_transient(self::TRANSIENT_IS_BUSINESS);
           self::clear_cache();
           wp_redirect('options-general.php?page=sharepress&step=1');
           exit;
@@ -1112,7 +1178,7 @@ class Sharepress {
         } else {
           ?>
             <div class="updated">
-              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress?utm_source=plugin&utm_medium=in-app-promo&utm_campaign=learn-more">Learn more</a>.</p>
+              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress?utm_source=sharepress&utm_medium=in-app-promo&utm_campaign=learn-more">Learn more</a>.</p>
             </div>
           <?php
         }

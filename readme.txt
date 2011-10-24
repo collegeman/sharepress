@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: social, facebook, publicize, automate, marketing
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.18
+Stable tag: 2.0.19
 
 SharePress publishes your content to your Facebook Wall. 
 
@@ -40,6 +40,12 @@ If you have SharePress installed, all you need to do is [buy a key](http://aaron
 
 = 2.0.19 =
 * Fixed: The sharepress-mu.php file was all kinds of broken. Now works for the purpose of setting your license key, App Id, and App Secret in one place. Also, it's no longer part of the distribution. Sent only to people who buy the license.
+* Fixed: Shortcodes appearing in og:description
+* Fixed: Google+Blog wasn't posting to Facebook
+* Fixed: Missing campaign tracking on some links in free version of the plugin
+* Fixed: Default image size now 150x150
+* Added: JS confirmation when no Featured Image is specified
+* Added: Optional Twitter hash tag, customizeable for each post
 
 = 2.0.18 =
 * Fixed: If a Facebook connection error occurs on the Edit Post screen, the error message is hidden in the collapsed "Advanced" section of the meta box

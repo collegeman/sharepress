@@ -57,43 +57,45 @@
       </label>
     </fieldset>
   
-    <br />
-    <fieldset>
-      <legend>
-        <label for="sharepress_meta_targets">
-          <b>Publishing Targets</b> &nbsp;&nbsp; 
-        </label>
-      </legend>
-    
-      <div style="max-height:150px; overflow:auto;">
-        <p style="color:red; display:none; padding-top: 0; margin-top: 0;" id="publish_target_error">
-          Choose at least one.
-        </p>
-        <p>
-          <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
-          <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
-            <input type="checkbox" class="sharepress_target" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
-            <?php echo $wall_name ?>
+    <?php if (!SharePress::is_business()) { ?>
+      <br />
+      <fieldset>
+        <legend>
+          <label for="sharepress_meta_targets">
+            <b>Publishing Targets</b> &nbsp;&nbsp; 
           </label>
-        </p>
-        <?php 
-          $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); 
-          foreach($pages as $page) { 
-            if (self::is_excluded_page($page)) {
-              continue; 
+        </legend>
+      
+        <div style="max-height:150px; overflow:auto;">
+          <p style="color:red; display:none; padding-top: 0; margin-top: 0;" id="publish_target_error">
+            Choose at least one.
+          </p>
+          <p>
+            <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
+            <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
+              <input type="checkbox" class="sharepress_target" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
+              <?php echo $wall_name ?>
+            </label>
+          </p>
+          <?php 
+            $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); 
+            foreach($pages as $page) { 
+              if (self::is_excluded_page($page)) {
+                continue; 
+              }
+              ?>
+                 <p>
+                  <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
+                    <input class="sharepress_target" type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
+                    <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
+                  </label>
+                </p>
+              <?php
             }
-            ?>
-               <p>
-                <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
-                  <input class="sharepress_target" type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
-                  <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
-                </label>
-              </p>
-            <?php
-          }
-        ?>
-      </div>
-    </fieldset>
+          ?>
+        </div>
+      </fieldset>
+    <?php } ?>
 
     <p style="margin:5px; text-align:center;">
       <a class="sharepress_hide_advanced" href="javascript:;" onclick="jQuery('.sharepress_advanced').slideUp(function() { jQuery('.sharepress_show_advanced').fadeIn(); });">Hide Advanced Options</a>
@@ -110,10 +112,28 @@
       <legend><b>Also Share With...</b></legend>
       
       <div class="tools">
-        <label>
-          <input type="checkbox" value="on" name="<?php echo Sharepress::META_TWITTER ?>[enabled]" <?php if ($twitter_enabled) echo 'checked="checked"' ?> />
-          &nbsp; Twitter
-        </label>
+        <p>
+          <label>
+            <input type="checkbox" value="on" id="<?php echo SharePress::META_TWITTER ?>_enabled" name="<?php echo Sharepress::META_TWITTER ?>[enabled]" <?php if ($twitter_enabled) echo 'checked="checked"' ?> />
+            &nbsp; Twitter Followers
+          </label>
+        </p>
+        <p style="margin-left:23px;">
+          <label for="<?php echo Sharepress::META_TWITTER ?>_hash_tag" style="display:block; margin-bottom:4px;">Hash Tag &nbsp;<span class="description">(optional)</span></label>
+          <input style="width:150px;" type="text" name="<?php echo Sharepress::META_TWITTER ?>[hash_tag]" id="<?php echo Sharepress::META_TWITTER ?>_hash_tag" value="<?php echo trim(esc_attr($twitter_meta['hash_tag'])) ?>" />
+        </p>
+        <script>
+          (function($) {
+            var enabled = $('#<?php echo SharePress::META_TWITTER ?>_enabled');
+            var hash_tag = $('#<?php echo Sharepress::META_TWITTER ?>_hash_tag');
+            if (!enabled[0].checked) {
+              hash_tag.parent().hide();
+            }
+            enabled.change(function() {
+              this.checked ? hash_tag.parent().slideDown() : hash_tag.parent().hide();
+            });
+          })(jQuery);
+        </script>
       </div>
     </fieldset>
 
@@ -195,25 +215,33 @@
       return true;
     });
 
-    var check_for_targets = true;
+    var check_for_featured_image = <?php echo SharePress::setting('featured_image_warning', 'on') == 'on' ? 'true' : 'false' ?>;
+    var check_for_targets = <?php echo (SharePress::is_business()) ? 'false' : 'true' ?>;
 
     $('#save-post').click(function() {
-      check_for_targets = false;
+      check_for_targets = check_for_featured_image = false;
       return true;
     });
 
     $('#publish').click(function() {
-      check_for_targets = true;
+      check_for_targets = check_for_featured_image = true;
       return true;
     });
 
     $('#post').submit(function() {
-      if (!check_for_targets) {
-        return true;
+      var will_share = ( $('#sharepress_meta_enabled_on:checked').size() || $('#sharepress_meta_publish_again').val() == '1' );
+
+      if (check_for_featured_image && will_share && !$('#postimagediv img').size()) {
+        if (confirm("It looks like you haven't set a Featured Image for this post. If you don't set a Featured Image, Facebook won't know what image to use. Click OK to set a Featured Image, or click CANCEL to Publish anyway.")) {
+          $('#set-post-thumbnail').trigger('click');
+          $('#ajax-loading').hide();
+          $('.button-primary-disabled').removeClass('button-primary-disabled');
+          return false;
+        }
       }
 
       // are we trying to post with sharepress?
-      if ($('#sharepress_meta_enabled_on:checked').size() || $('#sharepress_meta_publish_again').val() == '1') {
+      if (check_for_targets && will_share) {
         // no targets?
         if (!$('input.sharepress_target:checked').size()) {
 

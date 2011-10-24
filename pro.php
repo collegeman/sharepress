@@ -447,6 +447,10 @@ class SharepressPro {
   }
   
   function pages($default = array()) {
+    if (SharePress::is_business()) {
+      return array();
+    }
+
     try {
       $result = Sharepress::api(Sharepress::me('id').'/accounts', 'GET', array(), '1 hour');
     } catch (Exception $e) {

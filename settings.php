@@ -11,7 +11,7 @@
     SharePress
     <span>a WordPress plugin from <a href="http://aaroncollegeman.com/fatpanda/" target="_blank">Fat Panda</a></span>
   </h2>
-  
+
   <form method="post" action="options.php" id="settings_form">
     
     <?php if (!self::session()) { ?>
@@ -23,7 +23,7 @@
         <h3 class="title">Facebook Application</h3>
       
         <p>
-          Before you continue, you'll need to create your own Facebook Application. 
+          Before you continue, you'll need to create a Facebook Application. 
           <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now</a>.
           <span>( <a href="#" onclick="jQuery('#sharepress_help').show(); jQuery(this).parent().hide(); return false;">Help me</a>! )</span>
         </p>
@@ -136,7 +136,7 @@
           #
           if (!self::unlocked()) { ?>
           <p>
-            <a href="http://aaroncollegeman.com/sharepress">Buy a license</a> key today.
+            <a href="http://aaroncollegeman.com/sharepress?utm_source=sharepress&utm_medium=in-app-promo&utm_campaign=buy-a-license">Buy a license</a> key today.
             Unlock pro features, get access to documentation and support from the developer of SharePress!
           </p>
         <?php } else { ?>
@@ -255,54 +255,63 @@
       <br />
       <h3 class="title">Facebook Pages and Walls</h3>
       
-      <p>
-        When you publish new post, where should it be announced?
-        <?php if (self::$pro) { ?>
-          You'll be able to change this for each post: these are just the defaults.
-        <?php } else { ?>
-          If you <a href="http://aaroncollegeman.com/sharepress">unlock the pro features</a>, you will also be able to select from your Facebook pages.
-        <?php } ?>
-         
-      <div style="max-height: 365px; overflow:auto; border:1px solid #ccc;">
-        <table class="widefat post fixed" cellspacing="0">
-          <thead>
-           	<tr>
-           	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
-           	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
-           	</tr>
-          </thead>
+      <?php if (self::is_business()) { ?>
 
-          <tfoot>
-           	<tr>
-           	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
-           	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
-            </tr>
-         	</tfoot>
+        <p>You setup SharePress using a Facebook page account.</p>
 
-          <tbody>
-           	<!-- our blog owner's wall -->
-           	<tr id="" class="alternate">
-              <th scope="row" class="check-column">
-                <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
-              </th>
-              <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo self::me('id') ?>">
-                <?php echo (preg_match('/s$/i', trim($name = self::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
-            </tr>
-            <!-- /blog owner's wall -->
-          
-            <!-- all of the blog owner's pages -->
-            <?php foreach(self::pages() as $i => $page) { if (self::$pro && self::$pro->is_excluded_page($page)) continue; ?>
-              <tr class="<?php if ($i % 2) echo 'alternate' ?>">
-                <th scope="row" class="check-column">
-                  <input type="checkbox" name="sharepress_publishing_targets[<?php echo $page['id'] ?>]" value="1" <?php if (self::targets($page['id'])) echo 'checked="checked"' ?>>
-                </th>
-                <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo $page['id'] ?>"><?php echo $page['name'] ?></a></td>
+        <p>What you share with Facebook will be posted on <a target="_blank" href="http://www.facebook.com/profile.php?id=<?php echo self::me('id') ?>"><?php echo self::me('name') ?></a>'s wall.</p>
+
+      <?php } else { ?>
+        <p>
+          When you publish new post, where should it be announced?
+          <?php if (self::$pro) { ?>
+            You'll be able to change this for each post: these are just the defaults.
+          <?php } else { ?>
+            If you <a href="http://aaroncollegeman.com/sharepress">unlock the pro features</a>, you will also be able to select from your Facebook pages.
+          <?php } ?>
+           
+        <div style="max-height: 365px; overflow:auto; border:1px solid #ccc;">
+          <table class="widefat post fixed" cellspacing="0">
+            <thead>
+             	<tr>
+             	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
+             	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
+             	</tr>
+            </thead>
+
+            <tfoot>
+             	<tr>
+             	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
+             	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
               </tr>
-            <?php } ?>
-          </tbody>
-        
-        </table>
-      </div>
+           	</tfoot>
+
+            <tbody>
+             	<!-- our blog owner's wall -->
+             	<tr id="" class="alternate">
+                <th scope="row" class="check-column">
+                  <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
+                </th>
+                <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo self::me('id') ?>">
+                  <?php echo (preg_match('/s$/i', trim($name = self::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
+              </tr>
+              <!-- /blog owner's wall -->
+            
+              <!-- all of the blog owner's pages -->
+              <?php foreach(self::pages() as $i => $page) { if (self::$pro && self::$pro->is_excluded_page($page)) continue; ?>
+                <tr class="<?php if ($i % 2) echo 'alternate' ?>">
+                  <th scope="row" class="check-column">
+                    <input type="checkbox" name="sharepress_publishing_targets[<?php echo $page['id'] ?>]" value="1" <?php if (self::targets($page['id'])) echo 'checked="checked"' ?>>
+                  </th>
+                  <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo $page['id'] ?>"><?php echo $page['name'] ?></a></td>
+                </tr>
+              <?php } ?>
+            </tbody>
+          
+          </table>
+        </div>
+
+      <?php } // !self::is_business() ?>
 
       <br />
       <h3 class="title">Twitter</h3>
@@ -488,6 +497,24 @@
             <div style="color:red; display:none;" id="on_success_email_error">Please use a valid e-mail address</div>
           </td>
         </tr>
+
+        <tr>
+          <th>Featured Image:</th>
+          <td>
+            <div style="margin-bottom:5px;">
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[featured_image_warning]" value="on" <?php if (self::setting('featured_image_warning', 'on') == 'on') echo 'checked="checked"' ?> />
+                Yes, warn me if I forget it!
+              </label>
+            </div>
+            <div>
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[featured_image_warning]" value="off" <?php if (self::setting('featured_image_warning', 'on') == 'off') echo 'checked="checked"' ?> />
+                No, I don't care, shut up.
+              </label>
+            </div>
+          </td>
+        </tr>
       </table>  
 
       <script>
@@ -529,7 +556,7 @@
         <table class="form-table">
           <tr>
             <td>
-              <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 90, 90, self::load()->get_default_picture()) ?>
+              <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 150, 150, self::load()->get_default_picture()) ?>
             </td>
           </tr>
         </table>
