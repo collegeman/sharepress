@@ -1,40 +1,47 @@
 === Plugin Name ===
 Contributors: aaroncollegeman
 Donate link: http://aaroncollegeman.com/sharepress
-Tags: social, facebook, publicize, automate, marketing
+Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.2.1
 Stable tag: 2.0.19
 
-SharePress publishes your content to your Facebook Wall. 
+Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
 == Description ==
 
-SharePress publishes your content to your Facebook Wall. 
+SharePress is a WordPress plugin that helps you communicate with your [tribes](http://sethgodin.typepad.com/seths_blog/2008/01/tribal-manageme.html) on Facebook and Twitter by automatically publishing your WordPress posts the moment they become live on your site.
 
-Reaching an audience of more than 500,000,000 people, Facebook has become the next great stage from which to speak to the world. Rest assured: your customers and your readers are there - past, present, and future. 
+With SharePress you'll be able to
 
-But if you're like us, then posting things on Facebook is somewhere at the bottom of your list. After all, you're creating quality content with WordPress, and who has time to keep one eye on Facebook all day long? No longer will you have to manually share links to your Posts - just click Publish, and let SharePress do the rest.
+* Publish your WordPress posts to any/all of the Facebook pages you manage
+* Publish to your Facebook wall
+* Publish to your Twitter followers **NEW!**
+* Customize each Facebook status message
+* Control the image Facebook uses just by setting the post's featured image
+* Customize Twitter hashtag
+* Publish while you sleep: social messaging is published when posts go live
+* Schedule reposts of your content: keep traffic flowing to your site day and night
 
-There are two versions of SharePress: a lite version, that lets you post to your personal Facebook Wall; and a pro version, that lets you post to any Facebook Page you manage, as well as customize the messages that are posted there.
+Want to read what our customers say about SharePress? [Check this out](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=testimonials).
 
 == Installation ==
 
-1. Get the plugin-in. Download it manually or install through the 'Plugins' menu in WordPress.
+Want to try SharePress for free?
 
-2. If you downloaded the plugin as a zip file, extract the plugin into your `wp-content/plugins` folder. This should create within the plugins folder another folder named `sharepress`. If it does not create this folder, you must create the folder yourself, and put the plugin files in it. SharePress will not work unless it resides in a folder named `sharepress`.
+1. Get the plugin. Activate the plugin.
 
-3. Activate the plugin through the 'Plugins' menu in WordPress.
+2. Create a Facebook application.
 
-4. Configure through the 'SharePress' item on the 'Settings' menu. Instructions in the application will help you to create your own Facebook Application (required).
+3. Go to Settings / SharePress, and run setup.
 
-Post questions about installation and usage [in the forum](http://wordpress.org/tags/sharepress?forum_id=10#postform).
+Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Frequently Asked Questions ==
 
-= How do I get the pro version? =
+= How do I post to the wall of my Facebook page? =
 
-If you have SharePress installed, all you need to do is [buy a key](http://aaroncollegeman.com/sharepress).
+You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
 
