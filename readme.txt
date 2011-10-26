@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.19
+Stable tag: 2.0.20
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -44,6 +44,12 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.0.20 =
+* Fixed: (again) Taking another shot at the shortcode-in-og:description-problem
+* Fixed: Usability issues with the new Featured Image confirmation prompt
+* Added: New global options for controlling from where the picture used by Facebook is sourced (featured image, global, or essentially-random)
+* Change: Turned off the pinger. I wasn't using the data, and it upset some of my licensed customers. This will come back later in some more manageable form
 
 = 2.0.19 =
 * Fixed: The sharepress-mu.php file was all kinds of broken. Now works for the purpose of setting your license key, App Id, and App Secret in one place. Also, it's no longer part of the distribution. Sent only to people who buy the license.

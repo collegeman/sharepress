@@ -45,14 +45,23 @@
           <b>Picture</b>
         </label>
       </legend>
+
+      <p style="color:red; padding-top: 0; margin-top: 0; margin-bottom: 10px; display:none;" id="picture_error">
+        Can't use Featured Image if it isn't set. Please set the Featured Image, or select a different option.
+      </p>
   
-      <label style="display:block; margin-bottom: 5px;">
-        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="0" <?php if (!@$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
+      <label style="display:block; margin-bottom: 8px;">
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="0" <?php if (!$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
         Use this post's <a href="javascript:;" onclick="jQuery('#set-post-thumbnail').click();">Featured Image</a>
       </label>
 
-      <label style="display:block; margin-bottom: 5px;">
-        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if (@$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
+      <label style="display:block; margin-bottom: 8px;">
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="2" <?php if ($meta['let_facebook_pick_pic'] == 2) echo 'checked="checked"' ?> /> 
+        Just use the <a href="<?php echo admin_url('options-general.php?page=sharepress') ?>#picture" target="_blank">global default</a>
+      </label>
+
+      <label style="display:block; margin-bottom: 8px;">
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if ($meta['let_facebook_pick_pic'] == 1) echo 'checked="checked"' ?> /> 
         Let Facebook choose
       </label>
     </fieldset>
@@ -215,7 +224,7 @@
       return true;
     });
 
-    var check_for_featured_image = <?php echo SharePress::setting('featured_image_warning', 'on') == 'on' ? 'true' : 'false' ?>;
+    var check_for_featured_image = true;
     var check_for_targets = <?php echo (SharePress::is_business()) ? 'false' : 'true' ?>;
 
     $('#save-post').click(function() {
@@ -230,14 +239,17 @@
 
     $('#post').submit(function() {
       var will_share = ( $('#sharepress_meta_enabled_on:checked').size() || $('#sharepress_meta_publish_again').val() == '1' );
+      var let_facebook_pick_pic = $('input[name="sharepress_meta\[let_facebook_pick_pic\]"]:checked');
+    
+      if (check_for_featured_image && will_share && !$('#postimagediv img').size() && let_facebook_pick_pic.val() == '0') {
+        $('#ajax-loading').hide();
+        $('#publish').removeClass('button-primary-disabled');
+        $('.sharepress_show_advanced').hide(); 
+        $('.sharepress_advanced').slideDown();
+        $('#picture_error').show();
+        $(window).scrollTop($('#sharepress_meta').offset().top);
 
-      if (check_for_featured_image && will_share && !$('#postimagediv img').size()) {
-        if (confirm("It looks like you haven't set a Featured Image for this post. If you don't set a Featured Image, Facebook won't know what image to use. Click OK to set a Featured Image, or click CANCEL to Publish anyway.")) {
-          $('#set-post-thumbnail').trigger('click');
-          $('#ajax-loading').hide();
-          $('.button-primary-disabled').removeClass('button-primary-disabled');
-          return false;
-        }
+        return false;
       }
 
       // are we trying to post with sharepress?
@@ -252,7 +264,7 @@
           $('.sharepress_advanced').slideDown();
           $('label[for="sharepress_meta_targets"]').css('color', 'red');
           $('#publish_target_error').show();
-          $(window).scrollTop($('#sharepress_meta').offset().top)
+          $(window).scrollTop($('#sharepress_meta').offset().top);
 
           // don't allow submission:
           return false;

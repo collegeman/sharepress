@@ -497,24 +497,6 @@
             <div style="color:red; display:none;" id="on_success_email_error">Please use a valid e-mail address</div>
           </td>
         </tr>
-
-        <tr>
-          <th>Featured Image:</th>
-          <td>
-            <div style="margin-bottom:5px;">
-              <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[featured_image_warning]" value="on" <?php if (self::setting('featured_image_warning', 'on') == 'on') echo 'checked="checked"' ?> />
-                Yes, warn me if I forget it!
-              </label>
-            </div>
-            <div>
-              <label>
-                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[featured_image_warning]" value="off" <?php if (self::setting('featured_image_warning', 'on') == 'off') echo 'checked="checked"' ?> />
-                No, I don't care, shut up.
-              </label>
-            </div>
-          </td>
-        </tr>
       </table>  
 
       <script>
@@ -549,17 +531,42 @@
     
       <?php if (self::unlocked()) { ?>
         <br />
-        <h3 class="title">Default Picture</h3>
+        <a name="picture"></a>
+        <h3 class="title">Picture</h3>
 
-        <p>Each message posted to Facebook can be accompanied by a picture. You can set the default below.</p>
+        <p>Each message posted to Facebook can be accompanied by a picture.</p>
         
-        <table class="form-table">
+        <table class="form-table" style="margin-bottom:15px;">
           <tr>
+            <th>The default should be...</th>
             <td>
-              <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 150, 150, self::load()->get_default_picture()) ?>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="0" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 0) echo 'checked="checked"' ?> />
+                  The same as the post's featured image
+                </label>
+              </div>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="2" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 2) echo 'checked="checked"' ?> />
+                  The global default
+                </label>
+              </div>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="1" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 1) echo 'checked="checked"' ?> />
+                  Just let Facebook choose an image (not recommended)
+                </label>
+              </div>
             </td>
           </tr>
-        </table>
+        </table>  
+
+        <div>
+          <p><b>Global default picture</b></p>
+          <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 150, 150, self::load()->get_default_picture()) ?>
+        </div>
+        <div style="clear:left;"></div>
 
       <?php } ?>
       

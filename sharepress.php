@@ -133,11 +133,13 @@ class Sharepress {
     add_action('wp_head', array($this, 'wp_head'));
     add_filter('cron_schedules', array($this, 'cron_schedules'));
 
+    /*
     $can_ping = true;
     if (!defined('SHAREPRESS_PING_WRITTEN') && is_admin() && apply_filters('fatpanda_can_ping', $can_ping) && apply_filters('fatpanda_can_ping_sharperess', $can_ping)) {
       @define('SHAREPRESS_PING_WRITTEN', true);
       wp_enqueue_script('fatpanda-ping', ('on' == @$_SERVER['HTTPS'] ? 'https' : 'http').sprintf('://ping.fatpandadev.com/ping.js?plugin=sharepress&cb=%s', date('YmdH')), array('jquery'));
     }
+    */
 
     if (!wp_next_scheduled('sharepress_oneminute_cron')) {
       wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
@@ -194,6 +196,8 @@ class Sharepress {
             $picture = $this->get_default_picture();
           }
 
+        } else if ($meta['let_facebook_pick_pic'] == 2) { // explicitly set to use the default
+          $picture = $this->get_default_picture();
         }
 
         global $post;
@@ -208,7 +212,7 @@ class Sharepress {
           'og:image' => $picture,
           'og:site_name' => get_bloginfo('name'),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
-          'og:description' => strip_shortcodes($excerpt)
+          'og:description' => $this->strip_shortcodes($excerpt)
         );
 
       } else {
@@ -219,7 +223,7 @@ class Sharepress {
           'og:site_name' => get_bloginfo('name'),
           'og:image' => $this->get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
-          'og:description' => strip_shortcodes(get_bloginfo('description'))
+          'og:description' => $this->strip_shortcodes(get_bloginfo('description'))
         );
         
       }
@@ -270,8 +274,8 @@ class Sharepress {
           echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
             array('"', '<', '>'), 
             array('&quot;', '&lt;', '&gt;'), 
-            $content)
-          );
+            $this->strip_shortcodes($content)
+          ));
         }
       }
     } 
@@ -548,11 +552,11 @@ class Sharepress {
         'message' => $post->post_title,
         'title_is_message' => true,
         'picture' => $this->get_default_picture(),
-        'let_facebook_pick_pic' => false,
+        'let_facebook_pick_pic' => self::setting('let_facebook_pick_pic_default', 0),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => array_keys(self::targets()),
-        'enabled' => self::setting('default_behavior')
+        'enabled' => self::setting('default_behavior'),
       );
     } else {
       // overrides:
@@ -635,9 +639,23 @@ class Sharepress {
       self::log("Post is a revision; ignoring save_post($post_id)");
       return false;
     }
+
+    $is_xmlrpc = defined('XMLRPC_REQUEST') && XMLRPC_REQUEST;
+    if ($is_xmlrpc) {
+      self::log('In XML-RPC request');
+    } else {
+      self::log('Not in XML-RPC request');
+    }
+
+    $is_cron = defined('DOING_CRON') && DOING_CRON;
+    if ($is_cron) {
+      self::log('In CRON job');
+    } else {
+      self::log('Not in CRON job');
+    }
     
     // verify permissions
-    if (!current_user_can('edit_post', $post->ID) && !defined('DOING_CRON') && !DOING_CRON) {
+    if (!$is_cron && !current_user_can('edit_post', $post->ID)) {
       self::log("Current user is not allowed to edit posts; ignoring save_post($post_id)");
       return false;
     }
@@ -726,14 +744,14 @@ class Sharepress {
       
 
     #
-    # When save_post is invoked by XML-RPC the SharePress nonce won't be 
+    # When save_post is invoked by XML-RPC or CRON the SharePress nonce won't be 
     # available to test. So, we evaluate whether or not to post based on several
     # criteria:
     # 1. SharePress must be configured to post to Facebook by default
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if (defined('XMLRPC_REQUEST') && XMLRPC_REQUEST && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if (($is_xmlprc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
 
@@ -742,7 +760,7 @@ class Sharepress {
         'message' => $post->post_title,
         'title_is_message' => true,
         'picture' => $this->get_default_picture(),
-        'let_facebook_pick_pic' => false,
+        'let_facebook_pick_pic' => self::setting('let_facebook_pick_pic_default', 0),
         'link' => get_permalink($post),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
@@ -812,12 +830,20 @@ class Sharepress {
       $this->share($post);
     }
   }
+
+  public function strip_shortcodes($text) {
+    // the WordPress way:
+    $text = strip_shortcodes($text);
+    // the manual way:
+    return preg_replace('#\[/[^\]]+\]#', '', $text);
+
+  }
   
   public function get_excerpt($post = null, $text = null) {
     if (!is_null($post)) {
       $text = $post->post_excerpt ? $post->post_excerpt : $post->post_content;
     } 
-    $text = strip_shortcodes( $text );
+    $text = $this->strip_shortcodes( $text );
     $text = str_replace(']]>', ']]&gt;', $text);
     $text = strip_tags($text);
     
@@ -868,6 +894,9 @@ class Sharepress {
       }
       
       $meta['picture'] = $picture;
+    
+    } else if (@$meta['let_facebook_pick_pic'] == 2) {
+      $meta['picture'] = $this->get_default_picture();
     }
     
     return $meta;
