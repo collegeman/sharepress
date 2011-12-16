@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.2.1
-Stable tag: 2.0.20
+Stable tag: 2.0.21
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -44,6 +44,10 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.0.21 =
+* Change: "Let Facebook choose" mode for post image has been replaced with "Use the first image in the post," which is a much better default
+* Change: Don't display the setup warning everywhere
 
 = 2.0.20 =
 * Fixed: (again) Taking another shot at the shortcode-in-og:description-problem

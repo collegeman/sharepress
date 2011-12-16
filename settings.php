@@ -211,7 +211,8 @@
                   'og:url' => true,
                   'fb:app_id' => true,
                   'og:site_name' => true,
-                  'og:description' => true
+                  'og:description' => true,
+                  'og:locale' => true
                 ));
               }
 
@@ -222,7 +223,8 @@
                 'og:url' => false,
                 'fb:app_id' => false,
                 'og:site_name' => false,
-                'og:description' => false
+                'og:description' => false,
+                'og:locale' => false
               ), $page_og_tag);
             ?>
             <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[page_og_tag][__PLACEHOLDER__]" value="__PLACEHOLDER__" />
@@ -244,6 +246,12 @@
                         $('option[value="<?php echo self::setting('page_og_type', 'blog') ?>"]', $('#sharepress_home_og_type')).attr('selected', true);
                       })(jQuery);
                     </script>
+                  </span>
+                <?php } ?>
+                <?php if ($tag == 'og:locale') { ?>
+                  <span style="margin-left:50px;">
+                    <label for="sharepress_og_locale" style="cursor:help;" title="Enter the proper locale for your site">=</label>
+                    <input id="sharepress_og_locale" name="<?php echo self::OPTION_SETTINGS ?>[og_locale]" type="text" value="<?php echo esc_attr(self::setting('og_locale', 'en_US')) ?>" style="width:7em;" />
                   </span>
                 <?php } ?>
               </div>
@@ -548,14 +556,14 @@
               </div>
               <div style="margin-bottom:5px;">
                 <label>
-                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="2" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 2) echo 'checked="checked"' ?> />
-                  The global default
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="1" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 1) echo 'checked="checked"' ?> />
+                  Use the first image in the post
                 </label>
               </div>
               <div style="margin-bottom:5px;">
                 <label>
-                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="1" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 1) echo 'checked="checked"' ?> />
-                  Just let Facebook choose an image (not recommended)
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="2" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 2) echo 'checked="checked"' ?> />
+                  The global default
                 </label>
               </div>
             </td>

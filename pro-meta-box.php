@@ -56,13 +56,13 @@
       </label>
 
       <label style="display:block; margin-bottom: 8px;">
-        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="2" <?php if ($meta['let_facebook_pick_pic'] == 2) echo 'checked="checked"' ?> /> 
-        Just use the <a href="<?php echo admin_url('options-general.php?page=sharepress') ?>#picture" target="_blank">global default</a>
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if ($meta['let_facebook_pick_pic'] == 1) echo 'checked="checked"' ?> /> 
+        Use the first image in the post
       </label>
 
       <label style="display:block; margin-bottom: 8px;">
-        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if ($meta['let_facebook_pick_pic'] == 1) echo 'checked="checked"' ?> /> 
-        Let Facebook choose
+        <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="2" <?php if ($meta['let_facebook_pick_pic'] == 2) echo 'checked="checked"' ?> /> 
+        Use the <a href="<?php echo admin_url('options-general.php?page=sharepress') ?>#picture" target="_blank">global default</a>
       </label>
     </fieldset>
   
@@ -227,12 +227,12 @@
     var check_for_featured_image = true;
     var check_for_targets = <?php echo (SharePress::is_business()) ? 'false' : 'true' ?>;
 
-    $('#save-post').click(function() {
+    $('#save-post, #post-preview, input[value="Submit for Review"]').click(function() {
       check_for_targets = check_for_featured_image = false;
       return true;
     });
 
-    $('#publish').click(function() {
+    $('#publish').not('input[value="Submit for Review"]').click(function() {
       check_for_targets = check_for_featured_image = true;
       return true;
     });
