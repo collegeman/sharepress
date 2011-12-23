@@ -588,7 +588,7 @@ abstract class spBaseFacebook
         $this->clearPersistentData('state');
         return $_REQUEST['code'];
       } else {
-        self::errorLog('CSRF state token does not match one provided.');
+        SharePress::errorLog('CSRF state token does not match one provided.');
         return false;
       }
     }
@@ -835,7 +835,7 @@ abstract class spBaseFacebook
     $data = json_decode(self::base64UrlDecode($payload), true);
 
     if (strtoupper($data['algorithm']) !== 'HMAC-SHA256') {
-      self::errorLog('Unknown algorithm. Expected HMAC-SHA256');
+      SharePress::errorLog('Unknown algorithm. Expected HMAC-SHA256');
       return null;
     }
 
@@ -843,7 +843,7 @@ abstract class spBaseFacebook
     $expected_sig = hash_hmac('sha256', $payload,
                               $this->getApiSecret(), $raw = true);
     if ($sig !== $expected_sig) {
-      self::errorLog('Bad Signed JSON signature!');
+      SharePress::errorLog('Bad Signed JSON signature!');
       return null;
     }
 

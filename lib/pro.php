@@ -41,13 +41,6 @@ class SharepressPro {
   private function __construct() {
     add_action('init', array($this, 'init'), 10, 1);
     
-    #
-    # Discover this file's path
-    #
-    $parts = explode(DIRECTORY_SEPARATOR, __FILE__);
-    $fn = array_pop($parts);
-    $fd = (($fd = array_pop($parts)) != 'plugins' ? $fd : '');
-    
     add_action('plugin_action_links_sharepress/pro.php', array($this, 'plugin_action_links'), 10, 4);
 
     // enhancement #1: post thumbnails are used in messages posted to facebook
