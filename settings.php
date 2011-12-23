@@ -178,6 +178,29 @@
           </td>
         </tr>
       </table>
+
+      <br />
+      <h3 class="title">Post Link</h3>
+      <p>Append post link to the end of Facebook messages?</p>
+
+      <table class="form-table">
+        <tr>
+          <td>
+            <div style="margin-bottom:5px;">
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[append_link]" value="on" <?php if (self::setting('append_link', 'on') == 'on') echo 'checked="checked"' ?> />
+                Yes, by default
+              </label>
+            </div>
+            <div>
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[append_link]" value="off" <?php if (self::setting('append_link', 'on') == 'off') echo 'checked="checked"' ?> />
+                No
+              </label>
+            </div>
+          </td>
+        </tr>
+      </table>
       
       <br />
       <h3 class="title">Open Graph Tags</h3>

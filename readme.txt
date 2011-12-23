@@ -3,7 +3,7 @@ Contributors: aaroncollegeman
 Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
-Tested up to: 3.2.1
+Tested up to: 3.3
 Stable tag: 2.0.21
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
@@ -46,8 +46,13 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 == Changelog ==
 
 = 2.0.21 =
+* Fully compatible with WordPress 3.3 "Sonny"
 * Change: "Let Facebook choose" mode for post image has been replaced with "Use the first image in the post," which is a much better default
 * Change: Don't display the setup warning everywhere
+* Added: Now you can toggle the post link that appears at the end of Facebook messages
+* Added: Filter "sharepress_get_permalink" for influencing the permalink SharePress uses in posts to Facebook and Twitter, and for the og:url field
+* Fixed: Scheduled posts were posted to Facebook even when set not to be
+* Fixed: Don't display error for Featured Image when post is being submitted for review by a contributor
 
 = 2.0.20 =
 * Fixed: (again) Taking another shot at the shortcode-in-og:description-problem

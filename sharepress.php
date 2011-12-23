@@ -75,42 +75,13 @@ class Sharepress {
   private function __construct() {
     add_action('init', array($this, 'init'), 11, 1);
   }
+
+  function get_permalink($ref = null) {
+    $permalink = get_permalink($ref);
+    return apply_filters('sharepress_get_permalink', $permalink, $ref);
+  }
   
   function init() {
-    /*
-    register_post_type('sharepress', array(
-      'labels' => array(
-        'name' => 'SharePress',
-        'singular_name' => 'Share',
-        'add_new' => 'Schedule New Share',
-        'all_items' => 'Sharing History',
-        'add_new_item' => 'Schedule New Share',
-        'edit_item' => 'Edit Share',
-        'new_item' => 'Share New',
-        'view_item' => 'View Share',
-        'search_items' => 'Search Shares',
-        'not_found' => 'Share Not Found',
-        'not_found_in_share' => 'No Shares found in Trash',
-        'menu_name' => 'SharePress'
-      ),
-      'description' => 'Share with the social Web',
-      'public' => false,
-      'show_ui' => true,
-      'show_in_menu' => true,
-      'menu_position' => 2,
-      'supports' => array(
-        'title',
-        'author',
-        'thumbnail',
-        'excerpt',
-        'custom-fields',
-        'comments'
-      ),
-      'register_meta_box_cb' => 'sharepress_meta_boxes',
-      'can_export' => true
-    ));
-    */
-      
     if (is_admin()) {
       add_action('admin_notices', array($this, 'admin_notices'));
       add_action('admin_menu', array($this, 'admin_menu'));
@@ -132,14 +103,6 @@ class Sharepress {
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
     add_action('wp_head', array($this, 'wp_head'));
     add_filter('cron_schedules', array($this, 'cron_schedules'));
-
-    /*
-    $can_ping = true;
-    if (!defined('SHAREPRESS_PING_WRITTEN') && is_admin() && apply_filters('fatpanda_can_ping', $can_ping) && apply_filters('fatpanda_can_ping_sharperess', $can_ping)) {
-      @define('SHAREPRESS_PING_WRITTEN', true);
-      wp_enqueue_script('fatpanda-ping', ('on' == @$_SERVER['HTTPS'] ? 'https' : 'http').sprintf('://ping.fatpandadev.com/ping.js?plugin=sharepress&cb=%s', date('YmdH')), array('jquery'));
-    }
-    */
 
     if (!wp_next_scheduled('sharepress_oneminute_cron')) {
       wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
@@ -220,7 +183,7 @@ class Sharepress {
 
         $defaults = array(
           'og:type' => 'article',
-          'og:url' => get_permalink(),
+          'og:url' => $this->get_permalink(),
           'og:title' => get_the_title(),
           'og:image' => $picture,
           'og:site_name' => get_bloginfo('name'),
@@ -232,7 +195,7 @@ class Sharepress {
       } else {
         $defaults = array(
           'og:type' => self::setting('page_og_type', 'blog'),
-          'og:url' => is_front_page() ? get_bloginfo('siteurl') : get_permalink(),
+          'og:url' => is_front_page() ? get_bloginfo('siteurl') : $this->get_permalink(),
           'og:title' => get_the_title(),
           'og:site_name' => get_bloginfo('name'),
           'og:image' => $this->get_default_picture(),
@@ -353,7 +316,8 @@ class Sharepress {
       'excerpt_more' => '...',
       'og_tags' => 'on',
       'og_type' => 'blog',
-      'license_key' => null
+      'license_key' => null,
+      'append_link' => 1
     ));
     
     return (!is_null($name)) ? ( @$settings[$name] ? $settings[$name] : $default ) : $settings;
@@ -588,6 +552,7 @@ class Sharepress {
         'excerpt_is_description' => true,
         'targets' => self::targets() ? array_keys(self::targets()) : array(),
         'enabled' => self::setting('default_behavior'),
+        'append_link' => self::setting('append_link', 'on') == 'on'
       );
     } else {
       // overrides:
@@ -775,14 +740,14 @@ class Sharepress {
       
 
     #
-    # When save_post is invoked by XML-RPC or CRON the SharePress nonce won't be 
+    # When save_post is invoked by XML-RPC the SharePress nonce won't be 
     # available to test. So, we evaluate whether or not to post based on several
     # criteria:
     # 1. SharePress must be configured to post to Facebook by default
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if (($is_xmlprc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if ($is_xmlprc && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
 
@@ -792,7 +757,7 @@ class Sharepress {
         'title_is_message' => true,
         'picture' => $this->get_default_picture(),
         'let_facebook_pick_pic' => self::setting('let_facebook_pick_pic_default', 0),
-        'link' => get_permalink($post),
+        'link' => $this->get_permalink($post),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => array_keys(self::targets()),
@@ -851,7 +816,7 @@ class Sharepress {
   function publish_post($post_id) {
     self::log("publish_post($post_id)");
     
-    if (@$_POST[self::META]) {
+    if (!empty($_POST[self::META])) {
       self::log("Saving operation in progress; ignoring publish_post($post_id)");
       // saving operation... don't execute this
       return;
@@ -903,7 +868,7 @@ class Sharepress {
     }
     
     if (!@$meta['link'] || @$meta['link_is_permalink']) {
-      $meta['link'] = get_permalink($post->ID);
+      $meta['link'] = $this->get_permalink($post->ID);
     }
     
     if (!@$meta['name']) {
@@ -953,6 +918,8 @@ class Sharepress {
       // post only if no errors precede this posting
       && !get_post_meta($post->ID, self::META_ERROR)
     );
+
+    self::log("Loaded for {$post->ID}: ".print_r($meta, true));
     
     return ($can_post_on_facebook ? $meta : false);
   }
@@ -1030,8 +997,10 @@ class Sharepress {
     }
     
     if ($meta = $this->can_post_on_facebook($post)) {
-      // TODO: make configurable
-      $meta['message'] .= ' - ' . get_permalink($post->ID);
+      
+      if (!empty($meta['append_link'])) {
+        $meta['message'] .= ' - ' . $this->get_permalink($post->ID);
+      }
     
       try {
         // poke the linter
@@ -1067,7 +1036,7 @@ class Sharepress {
         if ($twitter_meta = $this->can_post_on_twitter($post)) {
        
           $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
-          $tweet = sprintf('%s %s', $post->post_title, get_permalink($post));
+          $tweet = sprintf('%s %s', $post->post_title, $this->get_permalink($post));
           if ($hash_tag = trim($twitter_meta['hash_tag'])) {
             $tweet .= ' '.$hash_tag;
           }

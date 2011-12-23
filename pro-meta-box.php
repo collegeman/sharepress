@@ -14,6 +14,10 @@
       </label>
     </legend>
     <textarea style="width:100%; height:75px;" name="sharepress_meta[message]" id="sharepress_meta_message"><?php echo @$meta['message'] ?></textarea>
+    <label for="sharepress_meta_append_link" style="padding:4px;">
+      <input type="checkbox" id="sharepress_meta_append_link" name="sharepress_meta[append_link]" value="1" <?php if (!empty($meta['append_link'])) echo 'checked="checked"' ?> />
+      Append post link to this message
+    </label>
   </fieldset>
 
   <?php if ( ($posted || $scheduled) || (!$posted && !$scheduled && $post->post_status == 'publish') ) { ?>
