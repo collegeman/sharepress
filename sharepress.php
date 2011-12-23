@@ -747,7 +747,7 @@ class Sharepress {
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if ($is_xmlprc && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if ($is_xmlrpc && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
 
@@ -763,6 +763,10 @@ class Sharepress {
         'targets' => array_keys(self::targets()),
         'enabled' => Sharepress::setting('default_behavior')
       ), $post); 
+
+      if (self::setting('append_link', 'on') == 'on') {
+        $meta['message'] .= ' - ' . $this->get_permalink($post->ID);
+      }
 
       update_post_meta($post->ID, self::META, $meta);
 
