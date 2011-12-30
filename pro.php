@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) exit;
  * This PHP class is a namespace for the pro version of your plugin. 
  */
 class SharepressPro {
-  
+
   // holds the singleton instance of your plugin's core
   static $instance;
   
@@ -84,7 +84,7 @@ class SharepressPro {
     // enhancement #6: twitter support
     add_action('wp_ajax_sharepress_test_twitter_settings', array($this, 'ajax_test_twitter_settings'));
   }
-  
+
   function after_setup_theme() {
     add_theme_support('post-thumbnails');
   }  
@@ -596,3 +596,5 @@ function like(/* dynamic args */) {
 endif; // !function_exists('like')
 
 SharepressPro::load();
+
+require(dirname(__FILE__).'/stats.php');
