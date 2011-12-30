@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.21
+Version: 2.0.23
 License: GPL2
 */
 
@@ -142,39 +142,9 @@ class Sharepress {
       }
 
       if (is_single() || ( is_page() && !is_front_page() )) {
-        $picture = '';
-
         $meta = get_post_meta($post->ID, self::META, true);
         
-        if (!$meta['let_facebook_pick_pic']) { // use featured image, fallback on first image in post, come to rest on global default
-        
-          // this prevents users from changing featured image after the fact: if (!($picture = $meta['picture'])) {
-            if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), 'thumbnail' )) {
-              $picture = $src[0];
-            }
-          // }
-
-          if (!$picture) {
-            $picture = $this->get_first_image_for($post->ID);
-          }
-
-          if (!$picture) {
-            $picture = $this->get_default_picture();
-          }
-
-        } else if ($meta['let_facebook_pick_pic'] == 2) { // explicitly set to use the default
-
-          $picture = $this->get_default_picture();
-        
-        } else { // try to use the first image in the post, fail to global default
-
-          $picture = $this->get_first_image_for($post->ID);
-
-          if (!$picture) {
-            $picture = $this->get_default_picture();
-          }
-
-        }
+        $picture = $this->get_og_image_url($post, $meta);
 
         global $post;
         if (!($excerpt = $post->post_excerpt)) {
@@ -497,6 +467,68 @@ class Sharepress {
     }
   }
 
+  function filter_sharepress_meta($meta, $post) {
+    if (!@$meta['message'] || @$meta['title_is_message']) {
+      $meta['message'] = apply_filters('post_title', $post->post_title);
+    }
+    
+    if (!@$meta['description'] || @$meta['excerpt_is_description']) {
+      $meta['description'] = $this->get_excerpt($post);
+    }
+    
+    if (!@$meta['link'] || @$meta['link_is_permalink']) {
+      $meta['link'] = $this->get_permalink($post->ID);
+    }
+    
+    if (!@$meta['name']) {
+      $meta['name'] = apply_filters('post_title', $post->post_title);
+    }
+    
+    if (!@$meta['targets'] && !self::$pro) {
+      $meta['targets'] = array('wall');
+    }
+    
+    $meta['picture'] = $this->get_og_image_url($post, $meta);
+    
+    return $meta;
+  }
+
+  function get_og_image_url($post, $meta) {
+    if (!$meta || empty($meta['let_facebook_pick_pic'])) {
+      $meta['let_facebook_pick_pic'] = self::setting('let_facebook_pick_pic_default', 0);
+    }
+
+    if (!$meta['let_facebook_pick_pic']) { // use featured image, fallback on first image in post, come to rest on global default
+    
+      if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), 'thumbnail' )) {
+        $picture = $src[0];
+      }
+
+      if (!$picture) {
+        $picture = $this->get_first_image_for($post->ID);
+      }
+
+      if (!$picture) {
+        $picture = $this->get_default_picture();
+      }
+
+    } else if ($meta['let_facebook_pick_pic'] == 2) { // explicitly set to use the default
+
+      $picture = $this->get_default_picture();
+    
+    } else { // try to use the first image in the post, fail to global default
+
+      $picture = $this->get_first_image_for($post->ID);
+
+      if (!$picture) {
+        $picture = $this->get_default_picture();
+      }
+
+    }
+
+    return $picture;
+  }
+
   function get_first_image_for($post_id) {
     $images = get_children(array( 
       'post_type' => 'attachment',
@@ -747,22 +779,31 @@ class Sharepress {
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if ($is_xmlrpc && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if (($is_xmlrpc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+      // is there already meta data stored?
+      $meta = get_post_meta($post->ID, self::META, true);
+      if ($meta && $meta['enabled'] && $meta['enabled'] != 'on') {
+        self::log("In XML-RPC or CRON job, but post is set not to share on Facebook; ignoring save_post($post_id)");
+        return;
+      }
+
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
 
       // setup meta with defaults
-      $meta = apply_filters('filter_'.self::META, array(
+      $meta = array(
         'message' => $post->post_title,
         'title_is_message' => true,
-        'picture' => $this->get_default_picture(),
+        'picture' => null,
         'let_facebook_pick_pic' => self::setting('let_facebook_pick_pic_default', 0),
         'link' => $this->get_permalink($post),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => array_keys(self::targets()),
         'enabled' => Sharepress::setting('default_behavior')
-      ), $post); 
+      );
+
+      $meta = apply_filters('filter_'.self::META, $meta, $post);
 
       if (self::setting('append_link', 'on') == 'on') {
         $meta['message'] .= ' - ' . $this->get_permalink($post->ID);
@@ -860,46 +901,6 @@ class Sharepress {
     }
     
     return $text;
-  }
-  
-  function filter_sharepress_meta($meta, $post) {
-    if (!@$meta['message'] || @$meta['title_is_message']) {
-      $meta['message'] = apply_filters('post_title', $post->post_title);
-    }
-    
-    if (!@$meta['description'] || @$meta['excerpt_is_description']) {
-      $meta['description'] = $this->get_excerpt($post);
-    }
-    
-    if (!@$meta['link'] || @$meta['link_is_permalink']) {
-      $meta['link'] = $this->get_permalink($post->ID);
-    }
-    
-    if (!@$meta['name']) {
-      $meta['name'] = apply_filters('post_title', $post->post_title);
-    }
-    
-    if (!@$meta['targets'] && !self::$pro) {
-      $meta['targets'] = array('wall');
-    }
-    
-    if (!@$meta['let_facebook_pick_pic']) {
-      // default to the post thumbnail
-      if ($thumbnail_id = get_post_meta($post->ID, '_thumbnail_id', true)) {
-        $thumbnail = wp_get_attachment_image_src($thumbnail_id, 'thumbnail');
-        $picture = $thumbnail[0];
-      } else {
-        // fall back on the global default
-        $picture = $this->get_default_picture();
-      }
-      
-      $meta['picture'] = $picture;
-    
-    } else if (@$meta['let_facebook_pick_pic'] == 2) {
-      $meta['picture'] = $this->get_default_picture();
-    }
-    
-    return $meta;
   }
   
   private function can_post_on_facebook($post) {

@@ -241,6 +241,17 @@
       return true;
     });
 
+    $('input[name="sharepress_meta\[let_facebook_pick_pic\]"]').change(function() {
+      $('#picture_error').hide();
+    });
+
+    $('input.sharepress_target').click(function() {
+      if ($('input.sharepress_target:checked').size()) {
+        $('label[for="sharepress_meta_targets"]').css('color', 'black');
+        $('#publish_target_error').hide();
+      }
+    });
+
     $('#post').submit(function() {
       var will_share = ( $('#sharepress_meta_enabled_on:checked').size() || $('#sharepress_meta_publish_again').val() == '1' );
       var let_facebook_pick_pic = $('input[name="sharepress_meta\[let_facebook_pick_pic\]"]:checked');
