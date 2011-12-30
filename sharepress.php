@@ -747,7 +747,14 @@ class Sharepress {
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if ($is_xmlrpc && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if (($is_xmlrpc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+      // is there already meta data stored?
+      $meta = get_post_meta($post->ID, self::META, true);
+      if ($meta && $meta['enabled'] && $meta['enabled'] != 'on') {
+        self::log("In XML-RPC or CRON job, but post is set not to share on Facebook; ignoring save_post($post_id)");
+        return;
+      }
+
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
 
