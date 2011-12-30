@@ -45,6 +45,10 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 
 == Changelog ==
 
+= 2.0.23 =
+* Fixed: Proper detection of Featured Image defaults in XML-RPC posts
+* Change: Dismiss inline errors as user makes corrections to meta data selections (e.g., if we say pick a target, and they do, immediately hide the error)
+
 = 2.0.22 =
 * Fixed: Regression: not posting in XML-RPC requests
 

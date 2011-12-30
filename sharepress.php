@@ -467,6 +467,32 @@ class Sharepress {
     }
   }
 
+  function filter_sharepress_meta($meta, $post) {
+    if (!@$meta['message'] || @$meta['title_is_message']) {
+      $meta['message'] = apply_filters('post_title', $post->post_title);
+    }
+    
+    if (!@$meta['description'] || @$meta['excerpt_is_description']) {
+      $meta['description'] = $this->get_excerpt($post);
+    }
+    
+    if (!@$meta['link'] || @$meta['link_is_permalink']) {
+      $meta['link'] = $this->get_permalink($post->ID);
+    }
+    
+    if (!@$meta['name']) {
+      $meta['name'] = apply_filters('post_title', $post->post_title);
+    }
+    
+    if (!@$meta['targets'] && !self::$pro) {
+      $meta['targets'] = array('wall');
+    }
+    
+    $meta['picture'] = $this->get_og_image_url($post, $meta);
+    
+    return $meta;
+  }
+
   function get_og_image_url($post, $meta) {
     if (!$meta || empty($meta['let_facebook_pick_pic'])) {
       $meta['let_facebook_pick_pic'] = self::setting('let_facebook_pick_pic_default', 0);
@@ -776,8 +802,6 @@ class Sharepress {
         'targets' => array_keys(self::targets()),
         'enabled' => Sharepress::setting('default_behavior')
       );
-
-      $meta['picture'] = $this->get_og_image_url($post, $meta);
 
       $meta = apply_filters('filter_'.self::META, $meta, $post);
 
