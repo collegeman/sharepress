@@ -48,6 +48,9 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 = 2.1 =
 * Added: Stats - Build a content strategy on insights into your Facebook audience.
 
+= 2.0.24 =
+* Fixed: Another bug in og:image selection - this one in the "let facebook choose" mode
+
 = 2.0.23 =
 * Fixed: Proper detection of Featured Image defaults in XML-RPC posts
 * Change: Dismiss inline errors as user makes corrections to meta data selections (e.g., if we say pick a target, and they do, immediately hide the error)

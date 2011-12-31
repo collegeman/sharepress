@@ -530,15 +530,15 @@ class Sharepress {
   }
 
   function get_first_image_for($post_id) {
-    $images = get_children(array( 
+    $images = array_values( get_children(array( 
       'post_type' => 'attachment',
       'post_mime_type' => 'image',
       'post_parent' => $post_id,
       'orderby' => 'menu_order',
       'order'  => 'ASC',
       'numberposts' => 1,
-    ));
-    
+    )) );
+
     if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, 'thumbnail') )) {
       return $src[0];
     }
