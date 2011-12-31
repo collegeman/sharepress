@@ -34,8 +34,26 @@ class SharePressStats {
     add_action('wp_ajax_sharepress_facebook_stats', array($this, 'ajax_facebook_stats'));
   }
 
+  function ajax_facebook_stats() {
+    if (!current_user_can('level_1')) {
+      return;
+    }
+
+    sharepress_cron_backfill_facebook_comment_stats();
+  }
+
   function init() {
     add_action('wp_dashboard_setup', array($this, 'wp_dashboard_setup'));
+
+    /*
+    if (!wp_next_scheduled('sharepress_cron_backfill_facebook_comment_stats')) {
+      wp_schedule_event(time(), 'hourly', 'sharepress_cron_backfill_facebook_comment_stats');
+    }
+
+    if (!wp_next_scheduled('sharepress_cron_update_facebook_comment_stats')) {
+      wp_schedule_event(time(), 'oneminute', 'sharepress_cron_update_facebook_comment_stats');
+    }
+    */
   }
 
   function wp_dashboard_setup() {
@@ -57,13 +75,14 @@ class SharePressStats {
    * $days worth of comment statistical data.
    * @param mixed $page_id The unique ID of a Facebook object (page or user)
    * @param int $oldest Unix timestamp
-   * @param int $days defaults to 30
+   * @param int $period number of seconds in each period, defaults to 86400 (24 hours)
+   * @param int $intervals defaults to 31
    * @return null
    * @throws SpMutexException When the function is already running 
    * @throws spFacebookApiException When the FacebooK SDK throws an Exception
    * @throws Exception If an error is returned by the Graph API, as in the case of exceeding API limits
    */
-  function download_raw_comment_stats($page_id, $oldest, $days = 30) {
+  function download_raw_comment_stats($page_id, $oldest, $period = 86400, $intervals = 31) {
     if (is_null($oldest)) {
       $oldest = time();
     }
@@ -103,15 +122,10 @@ class SharePressStats {
 
     mysql_query('BEGIN', $wpdb->dbh);
 
-    for($i = 0; $i < 31; $i++) {
-      $end = $oldest - ( 86400 * $i );
-      
-      // don't go back farther than a month
-      if ($end < strtotime('-1 month', $oldest)) {
-        break;
-      }
+    for($i = 0; $i < $intervals; $i++) {
+      $end = $oldest - ( $period * $i );
 
-      $start = $oldest - ( 86400 * ( $i + 1 ));
+      $start = $oldest - ( $period * ( $i + 1 ));
 
       $dates[] = date('Y-m-d', $start);
 
@@ -162,60 +176,75 @@ class SharePressStats {
     delete_transient($mutex_key);
   }
 
-  function ajax_facebook_stats() {
-    global $wpdb;
-    $tbl_raw = $wpdb->prefix . 'sharepress_raw';
+  function error($error) {
+    if (is_object($error)) {
+      $error = $error->getMessage();
+    }
     
-    $page_id = 73674099237;
-
-    // what is the oldest date we have comment data for?
-    $oldest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT min(`time`) FROM {$tbl_raw} WHERE page_id = %s", $page_id) );
-
-    // is the oldest less than a year old?
-    if (!$oldest || time() - 31536000 < $oldest) {
-      try {
-        $this->download_raw_comment_stats($page_id, $oldest);
-      } catch (Exception $e) {
-        echo json_encode(array('error' => $e->getMessage(), 'type' => get_class($e)));
-      }
-    }
-
-      
-    exit;  
+    wp_mail(
+      SharePress::load()->get_error_email(),
+      "SharePress Stats Error",
+      "While backfilling Facebook comments stats data, {$error}"
+    );
     
-    /*
-    $limit = empty($_POST['limit']) ? 10 : $_POST['limit'];
-    if ($limit < 0 || $limit > 100) {
-      $limit = 10;
-    }
-
-    echo json_encode($db);
-
-    exit;
-
-    $db->commenters = array_slice($db->commenters, 0, $limit, true);
-
-    $batch = array();
-
-    foreach($db as $id => $cnt) {
-      $batch[] = array(
-        'method' => 'GET',
-        'relative_url' => $id
-      );
-    }
-
-    try {
-      $responses = Sharepress::api('/', 'POST', array('batch' => json_encode($batch)));
-    } catch (Exception $e) {
-      echo json_encode(array('error' => $e->getMessage()));
-      return false;
-    }
-    */
-
-    
+    error_log("SharePress Stats Error: $error");
   }
 
+}
 
+function sharepress_cron_backfill_facebook_comment_stats() {
+  global $wpdb;
+  $tbl_raw = $wpdb->prefix . 'sharepress_raw';
+  
+  $page_id = 73674099237;
+
+  // what is the oldest date we have comment data for?
+  $oldest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT min(`time`) FROM {$tbl_raw} WHERE page_id = %s", $page_id) );
+
+  // is the oldest less than a year old?
+  if (!$oldest || time() - 31536000 < $oldest) {
+    try {
+      SharePressStats::load()->download_raw_comment_stats($page_id, $oldest, 86400, 31);
+    } catch (Exception $e) {
+      self::error(sprintf("While backfilling Facebook comments stats data, %s", $e->getMessage()));
+    }
+  }
+}
+
+function sharepress_cron_forwardfill_facebook_comment_stats() {
+  global $wpdb;
+  $tbl_raw = $wpdb->prefix . 'sharepress_raw';
+  
+  $page_id = 73674099237;
+
+  // what is the newest date we have comment data for?
+  $newest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT max(`time`) FROM {$tbl_raw} WHERE page_id = %s", $page_id) );
+
+  // take the oldest of $newest and ten minutes ago
+  $oldest = min( $newest, time() - 600 );
+
+  // less than an hour? only download what is necessary
+  $diff = (time() - $oldest) / 3600;
+
+  // less than or equal to a day? just download it all
+  if ($diff <= 24) {
+    $period = $diff;
+    $interval = 1;
+
+  // more than a day? download up to 31 days worth 
+  } else {
+    $days = ceil( (time() - $oldest) / 86400 );
+    $interval = max( $days, 31 );
+    $period = 86400;
+
+  }
+  
+  // backfill comment data  
+  try {
+    SharePressStats::load()->download_raw_comment_stats($page_id, time(), $period, $interval);
+  } catch (Exception $e) {
+    self::error(sprintf("While updating Facebook comments stats data, %s", $e->getMessage()));
+  }
 }
 
 class SpMutexException extends Exception {}
