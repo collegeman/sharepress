@@ -1093,7 +1093,7 @@ class Sharepress {
       }
       echo self::facebook()->getLoginUrl(array(
         'redirect_uri' => $_REQUEST['current_url'],
-        'scope' => 'read_stream,publish_stream,offline_access,manage_pages,share_item'
+        'scope' => 'read_stream,publish_stream,offline_access,manage_pages,share_item,read_insights'
       ));
         
     } else {

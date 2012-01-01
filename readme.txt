@@ -46,7 +46,7 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 == Changelog ==
 
 = 2.1 =
-* Added: Stats - Build a content strategy on insights into your Facebook audience.
+* Added: Stats - Build a content strategy with insights into your Facebook audience, right on your WordPress dashboard!
 
 = 2.0.24 =
 * Fixed: Another bug in og:image selection - this one in the "let facebook choose" mode

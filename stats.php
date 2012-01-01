@@ -31,43 +31,51 @@ class SharePressStats {
 
   private function __construct() {
     add_action('init', array($this, 'init'));
-    add_action('wp_ajax_sharepress_facebook_stats', array($this, 'ajax_facebook_stats'));
-  }
-
-  function ajax_facebook_stats() {
-    if (!current_user_can('level_1')) {
-      return;
-    }
-
-    sharepress_cron_backfill_facebook_comment_stats();
   }
 
   function init() {
     add_action('wp_dashboard_setup', array($this, 'wp_dashboard_setup'));
+    add_filter('cron_schedules', array($this, 'cron_schedules'));
 
-    /*
     if (!wp_next_scheduled('sharepress_cron_backfill_facebook_comment_stats')) {
-      wp_schedule_event(time(), 'hourly', 'sharepress_cron_backfill_facebook_comment_stats');
+      wp_schedule_event(time(), 'tenminute', 'sharepress_cron_backfill_facebook_comment_stats');
     }
+    add_action('sharepress_cron_backfill_facebook_comment_stats', array($this, 'backfill_facebook_comment_stats'));
+    
+    if (!wp_next_scheduled('sharepress_cron_forwardfill_facebook_comment_stats')) {
+      wp_schedule_event(time(), 'fifteenminute', 'sharepress_cron_forwardfill_facebook_comment_stats');
+    }
+    add_action('sharepress_cron_backfill_facebook_comment_stats', array($this, 'forwardfill_facebook_comment_stats'));
+    
+    if (!wp_next_scheduled('sharepress_cron_process_posts')) {
+      wp_schedule_event(time(), 'tenminute', 'sharepress_cron_process_posts');
+    }
+    add_action('sharepress_cron_backfill_facebook_comment_stats', array($this, 'process_posts'));
 
-    if (!wp_next_scheduled('sharepress_cron_update_facebook_comment_stats')) {
-      wp_schedule_event(time(), 'oneminute', 'sharepress_cron_update_facebook_comment_stats');
-    }
-    */
+    add_action('wp_ajax_sharepress_')
+    
+  }
+
+  function cron_schedules($schedules) {
+    $schedules['tenminute'] = array(
+      'interval' => 600,
+      'display' => __('Every Ten Minutes')
+    );
+
+    $schedules['fifteenminute'] = array(
+      'interval' => 900,
+      'display' => __('Every Fifteen Minutes')
+    );
+    
+    return $schedules;
   }
 
   function wp_dashboard_setup() {
-    wp_add_dashboard_widget('sharepress_facebook_stats', 'SharePress Facebook Stats', array($this, 'facebook_stats_widget'));
+    wp_add_dashboard_widget('sharepress_facebook_stats', 'Facebook Stats', array($this, 'facebook_stats_widget'));
   }
 
   function facebook_stats_widget() {
-    ?>
-      <script>
-        jQuery.post(ajaxurl, { action: 'sharepress_facebook_stats' }, function(response) {
-          console.log(response);
-        })
-      </script>
-    <?php
+    
   }
 
   /**
@@ -83,11 +91,13 @@ class SharePressStats {
    * @throws Exception If an error is returned by the Graph API, as in the case of exceeding API limits
    */
   function download_raw_comment_stats($page_id, $oldest, $period = 86400, $intervals = 31) {
+    global $wpdb;
+    $table = self::tables();
+
     if (is_null($oldest)) {
       $oldest = time();
     }
 
-    global $wpdb;
     $mutex_key = sprintf(self::MUTEX, __FUNCTION__);
 
     if (get_transient($mutex_key)) {
@@ -96,27 +106,6 @@ class SharePressStats {
 
     set_transient($mutex_key, true, 300);
     
-    $tbl_raw = $wpdb->prefix . 'sharepress_raw';
-      
-    // does our table exist?
-    if (get_option(__CLASS__.'_version') != self::VERSION) {
-      require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-      dbDelta("
-        CREATE TABLE {$tbl_raw} (
-          `id` VARCHAR(64) NOT NULL,
-          `page_id` VARCHAR(64) NOT NULL,
-          `object_id` VARCHAR(64) NOT NULL,
-          `post_id` VARCHAR(64) NOT NULL,
-          `time` BIGINT NOT NULL,
-          `fromid` VARCHAR(64) NOT NULL,
-          `wp_post_id` BIGINT NULL,
-          PRIMARY KEY (`id`),
-          KEY `time` (`time`,`fromid`),
-          KEY `wp_post_id` (`wp_post_id`)
-        ) ENGINE=InnoDB;
-      ");
-    }  
-
     $dates = array();
     $batch = array();
 
@@ -138,13 +127,13 @@ class SharePressStats {
             where post_id in ( 
               select post_id 
               from stream 
-              where source_id = {$page_id} 
+              where source_id = '{$page_id}'
               and created_time > {$start} and created_time < {$end} 
             )
           ")
       );
 
-      $wpdb->query( $wpdb->prepare("DELETE FROM {$tbl_raw} WHERE `page_id` = %s AND `time` BETWEEN %d AND %d", $page_id, $start, $end) );
+      $wpdb->query( $wpdb->prepare("DELETE FROM {$table['comments']} WHERE `page_id` = %s AND `time` BETWEEN %d AND %d", $page_id, $start, $end) );
     }
 
     try {
@@ -162,7 +151,21 @@ class SharePressStats {
       if (is_array($result)) {
         foreach($result as $R) {
           $R->page_id = $page_id;
-          $wpdb->insert($tbl_raw, (array) $R);
+          $wpdb->insert($table['comments'], array(
+            'id' => $R->id,
+            'object_id' => $R->object_id,
+            'post_id' => $R->post_id,
+            'time' => $R->time,
+            'fromid' => $R->fromid,
+            'page_id' => $R->page_id
+          ), array(
+            '%s',
+            '%s',
+            '%s',
+            '%d',
+            '%s',
+            '%s'
+          ));
         }
       } else if ($result->error_msg) {
         mysql_query('ROLLBACK', $wpdb->dbh);
@@ -190,63 +193,217 @@ class SharePressStats {
     error_log("SharePress Stats Error: $error");
   }
 
-}
+  static function tables($force_create = true) {
+    global $wpdb;
 
-function sharepress_cron_backfill_facebook_comment_stats() {
-  global $wpdb;
-  $tbl_raw = $wpdb->prefix . 'sharepress_raw';
-  
-  $page_id = 73674099237;
+    $table = array(
+      'comments' => $wpdb->prefix . 'sharepress_comments',
+      'posts' => $wpdb->prefix . 'sharepress_posts'
+    );
+      
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-  // what is the oldest date we have comment data for?
-  $oldest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT min(`time`) FROM {$tbl_raw} WHERE page_id = %s", $page_id) );
+    if ($force_create || get_option(__CLASS__.'_version') != self::VERSION) {
+      dbDelta("
+        CREATE TABLE {$table['comments']} (
+          `id` VARCHAR(64) NOT NULL,
+          `page_id` VARCHAR(64) NOT NULL,
+          `object_id` VARCHAR(64) NOT NULL,
+          `post_id` VARCHAR(64) NOT NULL,
+          `time` BIGINT NOT NULL,
+          `fromid` VARCHAR(64) NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `time` (`time`,`fromid`),
+          KEY `post_id` (`post_id`)
+        ) ENGINE=InnoDB;
+      ");
 
-  // is the oldest less than a year old?
-  if (!$oldest || time() - 31536000 < $oldest) {
+      dbDelta("
+        CREATE TABLE {$table['posts']} (
+          `post_id` VARCHAR(64) NOT NULL,
+          `wp_post_id` BIGINT NULL,
+          `type` VARCHAR(16) NULL,
+          `link` VARCHAR(255) NULL,
+          `post_created` BIGINT NOT NULL,
+          `data_updated` BIGINT NOT NULL,
+          `shares` INT,
+          `likes` INT,
+          `impressions` INT,
+          `comments` INT,
+          PRIMARY KEY (`post_id`),
+          KEY `wp_post_id` (`wp_post_id`)
+        ) ENGINE=InnoDB;
+      ");
+    }
+
+    return $table;
+  }
+
+  /**
+   * Each time this cron job is run, it attempts to download additional
+   * data for up to 20 of the posts referenced in the comments data.
+   * If the post is a link, this job will attempt to determine if the link
+   * is associated with one of the WordPress posts in this blog.
+   */
+  function process_posts() {
+    global $wpdb;
+    $table = SharePressStats::tables();
+
+    $mutex_key = sprintf(SharePressStats::MUTEX, __FUNCTION__);
+
+    if (get_transient($mutex_key)) {
+      throw new SpMutexException($mutex_key);
+    } 
+
+    set_transient($mutex_key, true, 300);
+
+    $page_id = 73674099237;
+
+    $queue = $wpdb->get_results($sql = $wpdb->prepare("
+      SELECT `post_id` 
+      FROM {$table['comments']} 
+      LEFT OUTER JOIN {$table['posts']} USING (`post_id`) 
+      WHERE 
+        {$table['posts']}.`post_id` IS NULL 
+        AND {$table['comments']}.`page_id` = %s
+      GROUP BY {$table['comments']}.`post_id`
+      LIMIT 20
+    ", $page_id ));
+
+    if (!$queue) {
+      return;
+    }
+
+    $batch = array();
+
+    foreach($queue as $P) {
+      $batch[] = array(
+        'method' => 'POST',
+        'relative_url' => "method/fql.query?query=" .
+          urlencode("
+            select post_id, impressions from stream where post_id = '{$P->post_id}'
+          ")
+      );
+
+      $batch[] = array(
+        'method' => 'GET',
+        'relative_url' => $P->post_id
+      );
+    }
+
     try {
-      SharePressStats::load()->download_raw_comment_stats($page_id, $oldest, 86400, 31);
+      $responses = Sharepress::api('/', 'POST', array('batch' => json_encode($batch)));
     } catch (Exception $e) {
-      self::error(sprintf("While backfilling Facebook comments stats data, %s", $e->getMessage()));
+      delete_transient($mutex_key);
+      throw $e;
+    }
+
+    $data = array();
+
+    foreach($responses as $i => $response) {
+      $result = json_decode($response['body']);
+      if (is_array($result)) {
+        foreach($result as $P) {
+          $data[$P->post_id]['impressions'] = $P->impressions;
+        }
+      } else if ($result->error_msg) {
+        delete_transient($mutex_key);
+        throw new Exception($result->error_msg);
+      } else {
+        $post_id = $result->id;
+        $data[$post_id]['likes'] = $result->likes ? $result->likes->count : 0;
+        $data[$post_id]['comments'] = $result->comments ? $result->comments->count : 0;
+        $data[$post_id]['type'] = $result->type;
+        $data[$post_id]['link'] = $result->type == 'link' ? $result->link : null;
+        $data[$post_id]['shares'] = $result->shares ? $result->shares->count : 0;
+        $data[$post_id]['post_created'] = strtotime($result->created_time);
+      }
+    }
+
+    foreach($data as $post_id => $D) {
+      $D['post_id'] = $post_id;
+      $D['data_updated'] = time();
+
+      $wpdb->insert($table['posts'], $D, array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'));
     }
   }
+
+  /**
+   * Each time this cron job is run, it attempts to download up
+   * to 31 days worth of comment data for a single Facebook page.
+   * The maximum amount of data this will backfill is 2 years.
+   */
+  function backfill_facebook_comment_stats() {
+    global $wpdb;
+    $table = SharePressStats::tables();
+    
+    $page_id = 73674099237;
+
+    // what is the oldest date we have comment data for?
+    $oldest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT min(`time`) FROM {$table['comments']} WHERE page_id = %s", $page_id) );
+
+    // is the oldest less than two years old?
+    if (!$oldest || time() - 63072000 < $oldest) {
+      try {
+        SharePressStats::load()->download_raw_comment_stats($page_id, $oldest, 86400, 31);
+      } catch (Exception $e) {
+        SharePressStats::error(sprintf("While backfilling Facebook comments stats data, %s", $e->getMessage()));
+      }
+    }
+  }
+
+  /**
+   * Each time this cron job is run, it attempts to download 
+   * all comments that are new since the last comment was downloaded. 
+   * If no data has been downloaded yet, this job triggers the backfill
+   * job instead. 
+   */
+  function forwardfill_facebook_comment_stats() {
+    global $wpdb;
+    $table = SharePressStats::tables();
+    
+    $page_id = 73674099237;
+
+    // what is the newest date we have comment data for?
+    $newest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT max(`time`) FROM {$table['comments']} WHERE page_id = %s", $page_id) );
+
+    if (!$newest) {
+      sharepress_cron_backfill_facebook_comment_stats();
+      return;
+    }
+
+    // take the oldest of $newest and ten minutes ago
+    $oldest = min( $newest, time() - 600 );
+
+    $diff = ceil( (time() - $oldest) / 3600 );
+
+    // less than or equal to a day? download two days' worth
+    if ($diff <= 24) {
+      $period = 86400;
+      $interval = 7;
+
+    // more than a day? download up to 31 days worth 
+    } else {
+      $days = ceil( (time() - $oldest) / 86400 );
+      $interval = max( $days, 31 );
+      $period = 86400;
+
+    }
+    
+    // backfill comment data  
+    try {
+      SharePressStats::load()->download_raw_comment_stats($page_id, time(), $period, $interval);
+    } catch (Exception $e) {
+      SharePressStats::error(sprintf("While updating Facebook comments stats data, %s", $e->getMessage()));
+    }
+  }
+
 }
 
-function sharepress_cron_forwardfill_facebook_comment_stats() {
-  global $wpdb;
-  $tbl_raw = $wpdb->prefix . 'sharepress_raw';
-  
-  $page_id = 73674099237;
 
-  // what is the newest date we have comment data for?
-  $newest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT max(`time`) FROM {$tbl_raw} WHERE page_id = %s", $page_id) );
-
-  // take the oldest of $newest and ten minutes ago
-  $oldest = min( $newest, time() - 600 );
-
-  // less than an hour? only download what is necessary
-  $diff = (time() - $oldest) / 3600;
-
-  // less than or equal to a day? just download it all
-  if ($diff <= 24) {
-    $period = $diff;
-    $interval = 1;
-
-  // more than a day? download up to 31 days worth 
-  } else {
-    $days = ceil( (time() - $oldest) / 86400 );
-    $interval = max( $days, 31 );
-    $period = 86400;
-
-  }
-  
-  // backfill comment data  
-  try {
-    SharePressStats::load()->download_raw_comment_stats($page_id, time(), $period, $interval);
-  } catch (Exception $e) {
-    self::error(sprintf("While updating Facebook comments stats data, %s", $e->getMessage()));
-  }
-}
 
 class SpMutexException extends Exception {}
 
 SharePressStats::load();
+
+// https://graph.facebook.com/73674099237/insights/page_active_users?access_token=AAADaj1lBuCUBAHT65FmFmJrZBX5IFBbVebLcsN5lQXc76V5ZBSiKkfmM39tZCyjllVtgY6ifJCQQEa7K8QOUlhe5oRqo6MZD
