@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright (C)2011 Fat Panda, LLC
+Copyright (C)2011-2012 Fat Panda, LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -36,7 +36,8 @@ class SharePressStats {
   function init() {
     add_action('wp_dashboard_setup', array($this, 'wp_dashboard_setup'));
     add_filter('cron_schedules', array($this, 'cron_schedules'));
-
+    add_action('template_redirect', array($this, 'template_redirect'));
+    /*
     if (!wp_next_scheduled('sharepress_cron_backfill_facebook_comment_stats')) {
       wp_schedule_event(time(), 'tenminute', 'sharepress_cron_backfill_facebook_comment_stats');
     }
@@ -51,9 +52,30 @@ class SharePressStats {
       wp_schedule_event(time(), 'tenminute', 'sharepress_cron_process_posts');
     }
     add_action('sharepress_cron_backfill_facebook_comment_stats', array($this, 'process_posts'));
+    */
+  }
 
-    add_action('wp_ajax_sharepress_')
-    
+  function template_redirect() {
+    if (!current_user_can('administrator')) {
+      return false;
+    }
+
+    if (preg_match('#sharepress(/.*)/?#', $_SERVER['REQUEST_URI'], $matches)) {
+      $slugs = array_filter(explode('/', $matches[1]));
+      $callback = array($this, array_shift($slugs));
+      ob_start();
+      try {
+        call_user_func_array($callback, $slugs);
+      } catch (Exception $e) {
+        status_header(500);
+        echo $e->getMessage();
+      }
+      status_header(200);
+      $content = ob_get_clean();
+      echo '<pre>';
+      echo $content;
+      exit;
+    }
   }
 
   function cron_schedules($schedules) {
@@ -78,19 +100,7 @@ class SharePressStats {
     
   }
 
-  /**
-   * Beginning with $start and working backwards, download
-   * $days worth of comment statistical data.
-   * @param mixed $page_id The unique ID of a Facebook object (page or user)
-   * @param int $oldest Unix timestamp
-   * @param int $period number of seconds in each period, defaults to 86400 (24 hours)
-   * @param int $intervals defaults to 31
-   * @return null
-   * @throws SpMutexException When the function is already running 
-   * @throws spFacebookApiException When the FacebooK SDK throws an Exception
-   * @throws Exception If an error is returned by the Graph API, as in the case of exceeding API limits
-   */
-  function download_raw_comment_stats($page_id, $oldest, $period = 86400, $intervals = 31) {
+  function download_posts($page_id, $oldest = null, $period = 86400, $intervals = 31) {
     global $wpdb;
     $table = self::tables();
 
@@ -109,7 +119,222 @@ class SharePressStats {
     $dates = array();
     $batch = array();
 
-    mysql_query('BEGIN', $wpdb->dbh);
+    for($i = 0; $i < $intervals; $i++) {
+      $end = $oldest - ( $period * $i );
+
+      $start = $oldest - ( $period * ( $i + 1 ));
+
+      $dates[] = date('Y-m-d', $start);
+
+      $batch[] = array(
+        'method' => 'POST',
+        'relative_url' => "method/fql.query?query=" .
+          urlencode(trim("
+            select post_id, app_id, created_time, updated_time, actor_id, message, impressions
+            from stream 
+            where source_id = '{$page_id}'
+            and created_time > {$start} and created_time < {$end} 
+          "))
+      );
+    }
+    
+    try {
+      $responses = Sharepress::api('/', 'POST', array('batch' => json_encode($batch)));
+    } catch (Exception $e) {
+      delete_transient($mutex_key);
+      throw $e;
+    }
+
+    $posts = array();
+
+    foreach($responses as $i => $response) {
+      $result = json_decode($response['body']);
+      if (is_array($result)) {
+        foreach($result as $R) {
+          $post = array(
+            'post_id' => $R->post_id,
+            'created_time' => $R->created_time,
+            'page_id' => $page_id,
+            'actor_id' => $R->actor_id,
+            'message' => $R->message,
+            'impressions' => $R->impressions,
+            'app_id' => $R->app_id
+          );
+
+          $posts[$R->post_id] = $post;
+        }
+      } else if ($result->error_msg) {
+        delete_transient($mutex_key);
+        throw new Exception($result->error_msg);
+      }
+    }
+
+    $stats = array();
+    $chunks = array_chunk($posts, 50, true);
+
+    foreach($chunks as $posts) {
+      $batch = array();
+
+      foreach($posts as $post_id => $P) {
+        $batch[] = array(
+          'method' => 'GET',
+          'relative_url' => $post_id
+        );
+      }
+
+      try {
+        $responses = Sharepress::api('/', 'POST', array('batch' => json_encode($batch)));
+      } catch (Exception $e) {
+        delete_transient($mutex_key);
+        throw $e;
+      }
+
+      foreach($responses as $i => $response) {
+        $result = json_decode($response['body']);
+        if ($result->error_msg) {
+          delete_transient($mutex_key);
+          throw new Exception($result->error_msg);
+        } else {
+          $post_id = $result->id;
+          $posts[$post_id]['type'] = $result->type;
+          $posts[$post_id]['link'] = $result->type == 'link' ? $result->link : null;
+          
+          $stats[$post_id]['impressions'] = $posts[$post_id]['impressions'];
+          $stats[$post_id]['likes'] = $result->likes ? $result->likes->count : 0;
+          $stats[$post_id]['comments'] = $result->comments ? $result->comments->count : 0;
+          $stats[$post_id]['shares'] = $result->shares ? $result->shares->count : 0;
+        }
+      }
+
+      foreach($posts as $P) {
+        unset($P['impressions']);
+        $wpdb->insert($table['posts'], $P, array('%s', '%d', '%s', '%s', '%s', '%s'));
+      }
+    }
+
+    foreach($stats as $post_id => $stat) {
+      $stat['post_id'] = $post_id;
+      $stat['data_updated'] = time();
+
+      if ($stat['impressions'] === '' || is_null($stat['impressions'])) {
+        unset($stat['impressions']);
+        $wpdb->insert($table['posts_stats'], $stat, array('%d', '%d', '%s', '%d', '%s'));  
+      } else {
+        $wpdb->insert($table['posts_stats'], $stat, array('%d', '%d', '%d', '%s', '%d', '%s'));  
+      }  
+    }
+
+    delete_transient($mutex_key);
+  }
+
+  function download_metric($page_id, $metric, $oldest = null, $period = 86400, $intervals = 31) {
+    if (strpos($metric, ',')) {
+      foreach(explode(',', $metric) as $metric) {
+        $this->download_metric($page_id, $metric, $oldest, $period, $intervals);
+      }
+      return;
+    }
+
+    global $wpdb;
+    $table = self::tables();
+
+    if (is_null($oldest)) {
+      $oldest = time();
+    }
+
+    $mutex_key = sprintf(self::MUTEX, __FUNCTION__);
+
+    // if (get_transient($mutex_key)) {
+    //   throw new SpMutexException($mutex_key);
+    // } 
+
+    set_transient($mutex_key, true, 300);
+    
+    $batch = array();
+    $dates = array();
+
+    for($i = 0; $i < $intervals; $i++) {
+      $end = $oldest - ( $period * $i );
+      $end_date = date('Y-m-d', $end);
+      $dates[] = strtotime($end_date);
+
+      $batch[] = array(
+        'method' => 'POST',
+        'relative_url' => "method/fql.query?query=" .
+          urlencode(trim("
+            select value, end_time
+            from insights 
+            where 
+              object_id = '{$page_id}'
+              and metric = '{$metric}'
+              and end_time = end_time_date('{$end_date}')
+              and period = {$period}
+          "))
+      );
+    }
+
+    try {
+      $responses = Sharepress::api('/', 'POST', array('batch' => json_encode($batch)));
+    } catch (Exception $e) {
+      delete_transient($mutex_key);
+      throw $e;
+    }
+
+    foreach($responses as $i => $response) {
+      $result = json_decode($response['body']);
+      if (is_array($result)) {
+        foreach($result as $R) {
+          $R->page_id = $page_id;
+          $wpdb->query($sql = "
+            REPLACE INTO `{$table['metrics']}` (
+              `page_id`, `end_time`, `metric`, `value`
+            ) VALUES (
+              '{$R->page_id}',
+              '{$R->end_time}',
+              '{$metric}',
+              '{$R->value}'
+            )
+          ");
+        }
+      } else if ($result->error_msg) {
+        delete_transient($mutex_key);
+        throw new Exception($result->error_msg);
+      }
+    }
+
+    delete_transient($mutex_key);
+  }
+
+  /**
+   * Beginning with $oldest and working backwards, download
+   * $days worth of comment statistical data.
+   * @param mixed $page_id The unique ID of a Facebook object (page or user)
+   * @param int $oldest Unix timestamp; defaults to now
+   * @param int $period number of seconds in each period, defaults to 86400 (24 hours)
+   * @param int $intervals defaults to 31
+   * @return null
+   * @throws SpMutexException When the function is already running 
+   * @throws spFacebookApiException When the FacebooK SDK throws an Exception
+   * @throws Exception If an error is returned by the Graph API, as in the case of exceeding API limits
+   */
+  function download_comments($page_id, $oldest = null, $period = 86400, $intervals = 31) {
+    global $wpdb;
+    $table = self::tables();
+
+    if (is_null($oldest)) {
+      $oldest = time();
+    }
+
+    $mutex_key = sprintf(self::MUTEX, __FUNCTION__);
+
+    if (get_transient($mutex_key)) {
+      throw new SpMutexException($mutex_key);
+    } 
+
+    set_transient($mutex_key, true, 300);
+    
+    $dates = array();
+    $batch = array();
 
     for($i = 0; $i < $intervals; $i++) {
       $end = $oldest - ( $period * $i );
@@ -121,7 +346,7 @@ class SharePressStats {
       $batch[] = array(
         'method' => 'POST',
         'relative_url' => "method/fql.query?query=" .
-          urlencode("
+          urlencode(trim("
             select id, post_id, object_id, fromid, time 
             from comment 
             where post_id in ( 
@@ -130,21 +355,16 @@ class SharePressStats {
               where source_id = '{$page_id}'
               and created_time > {$start} and created_time < {$end} 
             )
-          ")
+          "))
       );
-
-      $wpdb->query( $wpdb->prepare("DELETE FROM {$table['comments']} WHERE `page_id` = %s AND `time` BETWEEN %d AND %d", $page_id, $start, $end) );
     }
 
     try {
       $responses = Sharepress::api('/', 'POST', array('batch' => json_encode($batch)));
     } catch (Exception $e) {
-      mysql_query('ROLLBACK', $wpdb->dbh);
       delete_transient($mutex_key);
       throw $e;
     }
-
-    $wpdb->show_errors();
 
     foreach($responses as $i => $response) {
       $result = json_decode($response['body']);
@@ -168,13 +388,10 @@ class SharePressStats {
           ));
         }
       } else if ($result->error_msg) {
-        mysql_query('ROLLBACK', $wpdb->dbh);
         delete_transient($mutex_key);
         throw new Exception($result->error_msg);
       }
     }
-
-    mysql_query('COMMIT', $wpdb->dbh);
 
     delete_transient($mutex_key);
   }
@@ -198,7 +415,9 @@ class SharePressStats {
 
     $table = array(
       'comments' => $wpdb->prefix . 'sharepress_comments',
-      'posts' => $wpdb->prefix . 'sharepress_posts'
+      'posts' => $wpdb->prefix . 'sharepress_posts',
+      'posts_stats' => $wpdb->prefix . 'sharepress_posts_stats',
+      'metrics' => $wpdb->prefix . 'sharepress_metrics'
     );
       
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -221,17 +440,38 @@ class SharePressStats {
       dbDelta("
         CREATE TABLE {$table['posts']} (
           `post_id` VARCHAR(64) NOT NULL,
+          `app_id` VARCHAR(64) NOT NULL,
+          `page_id` VARCHAR(64) NOT NULL,
+          `actor_id` VARCHAR(64) NOT NULL,
           `wp_post_id` BIGINT NULL,
           `type` VARCHAR(16) NULL,
           `link` VARCHAR(255) NULL,
-          `post_created` BIGINT NOT NULL,
+          `created_time` BIGINT NOT NULL,
+          `message` TEXT NULL,
+          PRIMARY KEY (`post_id`),
+          KEY `wp_post_id` (`wp_post_id`)
+        ) ENGINE=InnoDB;
+      ");
+
+      dbDelta("
+        CREATE TABLE {$table['posts_stats']} (
+          `post_id` VARCHAR(64) NOT NULL,
           `data_updated` BIGINT NOT NULL,
           `shares` INT,
           `likes` INT,
           `impressions` INT,
           `comments` INT,
-          PRIMARY KEY (`post_id`),
-          KEY `wp_post_id` (`wp_post_id`)
+          KEY `post_id` (`post_id`)
+        ) ENGINE=InnoDB;
+      ");
+
+      dbDelta("
+        CREATE TABLE {$table['metrics']} (
+          `page_id` VARCHAR(64) NOT NULL,
+          `metric` VARCHAR(64) NOT NULL,
+          `end_time` BIGINT NOT NULL,
+          `value` INT,
+          PRIMARY KEY (`page_id`, `metric`, `end_time`)
         ) ENGINE=InnoDB;
       ");
     }
@@ -280,9 +520,9 @@ class SharePressStats {
       $batch[] = array(
         'method' => 'POST',
         'relative_url' => "method/fql.query?query=" .
-          urlencode("
+          urlencode(trim("
             select post_id, impressions from stream where post_id = '{$P->post_id}'
-          ")
+          "))
       );
 
       $batch[] = array(
@@ -333,7 +573,7 @@ class SharePressStats {
    * to 31 days worth of comment data for a single Facebook page.
    * The maximum amount of data this will backfill is 2 years.
    */
-  function backfill_facebook_comment_stats() {
+  function backfill_facebook_comments() {
     global $wpdb;
     $table = SharePressStats::tables();
     
@@ -358,7 +598,7 @@ class SharePressStats {
    * If no data has been downloaded yet, this job triggers the backfill
    * job instead. 
    */
-  function forwardfill_facebook_comment_stats() {
+  function forwardfill_facebook_comments() {
     global $wpdb;
     $table = SharePressStats::tables();
     

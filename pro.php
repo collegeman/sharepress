@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright (C)2011 Fat Panda, LLC
+Copyright (C)2011-2012 Fat Panda, LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
