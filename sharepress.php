@@ -328,7 +328,7 @@ class Sharepress {
    * @return The result of the query
    */
   static function api($path, $method = 'GET', $params = array(), $cache_for = false) {
-    self::log(sprintf("api(%s, %s, %s, %s)", $path, $method, serialize($params), $cache_for));
+    // self::log(sprintf("api(%s, %s, %s, %s)", $path, $method, serialize($params), $cache_for));
     
     if ($facebook = self::facebook()) {
       $cache = null;

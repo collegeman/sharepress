@@ -100,7 +100,13 @@ class SharePressStats {
     
   }
 
+  function download_post_stats($page_id) {
+    
+  }
+
   function download_posts($page_id, $oldest = null, $period = 86400, $intervals = 31) {
+    // SharePress::log(sprintf("%s(%s, %s, %s, %s)", __FUNCTION__, $page_id, $oldest, $period, $intervals));
+
     global $wpdb;
     $table = self::tables();
 
@@ -110,9 +116,9 @@ class SharePressStats {
 
     $mutex_key = sprintf(self::MUTEX, __FUNCTION__);
 
-    if (get_transient($mutex_key)) {
-      throw new SpMutexException($mutex_key);
-    } 
+    // if (get_transient($mutex_key)) {
+    //   throw new SpMutexException($mutex_key);
+    // } 
 
     set_transient($mutex_key, true, 300);
     
@@ -144,6 +150,8 @@ class SharePressStats {
       delete_transient($mutex_key);
       throw $e;
     }
+
+    // SharePress::log('Posts batch: '.count($responses));
 
     $posts = array();
 
@@ -189,6 +197,8 @@ class SharePressStats {
         throw $e;
       }
 
+      // SharePress::log('Post stats batch: '.count($responses));
+
       foreach($responses as $i => $response) {
         $result = json_decode($response['body']);
         if ($result->error_msg) {
@@ -213,15 +223,20 @@ class SharePressStats {
     }
 
     foreach($stats as $post_id => $stat) {
-      $stat['post_id'] = $post_id;
-      $stat['data_updated'] = time();
+      $S = array(
+        'post_id' => $post_id,
+        'likes' => $stat['likes'],
+        'comments' => $stat['comments'],
+        'shares' => $stat['shares'],
+        'data_updated' => time()
+      );
 
-      if ($stat['impressions'] === '' || is_null($stat['impressions'])) {
-        unset($stat['impressions']);
-        $wpdb->insert($table['posts_stats'], $stat, array('%d', '%d', '%s', '%d', '%s'));  
-      } else {
-        $wpdb->insert($table['posts_stats'], $stat, array('%d', '%d', '%d', '%s', '%d', '%s'));  
-      }  
+      // we want impressions to be NULL if it is not defined...
+      if ($stat['impressions'] !== '' && !is_null($stat['impressions'])) {
+        $S['impressions'] = $stat['impressions'];
+      }
+
+      $wpdb->insert($table['post_stats'], $S, array('%s', '%s', '%s', '%s', '%s', '%s'));  
     }
 
     delete_transient($mutex_key);
@@ -262,7 +277,7 @@ class SharePressStats {
         'method' => 'POST',
         'relative_url' => "method/fql.query?query=" .
           urlencode(trim("
-            select value, end_time
+            select value, end_time, period
             from insights 
             where 
               object_id = '{$page_id}'
@@ -287,12 +302,13 @@ class SharePressStats {
           $R->page_id = $page_id;
           $wpdb->query($sql = "
             REPLACE INTO `{$table['metrics']}` (
-              `page_id`, `end_time`, `metric`, `value`
+              `page_id`, `end_time`, `metric`, `value`, `period`,
             ) VALUES (
               '{$R->page_id}',
               '{$R->end_time}',
               '{$metric}',
-              '{$R->value}'
+              '{$R->value}',
+              '{$R->period}'
             )
           ");
         }
@@ -416,7 +432,7 @@ class SharePressStats {
     $table = array(
       'comments' => $wpdb->prefix . 'sharepress_comments',
       'posts' => $wpdb->prefix . 'sharepress_posts',
-      'posts_stats' => $wpdb->prefix . 'sharepress_posts_stats',
+      'post_stats' => $wpdb->prefix . 'sharepress_post_stats',
       'metrics' => $wpdb->prefix . 'sharepress_metrics'
     );
       
@@ -454,7 +470,7 @@ class SharePressStats {
       ");
 
       dbDelta("
-        CREATE TABLE {$table['posts_stats']} (
+        CREATE TABLE {$table['post_stats']} (
           `post_id` VARCHAR(64) NOT NULL,
           `data_updated` BIGINT NOT NULL,
           `shares` INT,
@@ -471,6 +487,7 @@ class SharePressStats {
           `metric` VARCHAR(64) NOT NULL,
           `end_time` BIGINT NOT NULL,
           `value` INT,
+          `period` INT,
           PRIMARY KEY (`page_id`, `metric`, `end_time`)
         ) ENGINE=InnoDB;
       ");
@@ -480,93 +497,29 @@ class SharePressStats {
   }
 
   /**
-   * Each time this cron job is run, it attempts to download additional
-   * data for up to 20 of the posts referenced in the comments data.
-   * If the post is a link, this job will attempt to determine if the link
-   * is associated with one of the WordPress posts in this blog.
+   * Each time this cron job is run, it attempts to download up
+   * to 31 days worth of comment data for a single Facebook page.
+   * The maximum amount of data this will backfill is 2 years.
    */
-  function process_posts() {
+  function backfill_facebook_posts() {
     global $wpdb;
     $table = SharePressStats::tables();
-
-    $mutex_key = sprintf(SharePressStats::MUTEX, __FUNCTION__);
-
-    if (get_transient($mutex_key)) {
-      throw new SpMutexException($mutex_key);
-    } 
-
-    set_transient($mutex_key, true, 300);
-
+    
     $page_id = 73674099237;
 
-    $queue = $wpdb->get_results($sql = $wpdb->prepare("
-      SELECT `post_id` 
-      FROM {$table['comments']} 
-      LEFT OUTER JOIN {$table['posts']} USING (`post_id`) 
-      WHERE 
-        {$table['posts']}.`post_id` IS NULL 
-        AND {$table['comments']}.`page_id` = %s
-      GROUP BY {$table['comments']}.`post_id`
-      LIMIT 20
-    ", $page_id ));
+    // what is the oldest date we have comment data for?
+    $oldest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT min(`created_time`) FROM {$table['posts']} WHERE page_id = %s AND `created_time` > 0", $page_id) );
 
-    if (!$queue) {
-      return;
-    }
-
-    $batch = array();
-
-    foreach($queue as $P) {
-      $batch[] = array(
-        'method' => 'POST',
-        'relative_url' => "method/fql.query?query=" .
-          urlencode(trim("
-            select post_id, impressions from stream where post_id = '{$P->post_id}'
-          "))
-      );
-
-      $batch[] = array(
-        'method' => 'GET',
-        'relative_url' => $P->post_id
-      );
-    }
-
-    try {
-      $responses = Sharepress::api('/', 'POST', array('batch' => json_encode($batch)));
-    } catch (Exception $e) {
-      delete_transient($mutex_key);
-      throw $e;
-    }
-
-    $data = array();
-
-    foreach($responses as $i => $response) {
-      $result = json_decode($response['body']);
-      if (is_array($result)) {
-        foreach($result as $P) {
-          $data[$P->post_id]['impressions'] = $P->impressions;
-        }
-      } else if ($result->error_msg) {
-        delete_transient($mutex_key);
-        throw new Exception($result->error_msg);
-      } else {
-        $post_id = $result->id;
-        $data[$post_id]['likes'] = $result->likes ? $result->likes->count : 0;
-        $data[$post_id]['comments'] = $result->comments ? $result->comments->count : 0;
-        $data[$post_id]['type'] = $result->type;
-        $data[$post_id]['link'] = $result->type == 'link' ? $result->link : null;
-        $data[$post_id]['shares'] = $result->shares ? $result->shares->count : 0;
-        $data[$post_id]['post_created'] = strtotime($result->created_time);
+    // is the oldest less than two years old?
+    if (!$oldest || time() - 63072000 < $oldest) {
+      try {
+        SharePressStats::load()->download_posts($page_id, $oldest, 86400, 31);
+      } catch (Exception $e) {
+        SharePressStats::error(sprintf("While backfilling Facebook posts data, %s", $e->getMessage()));
       }
     }
-
-    foreach($data as $post_id => $D) {
-      $D['post_id'] = $post_id;
-      $D['data_updated'] = time();
-
-      $wpdb->insert($table['posts'], $D, array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'));
-    }
   }
+
 
   /**
    * Each time this cron job is run, it attempts to download up
@@ -580,12 +533,12 @@ class SharePressStats {
     $page_id = 73674099237;
 
     // what is the oldest date we have comment data for?
-    $oldest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT min(`time`) FROM {$table['comments']} WHERE page_id = %s", $page_id) );
+    $oldest = $wpdb->get_var( $sql = $wpdb->prepare("SELECT min(`time`) FROM {$table['comments']} WHERE page_id = %s AND `time` > 0", $page_id) );
 
     // is the oldest less than two years old?
     if (!$oldest || time() - 63072000 < $oldest) {
       try {
-        SharePressStats::load()->download_raw_comment_stats($page_id, $oldest, 86400, 31);
+        SharePressStats::load()->download_comments($page_id, $oldest, 86400, 31);
       } catch (Exception $e) {
         SharePressStats::error(sprintf("While backfilling Facebook comments stats data, %s", $e->getMessage()));
       }
@@ -612,27 +565,12 @@ class SharePressStats {
       return;
     }
 
-    // take the oldest of $newest and ten minutes ago
-    $oldest = min( $newest, time() - 600 );
+    $diff = ceil( (time() - $newest) / 86400 );
 
-    $diff = ceil( (time() - $oldest) / 3600 );
-
-    // less than or equal to a day? download two days' worth
-    if ($diff <= 24) {
-      $period = 86400;
-      $interval = 7;
-
-    // more than a day? download up to 31 days worth 
-    } else {
-      $days = ceil( (time() - $oldest) / 86400 );
-      $interval = max( $days, 31 );
-      $period = 86400;
-
-    }
+    $diff = min(31, $diff);
     
-    // backfill comment data  
     try {
-      SharePressStats::load()->download_raw_comment_stats($page_id, time(), $period, $interval);
+      SharePressStats::load()->download_comments($page_id, time(), 86400, $diff);
     } catch (Exception $e) {
       SharePressStats::error(sprintf("While updating Facebook comments stats data, %s", $e->getMessage()));
     }
