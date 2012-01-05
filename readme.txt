@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.0.24
+Stable tag: 2.0.25
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -44,6 +44,12 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.0.25 =
+* Fixed: "Let facebook choose" mode will now seek out the first image in the content, but only if it finds no other available configuration data (e.g., featured image, or images from the post's gallery)
+* Added: Bit.ly powered URL shortening (optional)
+* Change: Moved the Save Settings button over to the right and fixed it at the top, since the settings page is now awfully long... and maybe just awful.
+* Fixed: SharePress::setting was returning $default when stored setting was == false
 
 = 2.0.24 =
 * Fixed: Another bug in og:image selection - this one in the "let facebook choose" mode

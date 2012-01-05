@@ -2,6 +2,7 @@
 
 <style>
 .wrap h2 span { font-size: 0.75em; padding-left: 20px; }
+p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18px !important; line-height:22px; }
 </style>
 
 <div class="wrap">
@@ -344,19 +345,25 @@
 
       <?php } // !self::is_business() ?>
 
-      <br />
-      <h3 class="title">Twitter</h3>
-
       <?php if (!self::unlocked()) { ?>
-     
+
+        <br />
+        <h3 class="title">Twitter</h3>
+   
         <p>If you <a href="http://aaroncollegeman.com/sharepress">unlock the pro features</a>, you'll be able to post to Twitter, too.</p>
      
+        <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[twitter_is_ready]" value="<?php echo self::setting('twitter_is_ready', 0) ?>" />
         <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_key]" value="<?php echo esc_attr(self::setting('twitter_consumer_key')) ?>" />
         <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_secret]" value="<?php echo esc_attr(self::setting('twitter_consumer_secret')) ?>" />
         <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token]" value="<?php echo esc_attr(self::setting('twitter_access_token')) ?>" />
         <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token_secret]" value="<?php echo esc_attr(self::setting('twitter_access_token_secret')) ?>" />
+        <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[bitly_login]" value="<?php echo esc_attr(self::setting('bitly_login')) ?>" />
+        <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[bigly_apikey]" value="<?php echo esc_attr(self::setting('bigly_apikey')) ?>" />
       
       <?php } else { ?>
+
+        <br />
+        <h3 class="title">Twitter</h3>
 
         <?php if (self::twitter_ready()) { ?>
         
@@ -381,6 +388,7 @@
           </table>
           <br />
 
+          <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[twitter_is_ready]" value="<?php echo self::setting('twitter_is_ready', 1) ?>" />
           <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_key]" value="<?php echo esc_attr(self::setting('twitter_consumer_key')) ?>" />
           <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_secret]" value="<?php echo esc_attr(self::setting('twitter_consumer_secret')) ?>" />
           <input type="hidden" class="twitter_setting" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token]" value="<?php echo esc_attr(self::setting('twitter_access_token')) ?>" />
@@ -388,6 +396,7 @@
           
         <?php } else { ?>
 
+          <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[twitter_is_ready]" value="1" />
           <input type="hidden" name="<?php echo self::OPTION_SETTINGS ?>[twitter_behavior]" value="<?php echo esc_attr(self::setting('twitter_behavior', 'on')) ?>" />
 
           <p>Want to be able to post to Twitter at the same time you post to Facebook? <a href="#" onclick="jQuery('.twitter_help').show(); return false;">Follow these steps</a>.</p>
@@ -453,25 +462,25 @@
 
           <table class="form-table">
             <tr>
-              <td style="width:160px;">Consumer key</td>
+              <td style="width:160px;">Consumer key:</td>
               <td>
                 <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_key]" value="<?php echo esc_attr(self::setting('twitter_consumer_key')) ?>" />
               </td>
             </tr>
             <tr>
-              <td>Consumer secret</td>
+              <td>Consumer secret:</td>
               <td>
                 <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_consumer_secret]" value="<?php echo esc_attr(self::setting('twitter_consumer_secret')) ?>" />
               </td>
             </tr>
             <tr>
-              <td>Access token</td>
+              <td>Access token:</td>
               <td>
                 <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token]" value="<?php echo esc_attr(self::setting('twitter_access_token')) ?>" />
               </td>
             </tr>
             <tr>
-              <td>Access token secret</td>
+              <td>Access token secret:</td>
               <td>
                 <input style="width:500px;" type="text" class="twitter_setting regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_access_token_secret]" value="<?php echo esc_attr(self::setting('twitter_access_token_secret')) ?>" />
               </td>
@@ -498,6 +507,28 @@
             }
           })(jQuery);
         </script>
+
+        <br />
+        <h3 class="title">Bit.ly</h3>
+
+        <p>It's often useful to shorten the URLs that are posted to Twitter. Twitter does this automatically... sometimes. 
+        If you'd rather use Bit.ly for reliabily, enter your Bit.ly username and API key below. 
+        <a href="http://bitly.com/a/your_api_key/">Get an API key here</a>.
+
+        <table class="form-table">
+          <tr>
+            <td style="width:160px;">Username:</td>
+            <td>
+              <input type="text" class="regular-text" name="<?php echo self::OPTION_SETTINGS ?>[bitly_login]" value="<?php echo esc_attr(self::setting('bitly_login')) ?>" />
+            </td>
+          </tr>
+          <tr>
+            <td>API Key:</td>
+            <td>
+              <input type="text" class="regular-text" name="<?php echo self::OPTION_SETTINGS ?>[bitly_apikey]" value="<?php echo esc_attr(self::setting('bitly_apikey')) ?>" />
+            </td>
+          </tr>
+        </table>
       
       <?php }  ?>
 
@@ -628,10 +659,12 @@
       <p class="submit">
         <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
       </p>
-      
+
+      <p class="floating submit">
+        <input id="btnFloatingSaveSettings" class="button-primary" value="Save Settings" type="submit" />
+      </p>
       
     <?php } ?>
-
 
   </form>  
     

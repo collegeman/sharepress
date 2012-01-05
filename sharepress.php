@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.24
+Version: 2.0.25
 License: GPL2
 */
 
@@ -57,6 +57,7 @@ class Sharepress {
   const META = 'sharepress_meta';
   const META_TWITTER = 'sharepress_twitter_meta';
   const META_SCHEDULED = 'sharepress_scheduled';
+  const META_BITLY = 'sharepress_bitly_url';
 
   const TRANSIENT_IS_BUSINESS = 'sharepress_is_business';
   
@@ -233,6 +234,7 @@ class Sharepress {
 
   static function twitter_ready() {
     return self::unlocked() 
+      && self::setting('twitter_is_ready', 1)
       && self::setting('twitter_consumer_key') 
       && self::setting('twitter_consumer_secret') 
       && self::setting('twitter_access_token') 
@@ -290,7 +292,7 @@ class Sharepress {
       'append_link' => 1
     ));
     
-    return (!is_null($name)) ? ( @$settings[$name] ? $settings[$name] : $default ) : $settings;
+    return (!is_null($name)) ? ( !is_null(@$settings[$name]) ? $settings[$name] : $default ) : $settings;
   }
   
   static function targets($id = null) {
@@ -530,6 +532,9 @@ class Sharepress {
   }
 
   function get_first_image_for($post_id) {
+    #
+    # try the DB first...
+    #
     $images = array_values( get_children(array( 
       'post_type' => 'attachment',
       'post_mime_type' => 'image',
@@ -541,6 +546,22 @@ class Sharepress {
 
     if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, 'thumbnail') )) {
       return $src[0];
+    
+    #
+    # fall back on sniffing out <img /> tags from post content
+    #
+    } else {
+      $post = get_post($post_id);
+      if ($content = do_shortcode($post->post_content)) {
+        preg_match_all('/<img[^>]+>/i', $post->post_content, $matches);
+        foreach($matches[0] as $img) {
+          if (preg_match('#src="([^"]+)"#i', $img, $src)) {
+            return $src[1];
+          } else if (preg_match("#src='([^']+)'#i", $img, $src)) {
+            return $src[1];
+          }
+        }
+      }
     }
   }
   
@@ -985,6 +1006,51 @@ class Sharepress {
       return null;
     }
   }
+
+  function get_bitly_link($post_id){
+    $post = get_page($post_id);
+    if (!$post->ID) {
+      return false;
+    }
+    
+    $permalink = $this->get_permalink($post);
+
+    if (!$login = $this->setting('bitly_login')) {
+      return $permalink;
+    }
+
+    if (!$apikey = $this->setting('bitly_apikey')) {
+      return $permalink;
+    }
+
+    if ($post->post_status == 'publish') {
+      if (!$shortlink = get_post_meta($post_id, self::META_BITLY, true)) {
+        
+        $response = _wp_http_get_object()->request('https://api-ssl.bitly.com/v3/shorten?' . http_build_query(array(
+          'login' => $login,
+          'apikey' => $apikey,
+          'longUrl' => $this->get_permalink($post->ID)
+        )), array('method' => 'GET'));
+
+        if (is_wp_error($response)) {
+          // TODO: log this?
+          return $permalink;
+
+        } else {
+          $response = json_decode($response['body']);
+          $shortlink = $response->data->url;
+          add_post_meta($post_id, self::META_BITLY, $shortlink);
+          
+        }   
+      }
+
+      return $shortlink;
+
+    } else {
+      return $shortlink;
+    }
+
+  }
   
   function sort_by_posted_date($result1, $result2) {
     $date1 = $result1['posted'];
@@ -1041,7 +1107,7 @@ class Sharepress {
         if ($twitter_meta = $this->can_post_on_twitter($post)) {
        
           $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
-          $tweet = sprintf('%s %s', $post->post_title, $this->get_permalink($post));
+          $tweet = sprintf('%s %s', $post->post_title, $this->get_bitly_link($post));
           if ($hash_tag = trim($twitter_meta['hash_tag'])) {
             $tweet .= ' '.$hash_tag;
           }
@@ -1133,8 +1199,7 @@ class Sharepress {
       if ($action == 'reset_twitter_settings') {
         if (current_user_can('administrator')) {
           $settings = get_option(self::OPTION_SETTINGS);
-          unset($settings['twitter_access_token']);
-          unset($settings['twitter_access_token_secret']);
+          $settings['twitter_is_ready'] = 0;
           update_option(self::OPTION_SETTINGS, $settings);
           wp_redirect('options-general.php?page=sharepress');
           exit;
