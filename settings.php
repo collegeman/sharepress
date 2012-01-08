@@ -493,7 +493,9 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <p>
           <a href="#" onclick="test_twitter_settings(); return false;" class="button">Test Twitter Settings</a>
           <?php if (self::twitter_ready()) { ?>
-            &nbsp; <a href="<?php echo admin_url('options-general.php?page=sharepress&action=reset_twitter_settings') ?>" onclick="return confirm('Are you sure you want to clear your Twitter settings and start over?');" class="button">Reset Settings</a>
+            &nbsp; <a href="<?php echo admin_url('options-general.php?page=sharepress&action=reset_twitter_settings') ?>" class="button">Change Twitter Settings</a>
+          <?php } else { ?>
+            &nbsp; <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
           <?php } ?>
         </p>
         <script>

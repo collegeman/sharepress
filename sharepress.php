@@ -149,7 +149,7 @@ class Sharepress {
 
         global $post;
         if (!($excerpt = $post->post_excerpt)) {
-          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s+/", ' ', strip_tags($post->post_content)), $matches) ? $matches[0].'...' : get_bloginfo('descrption');
+          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s+/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('descrption');
         }
 
         $defaults = array(
@@ -893,7 +893,7 @@ class Sharepress {
     }
   }
 
-  public function strip_shortcodes($text) {
+  function strip_shortcodes($text) {
     // the WordPress way:
     $text = strip_shortcodes($text);
     // the manual way:
@@ -901,7 +901,7 @@ class Sharepress {
 
   }
   
-  public function get_excerpt($post = null, $text = null) {
+  function get_excerpt($post = null, $text = null) {
     if (!is_null($post)) {
       $text = $post->post_excerpt ? $post->post_excerpt : $post->post_content;
     } 
@@ -1113,6 +1113,7 @@ class Sharepress {
           }
 
           $result = $client->post($tweet);
+          SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", print_r($result, true)));
           add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
 
         }
