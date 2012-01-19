@@ -147,12 +147,15 @@ class SharepressPro {
       $scheduled = get_post_meta($post_id, Sharepress::META_SCHEDULED, true);
       $edit = get_admin_url()."post.php?post={$post->ID}&action=edit&sharepress=schedule";
       $meta = get_post_meta($post_id, Sharepress::META, true);
+      $delayed = (($length = $meta['delay_length']) && ($unit = $meta['delay_unit'])) ? strtotime($delay = "{$length} {$unit}", strtotime($post->post_date_gmt)) : false;
       $error = get_post_meta($post_id, Sharepress::META_ERROR, true);
       
       if ($error) {
         echo '<span style="color:red;">'.__('Last Post Failed').': '.__($error).'</span><br /><a href="'.$edit.'">Try Again</a>';
       } else if ($posted) {
         echo __('Posted').': '.date('Y/m/d g:ia', strtotime($posted) + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
+      } else if ($delayed) {
+        echo '<span title="'.date('Y/m/d g:ia', $delayed).'">'.__('Delay for').' '.$delay.'</span><br /><a href="'.$edit.'">Edit</a>';
       } else if ($scheduled) {
         echo __('Scheduled').': '.date('Y/m/d g:ia', $scheduled).'<br /><a href="'.$edit.'">Edit Schedule</a>';
       } else if ($last_posted) {
