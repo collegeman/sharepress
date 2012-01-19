@@ -110,6 +110,21 @@
       </fieldset>
     <?php } ?>
 
+    <br />
+    <fieldset>
+      <legend><b>Share Delay</b></legend>
+      Delay sharing for:
+      <p>
+        <input type="number" class="regular-text" style="width:40px;" 
+          name="sharepress_meta[delay_length]" value="<?php echo esc_attr($meta['delay_length'] ? $meta['delay_length'] : 0) ?>" />
+        <select name="sharepress_meta[delay_unit]">
+          <?php foreach(array('minutes', 'hours', 'days') as $unit) { ?>
+            <option<?php if ($meta['delay_unit'] == $unit) echo ' selected="selected"' ?>><?php echo $unit ?></option>
+          <?php } ?>
+        </select>
+      </p>
+    </fieldset>
+
     <p style="margin:5px; text-align:center;">
       <a class="sharepress_hide_advanced" href="javascript:;" onclick="jQuery('.sharepress_advanced').slideUp(function() { jQuery('.sharepress_show_advanced').fadeIn(); });">Hide Advanced Options</a>
     </p>

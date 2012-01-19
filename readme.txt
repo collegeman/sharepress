@@ -4,13 +4,17 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.0.25
+Stable tag: 2.1.0
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
 == Description ==
 
 SharePress is a WordPress plugin that helps you communicate with your [tribes](http://sethgodin.typepad.com/seths_blog/2008/01/tribal-manageme.html) on Facebook and Twitter by automatically publishing your WordPress posts the moment they become live on your site.
+
+[youtube http://youtube.com/watch?v=X6dRD0pd1nM]
+
+(Awesome promo reel by [Keyframe Films](http://keyframefilms.com).)
 
 With SharePress you'll be able to
 
@@ -20,6 +24,7 @@ With SharePress you'll be able to
 * Customize each Facebook status message
 * Control the image Facebook uses just by setting the post's featured image
 * Customize Twitter hashtag
+* Delay SharePress' sharing for minutes, hours, or days after a post goes live
 * Publish while you sleep: social messaging is published when posts go live
 * Schedule reposts of your content: keep traffic flowing to your site day and night
 
@@ -44,6 +49,9 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.0 =
+* Added: The ability to delay new posts from being posted to SharePress for a user-defineable amount of time.
 
 = 2.0.25 =
 * Fixed: "Let facebook choose" mode will now seek out the first image in the content, but only if it finds no other available configuration data (e.g., featured image, or images from the post's gallery)

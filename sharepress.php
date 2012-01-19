@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.0.25
+Version: 2.1.0
 License: GPL2
 */
 
@@ -605,7 +605,9 @@ class Sharepress {
         'excerpt_is_description' => true,
         'targets' => self::targets() ? array_keys(self::targets()) : array(),
         'enabled' => self::setting('default_behavior'),
-        'append_link' => self::setting('append_link', 'on') == 'on'
+        'append_link' => self::setting('append_link', 'on') == 'on',
+        'delay_length' => self::setting('delay_length', 0),
+        'delay_unit' => self::setting('delay_unit', 'minutes')
       );
     } else {
       // overrides:
@@ -1068,6 +1070,16 @@ class Sharepress {
     }
     
     if ($meta = $this->can_post_on_facebook($post)) {
+
+      // determine if this should be delayed
+      if ($meta['delay_length']) {
+        self::log("Sharing of this post has been delayed {$meta['delay_length']} {$meta['delay_unit']}({$post->ID})");
+        $time = strtotime("+{$meta['delay_length']} {$meta['delay_unit']}", current_time('timestamp'));
+        update_post_meta($post->ID, self::META_SCHEDULED, $time);
+        $meta['delay_length'] = 0;
+        update_post_meta($post->ID, self::META, $meta);
+        return false;
+      }
       
       if (!empty($meta['append_link'])) {
         $meta['message'] .= ' - ' . $this->get_permalink($post->ID);

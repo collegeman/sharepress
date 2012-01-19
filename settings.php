@@ -633,6 +633,30 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <div style="clear:left;"></div>
 
       <?php } ?>
+
+      <?php if (self::unlocked()) { ?>
+        <br />
+        <h3 class="title">Share Delay</h3>
+
+        <p>In some instances it may be necessary or deseriable to delay sharing with SharePress until a certain time <em>after</em>
+          a post goes live on your site. You can configure a global default for that delay below.</p>
+
+        <table class="form-table" style="margin-bottom:15px;">
+          <tr>
+            <th>Delay sharing for:</th>
+            <td>
+              <input type="number" class="regular-text" style="width:40px;" 
+                name="<?php echo self::OPTION_SETTINGS ?>[delay_length]" value="<?php echo esc_attr(self::setting('delay_length', 0)) ?>" />
+              <select name="<?php echo self::OPTION_SETTINGS ?>[delay_unit]">
+                <?php foreach(array('minutes', 'hours', 'days') as $unit) { ?>
+                  <option<?php if (self::setting('delay_unit') == $unit) echo ' selected="selected"' ?>><?php echo $unit ?></option>
+                <?php } ?>
+              </select>
+            </td>
+          </tr>
+        </table>
+        
+      <?php } ?>
       
       <br />
       <h3 class="title">Clear Cache</h3>
