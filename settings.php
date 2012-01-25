@@ -14,24 +14,20 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
   </h2>
 
   <form method="post" action="options.php" id="settings_form">
-    
+
     <?php if (!self::session()) { ?>
 
       <?php settings_fields('fb-step1') ?>
       
       <?php if (!self::is_mu()) { ?>
 
-        <h3 class="title">Facebook Application</h3>
+        <h3 class="title">Your Facebook Application</h3>
       
         <p>
           Before you continue, you'll need to create a Facebook Application. 
           <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now</a>.
-          <span>( <a href="#" onclick="jQuery('#sharepress_help').show(); jQuery(this).parent().hide(); return false;">Help me</a>! )</span>
+          &nbsp;&nbsp;<b><a href="https://developers.facebook.com/docs/appsonfacebook/tutorial/#create" target="_blank">Need more help?</a></b>
         </p>
-
-        <div id="sharepress_help" style="display:none;">
-          <iframe width="480" height="390" src="http://www.youtube.com/embed/pI9IqJFQNF8" frameborder="0" allowfullscreen></iframe>
-        </div>
 
         <p>
           <b>Note:</b> Your Site URL is <b><?php echo preg_replace('#/+$#', '/', get_option('siteurl').'/') ?></b>, 
@@ -86,7 +82,6 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
       
       <script>
-
         (function($) {
           var api_key = $('#<?php echo self::OPTION_API_KEY ?>').focus();
           var app_secret = $('#<?php echo self::OPTION_APP_SECRET ?>');
@@ -110,14 +105,18 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
             <?php } ?>
 
-            $.post(ajaxurl, { action: 'fb_save_keys', current_url: '<?php echo self::facebook()->getCurrentUrl() ?>', api_key: api_key.val(), app_secret: app_secret.val() }, function(url) {
+            $.post(ajaxurl, { 
+              action: 'fb_save_keys', 
+              current_url: '<?php echo self::getCurrentUrl() ?>', 
+              api_key: api_key.val(), 
+              app_secret: app_secret.val() 
+            }, function(url) {
               btn.attr('disabled', true).val('Connecting...');
               document.location = url;  
             });
 
             return false;
           });
-     
           
         })(jQuery);
       </script> 

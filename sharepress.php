@@ -83,6 +83,10 @@ class Sharepress {
   }
   
   function init() {
+    if (!apply_filters('sharepress_enabled', true)) {
+      return false;
+    }
+
     if (is_admin()) {
       add_action('admin_notices', array($this, 'admin_notices'));
       add_action('admin_menu', array($this, 'admin_menu'));
@@ -1269,7 +1273,7 @@ class Sharepress {
     if (self::is_mu()) {
       $license_key = defined('SHAREPRESS_MU_LICENSE_KEY') ? SHAREPRESS_MU_LICENSE_KEY : null;
     }
-    return strlen($license_key) == 32;
+    return apply_filters('sharepress_enabled', true) && strlen($license_key) == 32;
   }
 
   function admin_notices() {
@@ -1322,6 +1326,59 @@ class Sharepress {
     }
     
     require('settings.php');
+  }
+
+  static function getCurrentUrl() {
+    if (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1)
+      || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
+    ) {
+      $protocol = 'https://';
+    }
+    else {
+      $protocol = 'http://';
+    }
+    $currentUrl = $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    $parts = parse_url($currentUrl);
+
+    $query = '';
+    if (!empty($parts['query'])) {
+      // drop known fb params
+      $params = explode('&', $parts['query']);
+      $retained_params = array();
+      foreach ($params as $param) {
+        if (self::shouldRetainParam($param)) {
+          $retained_params[] = $param;
+        }
+      }
+
+      if (!empty($retained_params)) {
+        $query = '?'.implode($retained_params, '&');
+      }
+    }
+
+    // use port if non default
+    $port =
+      isset($parts['port']) &&
+      (($protocol === 'http://' && $parts['port'] !== 80) ||
+       ($protocol === 'https://' && $parts['port'] !== 443))
+      ? ':' . $parts['port'] : '';
+
+    // rebuild
+    return $protocol . $parts['host'] . $port . $parts['path'] . $query; 
+  }
+
+  protected static $DROP_QUERY_PARAMS = array(
+    'code',
+    'state',
+    'signed_request',
+  );
+
+  static function shouldRetainParam($param) {
+    foreach (self::$DROP_QUERY_PARAMS as $drop_query_param) {
+      if (strpos($param, $drop_query_param.'=') === 0) {
+        return false;
+      }
+    }
   }
   
   function success($post, $meta) {
