@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.3
+Version: 2.1.4
 License: GPL2
 */
 
@@ -1230,9 +1230,6 @@ class Sharepress {
     register_setting('fb-settings', self::OPTION_PUBLISHING_TARGETS);
     register_setting('fb-settings', self::OPTION_NOTIFICATIONS);
     register_setting('fb-settings', self::OPTION_SETTINGS, array($this, 'sanitize_settings'));
-
-    wp_enqueue_style('fancybox', plugins_url('lib/fancybox/jquery.fancybox-1.3.4.css', __FILE__));
-    wp_enqueue_script('fancybox', plugins_url('lib/fancybox/jquery.fancybox-1.3.4.pack.js', __FILE__), array('jquery'));
   }
 
   function sanitize_settings($settings) {
