@@ -50,6 +50,9 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 
 == Changelog ==
 
+= 2.1.5 =
+* Fixed: After setting up Facebook app, user was being redirected to options-general.php instead of options-general.php?page=sharepress
+
 = 2.1.4 =
 * Fixed: More orphaned Fancybox stuff (sorry!)
 
