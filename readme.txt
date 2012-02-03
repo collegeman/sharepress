@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.5
+Stable tag: 2.1.6
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -49,6 +49,10 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.6 =
+* Fixed: Stop caching Bit.ly API results
+* Fixed: When publishing via XML-RPC, post meta would have title "Auto Draft" and default WP shortlink
 
 = 2.1.5 =
 * Fixed: After setting up Facebook app, user was being redirected to options-general.php instead of options-general.php?page=sharepress

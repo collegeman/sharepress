@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.5
+Version: 2.1.6
 License: GPL2
 */
 
@@ -689,7 +689,7 @@ class Sharepress {
     $post = get_post($post_id);
     
     // make sure we're not working with a revision
-    if ($parent_post_id = wp_is_post_revision($post)) {
+    if ($post->post_status == 'auto-draft' || ( $parent_post_id = wp_is_post_revision($post) )) {
       self::log("Post is a revision; ignoring save_post($post_id)");
       return false;
     }
@@ -867,21 +867,21 @@ class Sharepress {
       self::log(sprintf("transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
     }
 
-    if (@$_POST[self::META]) {
+    if (@$_POST[self::META] || $new_status != 'publish') {
       if (SHAREPRESS_DEBUG) {
         self::log(sprintf("Saving operation in progress; ignoring transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
       }
       return;
-    }
+    } 
     
     // value of $post here is inconsistent
     if (!is_object($post)) {
       $post = get_post($post);
     }
     
-    if ($new_status == 'publish' && $old_status != 'publish' && $post) {
+    if ($post) {
       $this->share($post);
-    }
+    } 
   }
   
   function publish_post($post_id) {
@@ -893,7 +893,8 @@ class Sharepress {
       return;
     }
     
-    if ($post = get_post($post_id)) {
+    $post = get_post($post_id);
+    if ($post && ($post->post_status == 'publish')) {
       $this->share($post);
     }
   }
@@ -1012,7 +1013,7 @@ class Sharepress {
     }
   }
 
-  function get_bitly_link($post_id){
+  function get_bitly_link($post_id) {
     $post = get_page($post_id);
     if (!$post->ID) {
       return false;
@@ -1029,30 +1030,25 @@ class Sharepress {
     }
 
     if ($post->post_status == 'publish') {
-      if (!$shortlink = get_post_meta($post_id, self::META_BITLY, true)) {
+      
+      $response = _wp_http_get_object()->request('https://api-ssl.bitly.com/v3/shorten?' . http_build_query(array(
+        'login' => $login,
+        'apikey' => $apikey,
+        'longUrl' => $this->get_permalink($post->ID),
+        'format' => 'txt'
+      )), array('method' => 'GET'));
+
+      if (is_wp_error($response)) {
+        // TODO: log this?
+        return $permalink;
+
+      } else {
+        return $response['body'];
         
-        $response = _wp_http_get_object()->request('https://api-ssl.bitly.com/v3/shorten?' . http_build_query(array(
-          'login' => $login,
-          'apikey' => $apikey,
-          'longUrl' => $this->get_permalink($post->ID)
-        )), array('method' => 'GET'));
-
-        if (is_wp_error($response)) {
-          // TODO: log this?
-          return $permalink;
-
-        } else {
-          $response = json_decode($response['body']);
-          $shortlink = $response->data->url;
-          add_post_meta($post_id, self::META_BITLY, $shortlink);
-          
-        }   
-      }
-
-      return $shortlink;
+      }   
 
     } else {
-      return $shortlink;
+      return $permalink;
     }
 
   }
@@ -1071,7 +1067,7 @@ class Sharepress {
     if (!is_object($post)) {
       $post = get_post($post);
     }
-    
+
     if ($meta = $this->can_post_on_facebook($post)) {
 
       // determine if this should be delayed
