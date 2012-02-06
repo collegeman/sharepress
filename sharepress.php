@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.6
+Version: 2.1.7
 License: GPL2
 */
 
@@ -112,9 +112,22 @@ class Sharepress {
       wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
     }
 
+    if (!wp_next_scheduled('sharepress_hourly_cron')) {
+      wp_schedule_event(time(), 'hourly', 'sharepress_hourly_cron');
+    }
+
+    add_action('sharepress_hourly_cron', array($this, 'hourly_cron'));
+
     // triggers sharepress-mu loading, if present:
     do_action('sharepress_init');
   } 
+
+  function hourly_cron() {
+    // do something to keep access token current
+    self::me(null, false, true);
+
+    self::log('Hourly cron: trying to keep access token current.');
+  }
 
   function cron_schedules($schedules) {
     $schedules['oneminute'] = array(
@@ -402,14 +415,14 @@ class Sharepress {
    * @param boolean $rethrow If set to true, rethrow an exception triggered by the API call
    * @return mixed If $param is defined, only a single value is returned; otherwise, an array - the whole packet
    */
-  static function me($param = null, $rethrow = false) {
+  static function me($param = null, $rethrow = false, $flush = false) {
     try {
       if (self::is_business()) {
-        $accounts = self::api('/me/accounts', 'GET', array(), '10 minutes');
+        $accounts = self::api('/me/accounts', 'GET', array(), $flush ? false : '5 minutes');
         $me = $accounts['data'][0];
         return ($param) ? $me[$param] : $me;
       } else {
-        $me = self::api('/me', 'GET', array(), '10 minutes');
+        $me = self::api('/me', 'GET', array(), $flush ? false : '5 minutes');
         return ($param) ? $me[$param] : $me;
       } 
     } catch (Exception $e) {
@@ -1171,7 +1184,7 @@ class Sharepress {
       }
       echo self::facebook()->getLoginUrl(array(
         'redirect_uri' => $_REQUEST['current_url'],
-        'scope' => 'read_stream,publish_stream,offline_access,manage_pages,share_item'
+        'scope' => 'read_stream,publish_stream,manage_pages,share_item'
       ));
         
     } else {
