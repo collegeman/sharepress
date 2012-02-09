@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.7
+Stable tag: 2.1.8
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -49,6 +49,9 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.8 =
+* Fixed: If user unchecks "Same as title" and leaves the message box empty, don't fill it up automatically
 
 = 2.1.7 =
 * Added: Hourly cron job that pings the Facebook API, helping to ensure stored access token stays current

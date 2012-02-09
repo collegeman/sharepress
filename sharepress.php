@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.7
+Version: 2.1.8
 License: GPL2
 */
 
@@ -486,7 +486,7 @@ class Sharepress {
   }
 
   function filter_sharepress_meta($meta, $post) {
-    if (!@$meta['message'] || @$meta['title_is_message']) {
+    if (!@$meta['message'] && @$meta['title_is_message']) {
       $meta['message'] = apply_filters('post_title', $post->post_title);
     }
     
@@ -845,7 +845,10 @@ class Sharepress {
       $meta = apply_filters('filter_'.self::META, $meta, $post);
 
       if (self::setting('append_link', 'on') == 'on') {
-        $meta['message'] .= ' - ' . $this->get_permalink($post->ID);
+        if ($meta['message']) {
+          $meta['message'] .= ' - ';
+        }
+        $meta['message'] .= $this->get_permalink($post->ID);
       }
 
       update_post_meta($post->ID, self::META, $meta);
@@ -1094,7 +1097,10 @@ class Sharepress {
       }
       
       if (!empty($meta['append_link'])) {
-        $meta['message'] .= ' - ' . $this->get_permalink($post->ID);
+        if ($meta['message']) {
+          $meta['message'] .= ' - ';  
+        }
+        $meta['message'] .= $this->get_permalink($post->ID);
       }
     
       try {
