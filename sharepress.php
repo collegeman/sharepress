@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.8
+Version: 2.1.9
 License: GPL2
 */
 
@@ -486,7 +486,7 @@ class Sharepress {
   }
 
   function filter_sharepress_meta($meta, $post) {
-    if (!@$meta['message'] && @$meta['title_is_message']) {
+    if (!@$meta['message'] && ( @$meta['title_is_message'] || !self::$pro )) {
       $meta['message'] = apply_filters('post_title', $post->post_title);
     }
     
@@ -1111,7 +1111,7 @@ class Sharepress {
         if (!$meta['targets'] && !self::is_business()) {
           throw new Exception("No publishing Targets selected.");
         }
-        
+
         // first, should we post to the wall?
         if (self::is_business() || in_array('wall', $meta['targets'])) {
           $result = self::api(self::me('id').'/links', 'POST', array(
@@ -1121,7 +1121,7 @@ class Sharepress {
             'picture' => $meta['picture'],
             'link' => $meta['link']
           ));
-          
+
           self::log(sprintf("posted to the wall: %s", serialize($result)));
           
           // store the ID and published date for queuing 
