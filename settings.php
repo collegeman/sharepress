@@ -34,10 +34,11 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
         </p>  
         
+        <?php /* ?>
         <p style="padding:10px; background-color:#ffffcc;">
           <b style="color:red;">Breaking Change</b>
           &nbsp;&nbsp;<a href="http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation" target="_blank">Read this</a> to learn how to properly configure your Facebook application to avoid disruption of service.
-        </p>
+        </p> */ ?>
 
         <table class="form-table">
           <tr>
