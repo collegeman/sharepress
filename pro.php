@@ -65,22 +65,32 @@ class SharepressPro {
   function init() {
     // attach a reference to the pro version onto the lite version
     Sharepress::$pro = $this;
+    
     // enhancement #2: ability to publish to pages
     add_filter('sharepress_pages', array($this, 'pages'));
     add_action('sharepress_post', array($this, 'post'), 10, 2);
+    
     // enhancement #3: configure the content of each post individually
     add_filter('sharepress_meta_box', array($this, 'meta_box'), 10, 2);
     add_action('wp_ajax_sharepress_get_excerpt', array($this, 'ajax_get_excerpt'));
+    
     // enhancement #4: enhancements to the posts browser
-    add_action('restrict_manage_posts', array($this, 'restrict_manage_posts'));
-    add_action('manage_posts_columns', array($this, 'manage_posts_columns'));
-    add_action('manage_posts_custom_column', array($this, 'manage_posts_custom_column'), 10, 2);
     if (is_admin()) {
-      add_filter('posts_where', array($this, 'posts_where'));
-      add_filter('posts_orderby', array($this, 'posts_orderby'));
+      $post_type = !empty($_REQUEST['post_type']) ? $_REQUEST['post_type'] : 'post';
+      if (in_array($post_type, Sharepress::supported_post_types())) {
+        add_action('restrict_manage_posts', array($this, 'restrict_manage_posts'));
+        add_filter('posts_where', array($this, 'posts_where'));
+        add_filter('posts_orderby', array($this, 'posts_orderby'));
+      }
     }
+    foreach(Sharepress::supported_post_types() as $type) {
+      add_action("manage_edit-{$type}_columns", array($this, 'manage_posts_columns'));
+    }
+    add_action('manage_posts_custom_column', array($this, 'manage_posts_custom_column'), 10, 2);
+    
     // enhancement #5: scheduling 
     add_action('sharepress_oneminute_cron', array($this, 'oneminute_cron'));
+    
     // enhancement #6: twitter support
     add_action('wp_ajax_sharepress_test_twitter_settings', array($this, 'ajax_test_twitter_settings'));
   }
@@ -126,10 +136,11 @@ class SharepressPro {
     $current_url = ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     $current_url = remove_query_arg( 'sharepress_sort', $current_url );
     
-    if ( isset( $_GET['sharepress_sort'] ) && 'desc' == $_GET['sharepress_sort'] )
+    if ( isset( $_GET['sharepress_sort'] ) && 'desc' == $_GET['sharepress_sort'] ) {
       $current_order = 'desc';
-    else
+    } else {
       $current_order = 'asc';
+    }
       
     $url = $current_url . '&sharepress_sort='. ( $current_order == 'asc' ? 'desc' : 'asc' );
     

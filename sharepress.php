@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.9
+Version: 2.1.10
 License: GPL2
 */
 
@@ -81,11 +81,52 @@ class Sharepress {
     $permalink = get_permalink($ref);
     return apply_filters('sharepress_get_permalink', $permalink, $ref);
   }
+
+  static function supported_post_types() {
+    $supported = apply_filters('sharepress_supported_post_types', array('post'));
+    if (!$supported) { // make sure to return an array
+      $supported = array();
+    }
+    return $supported;
+  }
   
   function init() {
     if (!apply_filters('sharepress_enabled', true)) {
       return false;
     }
+
+    /* For testing custom post type support:
+    $labels = array(
+      'name' => _x('Books', 'post type general name'),
+      'singular_name' => _x('Book', 'post type singular name'),
+      'add_new' => _x('Add New', 'book'),
+      'add_new_item' => __('Add New Book'),
+      'edit_item' => __('Edit Book'),
+      'new_item' => __('New Book'),
+      'all_items' => __('All Books'),
+      'view_item' => __('View Book'),
+      'search_items' => __('Search Books'),
+      'not_found' =>  __('No books found'),
+      'not_found_in_trash' => __('No books found in Trash'), 
+      'parent_item_colon' => '',
+      'menu_name' => 'Books'
+
+    );
+    $args = array(
+      'labels' => $labels,
+      'public' => true,
+      'publicly_queryable' => true,
+      'show_ui' => true, 
+      'show_in_menu' => true, 
+      'query_var' => true,
+      'rewrite' => true,
+      'capability_type' => 'post',
+      'has_archive' => true, 
+      'hierarchical' => false,
+      'menu_position' => null,
+      'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' )
+    ); 
+    register_post_type('book', $args); */
 
     if (is_admin()) {
       add_action('admin_notices', array($this, 'admin_notices'));
@@ -473,7 +514,9 @@ class Sharepress {
   
   function add_meta_boxes() {
     if (self::installed()) {
-      add_meta_box(self::META, 'SharePress', array($this, 'meta_box'), 'post', 'side', 'high');
+      foreach(self::supported_post_types() as $type) {
+        add_meta_box(self::META, 'SharePress', array($this, 'meta_box'), $type, 'side', 'high');
+      }
     }
   }
   
