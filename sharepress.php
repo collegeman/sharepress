@@ -36,6 +36,8 @@ spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
 );
   
+define('SHAREPRESS', dirname(__FILE__));
+
 // override this in functions.php
 @define('SHAREPRESS_DEBUG', false);
 
@@ -139,6 +141,21 @@ class Sharepress {
       if ($_REQUEST['page'] == 'sharepress' && isset($_REQUEST['log'])) {
         wp_enqueue_style('theme-editor');
       }
+
+      if ($_REQUEST['page'] == 'sharepress-3.0') {
+        
+        // these request are loaded in an iframe, so hide noise
+        if (isset($_REQUEST['settings'])) {
+          define('IFRAME_REQUEST', true);
+          add_filter('admin_footer_text', '__return_false');
+          add_filter('update_footer', '__return_false');
+        }
+
+        wp_enqueue_style('sharepress-bootstrap-min', $this->url('css/bootstrap.min.css'));
+        wp_enqueue_style('sharepress-admin', $this->url('css/admin.css'));
+        wp_enqueue_script('sharepress-bootstrap-min', $this->url('js/bootstrap.min.js'), array('jquery'));
+        wp_enqueue_script('sharepress-admin', $this->url('js/admin.js'), array('sharepress-bootstrap-min'));
+      }
     }
     
     add_action('save_post', array($this, 'save_post'));
@@ -182,7 +199,7 @@ class Sharepress {
   function wp_head() {
     global $wpdb, $post;
     
-    if (self::setting('page_og_tags', 'on') == 'on' || self::setting('page_og_tags', 'on') == 'imageonly') {
+    if ($this->setting('page_og_tags', 'on') == 'on' || $this->setting('page_og_tags', 'on') == 'imageonly') {
       // get any values stored in meta data
       $defaults = array();
       $overrides = array();
@@ -222,7 +239,7 @@ class Sharepress {
 
       } else {
         $defaults = array(
-          'og:type' => self::setting('page_og_type', 'blog'),
+          'og:type' => $this->setting('page_og_type', 'blog'),
           'og:url' => is_front_page() ? get_bloginfo('siteurl') : $this->get_permalink(),
           'og:title' => get_the_title(),
           'og:site_name' => get_bloginfo('name'),
@@ -291,11 +308,11 @@ class Sharepress {
 
   static function twitter_ready() {
     return self::unlocked() 
-      && self::setting('twitter_is_ready', 1)
-      && self::setting('twitter_consumer_key') 
-      && self::setting('twitter_consumer_secret') 
-      && self::setting('twitter_access_token') 
-      && self::setting('twitter_access_token_secret');
+      && self::load()->setting('twitter_is_ready', 1)
+      && self::load()->setting('twitter_consumer_key') 
+      && self::load()->setting('twitter_consumer_secret') 
+      && self::load()->setting('twitter_access_token') 
+      && self::load()->setting('twitter_access_token_secret');
   }
   
   static function err($message) {
@@ -336,20 +353,6 @@ class Sharepress {
       // log this...?
       return false;
     }
-  }
-  
-  static function setting($name = null, $default = null) {
-    $settings = get_option(self::OPTION_SETTINGS, array(
-      'default_behavior' => 'on',
-      'excerpt_length' => 20,
-      'excerpt_more' => '...',
-      'og_tags' => 'on',
-      'og_type' => 'blog',
-      'license_key' => null,
-      'append_link' => 1
-    ));
-    
-    return (!is_null($name)) ? ( !is_null(@$settings[$name]) ? $settings[$name] : $default ) : $settings;
   }
   
   static function targets($id = null) {
@@ -556,7 +559,7 @@ class Sharepress {
 
   function get_og_image_url($post, $meta) {
     if (!$meta || !isset($meta['let_facebook_pick_pic'])) {
-      $meta['let_facebook_pick_pic'] = self::setting('let_facebook_pick_pic_default', 0);
+      $meta['let_facebook_pick_pic'] = $this->setting('let_facebook_pick_pic_default', 0);
     }
 
     if (!$meta['let_facebook_pick_pic']) { // use featured image, fallback on first image in post, come to rest on global default
@@ -659,14 +662,14 @@ class Sharepress {
         'message' => $post->post_title,
         'title_is_message' => true,
         'picture' => $this->get_default_picture(),
-        'let_facebook_pick_pic' => self::setting('let_facebook_pick_pic_default', 0),
+        'let_facebook_pick_pic' => $this->setting('let_facebook_pick_pic_default', 0),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => self::targets() ? array_keys(self::targets()) : array(),
-        'enabled' => self::setting('default_behavior'),
-        'append_link' => self::setting('append_link', 'on') == 'on',
-        'delay_length' => self::setting('delay_length', 0),
-        'delay_unit' => self::setting('delay_unit', 'minutes')
+        'enabled' => $this->setting('default_behavior'),
+        'append_link' => $this->setting('append_link', 'on') == 'on',
+        'delay_length' => $this->setting('delay_length', 0),
+        'delay_unit' => $this->setting('delay_unit', 'minutes')
       );
     } else {
       // overrides:
@@ -877,7 +880,7 @@ class Sharepress {
         'message' => $post->post_title,
         'title_is_message' => true,
         'picture' => null,
-        'let_facebook_pick_pic' => self::setting('let_facebook_pick_pic_default', 0),
+        'let_facebook_pick_pic' => $this->setting('let_facebook_pick_pic_default', 0),
         'link' => $this->get_permalink($post),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
@@ -887,7 +890,7 @@ class Sharepress {
 
       $meta = apply_filters('filter_'.self::META, $meta, $post);
 
-      if (self::setting('append_link', 'on') == 'on') {
+      if ($this->setting('append_link', 'on') == 'on') {
         if ($meta['message']) {
           $meta['message'] .= ' - ';
         }
@@ -974,8 +977,8 @@ class Sharepress {
     $text = str_replace(']]>', ']]&gt;', $text);
     $text = strip_tags($text);
     
-    $excerpt_length = apply_filters('sharepress_excerpt_length', self::setting('excerpt_length'));
-    $excerpt_more = apply_filters('sharepress_excerpt_more', self::setting('excerpt_more'));
+    $excerpt_length = apply_filters('sharepress_excerpt_length', $this->setting('excerpt_length'));
+    $excerpt_more = apply_filters('sharepress_excerpt_more', $this->setting('excerpt_more'));
     $words = preg_split("/[\n\r\t ]+/", $text, $excerpt_length + 1, PREG_SPLIT_NO_EMPTY);
     
     if ( count($words) > $excerpt_length ) {
@@ -1348,6 +1351,16 @@ class Sharepress {
   
   function admin_menu() {
     add_submenu_page('options-general.php', 'SharePress', 'SharePress', 'administrator', 'sharepress', array($this, 'settings'));
+    add_submenu_page('options-general.php', 'SharePress 3.0', 'SharePress 3.0', 'administrator', 'sharepress-3.0', array($this, 'settings_3'));
+  }
+
+  function settings_3() {
+    if ($settings = $_REQUEST['settings']) {
+      echo "<html><body class='iframe'>";
+      require(SHAREPRESS.'/views/'.$settings.'_settings.php');
+    } else {
+      require(SHAREPRESS.'/views/settings.php');
+    }
   }
   
   function settings() {
@@ -1473,6 +1486,99 @@ class Sharepress {
   static function notify_on_success() {
     $options = get_option(self::OPTION_NOTIFICATIONS);
     return $options ? $options['on_success'] == '1' : true;
+  }
+
+  // ===========================================================================
+  // Helper functions - Provided to your plugin, courtesy of wp-kitchensink
+  // http://github.com/collegeman/wp-kitchensink
+  // ===========================================================================
+  
+  function url($path) {
+    return plugins_url($path, __FILE__);
+  }
+
+  /**
+   * This function provides a convenient way to access your plugin's settings.
+   * The settings are serialized and stored in a single WP option. This function
+   * opens that serialized array, looks for $name, and if it's found, returns
+   * the value stored there. Otherwise, $default is returned.
+   * @param string $name
+   * @param mixed $default
+   * @return mixed
+   */
+  function setting($name, $default = null) {
+    $settings = get_option(self::OPTION_SETTINGS, array(
+      'default_behavior' => 'on',
+      'excerpt_length' => 20,
+      'excerpt_more' => '...',
+      'og_tags' => 'on',
+      'og_type' => 'blog',
+      'license_key' => null,
+      'append_link' => 1
+    ));
+
+    return isset($settings[$name]) ? $settings[$name] : $default;
+  }
+
+  /**
+   * Use this function in conjunction with Settings pattern #3 to generate the
+   * HTML ID attribute values for anything on the page. This will help
+   * to ensure that your field IDs are unique and scoped to your plugin.
+   *
+   * @see settings.php
+   */
+  function id($name, $echo = true) {
+    $id = sprintf('%s_settings_%s', __CLASS__, $name);
+    if ($echo) {
+      echo $id;
+    }
+    return $id;
+  }
+
+  /**
+   * Use this function in conjunction with Settings pattern #3 to generate the
+   * HTML NAME attribute values for form input fields. This will help
+   * to ensure that your field names are unique and scoped to your plugin, and
+   * named in compliance with the setting storage pattern defined above.
+   * 
+   * @see settings.php
+   */
+  function field($name, $echo = true) {
+    $field = sprintf('%s_settings[%s]', __CLASS__, $name);
+    if ($echo) {
+      echo $field;
+    }
+    return $field;
+  }
+  
+  /**
+   * A helper function. Prints 'checked="checked"' under two conditions:
+   * 1. $field is a string, and $this->setting( $field ) == $value
+   * 2. $field evaluates to true
+   */
+  function checked($field, $value = null) {
+    if ( is_string($field) ) {
+      if ( $this->setting($field) == $value ) {
+        echo 'checked="checked"';
+      }
+    } else if ( (bool) $field ) {
+      echo 'checked="checked"';
+    }
+  }
+
+  /**
+   * A helper function. Prints 'selected="selected"' under two conditions:
+   * 1. $field is a string, and $this->setting( $field ) == $value
+   * 2. $field evaluates to true
+   */
+  function selected($field, $value = null) {
+    if ( is_string($field) ) {
+      if ( $this->setting($field) == $value ) {
+        echo 'selected="selected"';
+      }
+    } else if ( (bool) $field ) {
+      echo 'selected="selected"';
+    }
   }
 }
 
@@ -1805,6 +1911,7 @@ class SharePress_WordPressOAuth {
     // Each name-value pair is separated by an '&' character (ASCII code 38)
     return implode('&', $pairs);
   }
+
 }
 
 Sharepress::load();

@@ -1,0 +1,39 @@
+.container { border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; margin-top: 10px; background-color: #efefef; width: 100%; height: 100%; overflow: auto; }
+.rail { padding-left: 20px; }
+.rail .panel { padding: 20px 20px 20px 0; position: relative; float: left; width: 350px; }
+.rail .panel .remove { display: none; position: absolute; right: 7px; top: 9px; text-indent: -9999px; width: 28px; height: 28px; background: url(<?php echo $this->url('img/close.png') ?>);}
+.rail .panel .inner { -moz-transition: all 0.25s; -webkit-transition: all 0.25s; border: 1px solid #ddd; padding: 4px; min-height: 800px; background-color: white; }
+.rail .panel:hover .inner { border-color: #bbb; }
+.rail .panel.add { width: 330px; padding: 0; margin: 20px 20px 20px 0; min-height: 800px; background: none; border: 5px dashed #ccc; padding: 0; }
+.rail .panel h3, body.iframe h3 { font-size: 0.9em; color: #ddd; display: block; font-weight: normal; margin: 5px 10px; }
+body.iframe h3 { margin: 5px 0; }
+.rail .panel h3 .settings { opacity: 0.25; float: right; width: 16px; height: 16px; background: url(<?php echo $this->url('img/settings.png') ?>) no-repeat; text-indent: -9999px; }
+.rail .panel .radar-filter { height: 25px; margin: 0 10px; }
+.rail .panel .radar-filter input { padding: 5px; font-size: 0.9em; width: 100%; }
+.rail .panel ul.list { list-style-type: none; padding: 0; margin: 10px; }
+.rail .panel ul li { border-top: 1px solid #ddd; padding: 15px 0 12px 0; }
+.rail .panel .tools { width: 40px; float: left; }
+.rail a.tool { -moz-transition: all 0.25s; -webkit-transition: all 0.25s; opacity: 0.25; position: relative; top: -3px; width: 36px; height: 24px; display: block; text-indent: -9999px; background-position: center; background-repeat: no-repeat; }
+.rail a.tool:hover { opacity: 1.0; }
+.rail a.tool.fav { background-image: url(<?php echo $this->url('img/fav-off.png') ?>); }
+.rail a.tool.post { background-image: url(<?php echo $this->url('img/post.png') ?>); }
+.rail a.tool.fav.is { background-image: url(<?php echo $this->url('img/fav-on.png') ?>); }
+.rail a.tool.chat { color: black; text-decoration: none; width: 16px; height: 16px; padding-left: 40px; background-image: url(<?php echo $this->url('img/chat.png') ?>); }
+.rail a.tool.chat.no { background-image: url(<?php echo $this->url('img/chat-0.png') ?>); }
+.wrap .age a.tool { position: absolute; right: -10px; top: 4px; }
+.rail .panel .info { width: 270px; float: left; }
+.rail .panel .more { padding-top: 7px; }
+.rail .panel .info a.jump { font-size: 1.2em; display: block; text-decoration: none; line-height: 1.3em;  }
+.rail .panel .info p { padding-top: 0; margin-top: 0; }
+.rail .panel .age { clear: both; position: relative; padding-top: 4px; margin-left: 40px; color: #aaa; }
+.rail .panel.add p { text-align: center; padding: 0 10%; color: #ccc; padding-top: 50%; font-size: 3.0em; line-height: 1.1em; }
+.wrap .pagetitle { height: 40px; }
+.wrap .pagetitle h2 { float: left; }
+.wrap .pagetitle form { float: left; position: relative; }
+.wrap .pagetitle form input { position: absolute; top: 8px; font-size: 1.4em; padding: 4px 4px 4px 28px; background: url(<?php echo $this->url('img/find.png') ?>) 6px center no-repeat;}
+.wrap .pagetitle form .save { position: absolute; left: 200px; }
+iframe.autoscale { width: 100%; }
+
+body.iframe { margin: 0 10px; min-height: 400px; }
+body.iframe #footer { display: none; }
+.clear { clear: both; }
