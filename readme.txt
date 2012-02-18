@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.10
+Stable tag: 2.1.11
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -49,6 +49,9 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.11 =
+* Fixed: If the global default for Open Graph image is set to Global Default, then you can't use "Use Featured Image" option on individual posts
 
 = 2.1.10 =
 * Added: Support for custom post types. See: http://aaroncollegeman.com/2012/02/16/using-sharepress-with-custom-post-types
