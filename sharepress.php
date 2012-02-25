@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.12
+Version: 2.1.13
 License: GPL2
 */
 
@@ -561,7 +561,7 @@ class Sharepress {
 
     if (!$meta['let_facebook_pick_pic']) { // use featured image, fallback on first image in post, come to rest on global default
       
-      if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), '150x150' )) {
+      if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), array(150, 150) )) {
         $picture = $src[0];
       }
 
@@ -603,7 +603,7 @@ class Sharepress {
       'numberposts' => 1,
     )) );
 
-    if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, '150x150') )) {
+    if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, array(150, 150)) )) {
       return $src[0];
     
     #
