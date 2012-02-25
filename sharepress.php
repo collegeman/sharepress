@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.13
+Version: 2.1.14
 License: GPL2
 */
 
@@ -32,12 +32,12 @@ if (!defined('ABSPATH')) exit;
 // we depend on this...
 require('lib/facebook.php');
 // we don't care about certificate verification
-spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
+BaseFacebook::$CURL_OPTS = BaseFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
 );
   
 // override this in functions.php
-@define('SHAREPRESS_DEBUG', false);
+@define('SHAREPRESS_DEBUG', true);
 
 class Sharepress {
   
@@ -217,7 +217,7 @@ class Sharepress {
           'og:site_name' => get_bloginfo('name'),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
           'og:description' => $this->strip_shortcodes($excerpt),
-          'og:locale' => 'en_US'
+          'og:locale' => $this->setting('og_locale', 'en_US')
         );
 
       } else {
@@ -229,7 +229,7 @@ class Sharepress {
           'og:image' => $this->get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
           'og:description' => $this->strip_shortcodes(get_bloginfo('description')),
-          'og:locale' => 'en_US'
+          'og:locale' => $this->setting('og_locale', 'en_US')
         );
         
       }
@@ -365,10 +365,10 @@ class Sharepress {
   static function facebook() {
     if (!self::$facebook) {
       if (($api_key = self::api_key()) && ($app_secret = self::app_secret())) {
-        self::$facebook = new spFacebook(array(
+        self::$facebook = new SharePressFacebook(array(
           'appId' => $api_key,
           'secret' => $app_secret
-        ));
+        ), false);
       } else {
         return null;
       }
@@ -1094,15 +1094,23 @@ class Sharepress {
         'login' => $login,
         'apikey' => $apikey,
         'longUrl' => $this->get_permalink($post->ID),
-        'format' => 'txt'
+        'format' => 'json'
       )), array('method' => 'GET'));
 
+      // SharePress::log('Bit.ly result: '.print_r($response, true));
+
       if (is_wp_error($response)) {
-        // TODO: log this?
+        SharePress::log('Bit.ly issue: '.print_r($response, true), 'ERROR');
         return $permalink;
 
       } else {
-        return $response['body'];
+        $result = json_decode($response['body']);
+        if ($result->status_code == 200) {
+          return $result->data->url;
+        } else {
+          SharePress::log('Bit.ly issue: '.print_r($response, true), 'ERROR');
+          return $permalink;
+        }
         
       }   
 

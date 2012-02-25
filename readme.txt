@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.13
+Stable tag: 2.1.14
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -50,9 +50,14 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 
 == Changelog ==
 
+= 2.1.14 =
+* Fixed: Custom values for og:locale were not displaying in meta tags
+* Fixed: Deleted the remaining Fancybox stuff... I thought I did this once before, but it came back!
+* Fixed: Reimplemented Facebook PHP SDK, making better use of OOP design, and correcting some problems with session management
+* Added: Better logging for Bit.ly issues
+
 = 2.1.13 =
 * Fixed: Was using '150x150' to control og:image thumbnail size, but it needed to be array(150, 150)
-
 
 = 2.1.12 =
 * Fixed: "Fatal error: Call to undefined function get_post_thumbnail_id() in /home/chicagop/public_html/wp-content/plugins/sharepress/sharepress.php on line 564"

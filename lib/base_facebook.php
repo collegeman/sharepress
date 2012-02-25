@@ -15,12 +15,11 @@
  * under the License.
  */
 
-/**
- * This file has been modified to use the WP_Http object instead of cURL.
- * Also, classes are now prefixed with 'sp' to eliminate namespace collissions
- * with other plugins.
- */
-
+/*
+if (!function_exists('curl_init')) {
+  throw new Exception('Facebook needs the CURL PHP extension.');
+}
+*/
 if (!function_exists('json_decode')) {
   throw new Exception('Facebook needs the JSON PHP extension.');
 }
@@ -30,7 +29,7 @@ if (!function_exists('json_decode')) {
  *
  * @author Naitik Shah <naitik@facebook.com>
  */
-class spFacebookApiException extends Exception
+class FacebookApiException extends Exception
 {
   /**
    * The result from the API server that represents the exception information.
@@ -118,7 +117,7 @@ class spFacebookApiException extends Exception
  *
  * @author Naitik Shah <naitik@facebook.com>
  */
-abstract class spBaseFacebook
+abstract class BaseFacebook
 {
   /**
    * Version.
@@ -153,6 +152,7 @@ abstract class spBaseFacebook
     'api_video' => 'https://api-video.facebook.com/',
     'api_read'  => 'https://api-read.facebook.com/',
     'graph'     => 'https://graph.facebook.com/',
+    'graph_video' => 'https://graph-video.facebook.com/',
     'www'       => 'https://www.facebook.com/',
   );
 
@@ -164,11 +164,11 @@ abstract class spBaseFacebook
   protected $appId;
 
   /**
-   * The Application API Secret.
+   * The Application App Secret.
    *
    * @var string
    */
-  protected $apiSecret;
+  protected $appSecret;
 
   /**
    * The ID of the Facebook user, or 0 if the user is logged out.
@@ -214,7 +214,7 @@ abstract class spBaseFacebook
    */
   public function __construct($config) {
     $this->setAppId($config['appId']);
-    $this->setApiSecret($config['secret']);
+    $this->setAppSecret($config['secret']);
     if (isset($config['fileUpload'])) {
       $this->setFileUploadSupport($config['fileUpload']);
     }
@@ -246,23 +246,45 @@ abstract class spBaseFacebook
   }
 
   /**
-   * Set the API Secret.
+   * Set the App Secret.
    *
-   * @param string $apiSecret The API Secret
+   * @param string $apiSecret The App Secret
    * @return BaseFacebook
+   * @deprecated
    */
   public function setApiSecret($apiSecret) {
-    $this->apiSecret = $apiSecret;
+    $this->setAppSecret($apiSecret);
     return $this;
   }
 
   /**
-   * Get the API Secret.
+   * Set the App Secret.
    *
-   * @return string the API Secret
+   * @param string $appSecret The App Secret
+   * @return BaseFacebook
+   */
+  public function setAppSecret($appSecret) {
+    $this->appSecret = $appSecret;
+    return $this;
+  }
+
+  /**
+   * Get the App Secret.
+   *
+   * @return string the App Secret
+   * @deprecated
    */
   public function getApiSecret() {
-    return $this->apiSecret;
+    return $this->getAppSecret();
+  }
+
+  /**
+   * Get the App Secret.
+   *
+   * @return string the App Secret
+   */
+  public function getAppSecret() {
+    return $this->appSecret;
   }
 
   /**
@@ -281,8 +303,19 @@ abstract class spBaseFacebook
    *
    * @return boolean true if and only if the server supports file upload.
    */
-  public function useFileUploadSupport() {
+  public function getFileUploadSupport() {
     return $this->fileUploadSupport;
+  }
+
+  /**
+   * DEPRECATED! Please use getFileUploadSupport instead.
+   *
+   * Get the file upload support status.
+   *
+   * @return boolean true if and only if the server supports file upload.
+   */
+  public function useFileUploadSupport() {
+    return $this->getFileUploadSupport();
   }
 
   /**
@@ -317,7 +350,8 @@ abstract class spBaseFacebook
     // access token, in case we navigate to the /oauth/access_token
     // endpoint, where SOME access token is required.
     $this->setAccessToken($this->getApplicationAccessToken());
-    if ($user_access_token = $this->getUserAccessToken()) {
+    $user_access_token = $this->getUserAccessToken();
+    if ($user_access_token) {
       $this->setAccessToken($user_access_token);
     }
 
@@ -570,6 +604,17 @@ abstract class spBaseFacebook
   }
 
   /**
+   * Constructs and returns the name of the coookie that potentially contain
+   * metadata. The cookie is not set by the BaseFacebook class, but it may be
+   * set by the JavaScript SDK.
+   *
+   * @return string the name of the cookie that would house metadata.
+   */
+  protected function getMetadataCookieName() {
+    return 'fbm_'.$this->getAppId();
+  }
+
+  /**
    * Get the authorization code from the query parameters, if it exists,
    * and otherwise return false to signal no authorization code was
    * discoverable.
@@ -610,7 +655,7 @@ abstract class spBaseFacebook
     try {
       $user_info = $this->api('/me');
       return $user_info['id'];
-    } catch (spFacebookApiException $e) {
+    } catch (FacebookApiException $e) {
       return 0;
     }
   }
@@ -623,7 +668,7 @@ abstract class spBaseFacebook
    *                public information about users and applications.
    */
   protected function getApplicationAccessToken() {
-    return $this->appId.'|'.$this->apiSecret;
+    return $this->appId.'|'.$this->appSecret;
   }
 
   /**
@@ -666,10 +711,10 @@ abstract class spBaseFacebook
         $this->_oauthRequest(
           $this->getUrl('graph', '/oauth/access_token'),
           $params = array('client_id' => $this->getAppId(),
-                          'client_secret' => $this->getApiSecret(),
+                          'client_secret' => $this->getAppSecret(),
                           'redirect_uri' => $redirect_uri,
                           'code' => $code));
-    } catch (spFacebookApiException $e) {
+    } catch (FacebookApiException $e) {
       // most likely that user very recently revoked authorization.
       // In any event, we don't have an access token, so say so.
       return false;
@@ -694,7 +739,7 @@ abstract class spBaseFacebook
    * @param array $params Method call object
    *
    * @return mixed The decoded response object
-   * @throws spFacebookApiException
+   * @throws FacebookApiException
    */
   protected function _restserver($params) {
     // generic application level parameters
@@ -708,10 +753,30 @@ abstract class spBaseFacebook
 
     // results are returned, errors are thrown
     if (is_array($result) && isset($result['error_code'])) {
-      throw new spFacebookApiException($result);
+      $this->throwAPIException($result);
+    }
+
+    if ($params['method'] === 'auth.expireSession' ||
+        $params['method'] === 'auth.revokeAuthorization') {
+      $this->destroySession();
     }
 
     return $result;
+  }
+
+  /**
+   * Return true if this is video post.
+   *
+   * @param string $path The path
+   * @param string $method The http method (default 'GET')
+   *
+   * @return boolean true if this is video post
+   */
+  protected function isVideoPost($path, $method = 'GET') {
+    if ($method == 'POST' && preg_match("/^(\/)(.+)(\/)(videos)$/", $path)) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -722,7 +787,7 @@ abstract class spBaseFacebook
    * @param array $params The query/post data
    *
    * @return mixed The decoded response object
-   * @throws spFacebookApiException
+   * @throws FacebookApiException
    */
   protected function _graph($path, $method = 'GET', $params = array()) {
     if (is_array($method) && empty($params)) {
@@ -731,8 +796,14 @@ abstract class spBaseFacebook
     }
     $params['method'] = $method; // method override as we always do a POST
 
+    if ($this->isVideoPost($path, $method)) {
+      $domainKey = 'graph_video';
+    } else {
+      $domainKey = 'graph';
+    }
+
     $result = json_decode($this->_oauthRequest(
-      $this->getUrl('graph', $path),
+      $this->getUrl($domainKey, $path),
       $params
     ), true);
 
@@ -751,7 +822,7 @@ abstract class spBaseFacebook
    * @param array $params The query/post data
    *
    * @return string The decoded response object
-   * @throws spFacebookApiException
+   * @throws FacebookApiException
    */
   protected function _oauthRequest($url, $params) {
     if (!isset($params['access_token'])) {
@@ -780,20 +851,20 @@ abstract class spBaseFacebook
    * @return string The response text
    */
   protected function makeRequest($url, $params, $ch=null) {
-    $http = _wp_http_get_object();
+    if (!$ch) {
+      $ch = curl_init();
+    }
 
-    $args = array();
-    $args['method'] = 'POST';
-    
-    if ($this->useFileUploadSupport()) {
-      // TODO
+    $opts = self::$CURL_OPTS;
+    if ($this->getFileUploadSupport()) {
+      $opts[CURLOPT_POSTFIELDS] = $params;
     } else {
-      $args['body'] = http_build_query($params, null, '&');
-    } 
+      $opts[CURLOPT_POSTFIELDS] = http_build_query($params, null, '&');
+    }
+    $opts[CURLOPT_URL] = $url;
 
     // disable the 'Expect: 100-continue' behaviour. This causes CURL to wait
     // for 2 seconds if the server does not support this header.
-    $opts = self::$CURL_OPTS;
     if (isset($opts[CURLOPT_HTTPHEADER])) {
       $existing_headers = $opts[CURLOPT_HTTPHEADER];
       $existing_headers[] = 'Expect:';
@@ -801,24 +872,31 @@ abstract class spBaseFacebook
     } else {
       $opts[CURLOPT_HTTPHEADER] = array('Expect:');
     }
-    $args['headers'] = $opts[CURLOPT_HTTPHEADER];
 
-    $args['sslverify'] = false;
-    $args['timeout'] = $opts[CURLOPT_CONNECTTIMEOUT] * 1000;
+    curl_setopt_array($ch, $opts);
+    $result = curl_exec($ch);
 
-    $result = $http->request($url, $args);
+    if (curl_errno($ch) == 60) { // CURLE_SSL_CACERT
+      self::errorLog('Invalid or no certificate authority found, '.
+                     'using bundled information');
+      curl_setopt($ch, CURLOPT_CAINFO,
+                  dirname(__FILE__) . '/fb_ca_chain_bundle.crt');
+      $result = curl_exec($ch);
+    }
 
-    if (is_wp_error($result)) {
-      throw new spFacebookApiException(array(
-        'error_code' => (int) $result->get_error_code(),
+    if ($result === false) {
+      $e = new FacebookApiException(array(
+        'error_code' => curl_errno($ch),
         'error' => array(
-          'message' => $result->get_error_message(),
-          'type' => 'WP_Error'
-        )
+        'message' => curl_error($ch),
+        'type' => 'CurlException',
+        ),
       ));
-    } 
-
-    return $result['body'];
+      curl_close($ch);
+      throw $e;
+    }
+    curl_close($ch);
+    return $result;
   }
 
   /**
@@ -841,7 +919,7 @@ abstract class spBaseFacebook
 
     // check sig
     $expected_sig = hash_hmac('sha256', $payload,
-                              $this->getApiSecret(), $raw = true);
+                              $this->getAppSecret(), $raw = true);
     if ($sig !== $expected_sig) {
       self::errorLog('Bad Signed JSON signature!');
       return null;
@@ -957,10 +1035,11 @@ abstract class spBaseFacebook
    *
    * @return string The current URL
    */
-  public function getCurrentUrl() {
-    if (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1)
-      || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
-    ) {
+  protected function getCurrentUrl() {
+    if (isset($_SERVER['HTTPS']) &&
+        ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) ||
+        isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
       $protocol = 'https://';
     }
     else {
@@ -1020,25 +1099,28 @@ abstract class spBaseFacebook
   /**
    * Analyzes the supplied result to see if it was thrown
    * because the access token is no longer valid.  If that is
-   * the case, then the persistent store is cleared.
+   * the case, then we destroy the session.
    *
    * @param $result array A record storing the error message returned
    *                      by a failed API call.
    */
   protected function throwAPIException($result) {
-    $e = new spFacebookApiException($result);
+    $e = new FacebookApiException($result);
     switch ($e->getType()) {
       // OAuth 2.0 Draft 00 style
       case 'OAuthException':
         // OAuth 2.0 Draft 10 style
       case 'invalid_token':
+        // REST server errors are just Exceptions
+      case 'Exception':
         $message = $e->getMessage();
-      if ((strpos($message, 'Error validating access token') !== false) ||
-          (strpos($message, 'Invalid OAuth access token') !== false)) {
-        $this->setAccessToken(null);
-        $this->user = 0;
-        $this->clearAllPersistentData();
-      }
+        if ((strpos($message, 'Error validating access token') !== false) ||
+            (strpos($message, 'Invalid OAuth access token') !== false) ||
+            (strpos($message, 'An active access token must be used') !== false)
+        ) {
+          $this->destroySession();
+        }
+        break;
     }
 
     throw $e;
@@ -1072,6 +1154,73 @@ abstract class spBaseFacebook
    */
   protected static function base64UrlDecode($input) {
     return base64_decode(strtr($input, '-_', '+/'));
+  }
+
+  /**
+   * Destroy the current session
+   */
+  public function destroySession() {
+    $this->accessToken = null;
+    $this->signedRequest = null;
+    $this->user = null;
+    $this->clearAllPersistentData();
+
+    // Javascript sets a cookie that will be used in getSignedRequest that we
+    // need to clear if we can
+    $cookie_name = $this->getSignedRequestCookieName();
+    if (array_key_exists($cookie_name, $_COOKIE)) {
+      unset($_COOKIE[$cookie_name]);
+      if (!headers_sent()) {
+        // The base domain is stored in the metadata cookie if not we fallback
+        // to the current hostname
+        $base_domain = '.'. $_SERVER['HTTP_HOST'];
+
+        $metadata = $this->getMetadataCookie();
+        if (array_key_exists('base_domain', $metadata) &&
+            !empty($metadata['base_domain'])) {
+          $base_domain = $metadata['base_domain'];
+        }
+
+        setcookie($cookie_name, '', 0, '/', $base_domain);
+      } else {
+        self::errorLog(
+          'There exists a cookie that we wanted to clear that we couldn\'t '.
+          'clear because headers was already sent. Make sure to do the first '.
+          'API call before outputing anything'
+        );
+      }
+    }
+  }
+
+  /**
+   * Parses the metadata cookie that our Javascript API set
+   *
+   * @return  an array mapping key to value
+   */
+  protected function getMetadataCookie() {
+    $cookie_name = $this->getMetadataCookieName();
+    if (!array_key_exists($cookie_name, $_COOKIE)) {
+      return array();
+    }
+
+    // The cookie value can be wrapped in "-characters so remove them
+    $cookie_value = trim($_COOKIE[$cookie_name], '"');
+
+    if (empty($cookie_value)) {
+      return array();
+    }
+
+    $parts = explode('&', $cookie_value);
+    $metadata = array();
+    foreach ($parts as $part) {
+      $pair = explode('=', $part, 2);
+      if (!empty($pair[0])) {
+        $metadata[urldecode($pair[0])] =
+          (count($pair) > 1) ? urldecode($pair[1]) : '';
+      }
+    }
+
+    return $metadata;
   }
 
   /**
