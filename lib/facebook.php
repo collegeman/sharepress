@@ -15,7 +15,7 @@
  * under the License.
  */
 
-if (!class_exists('Facebook')) {
+if (!class_exists('BaseFacebook')) {
   require_once "base_facebook.php";
 } else {
   SharePress::log('WARNING: The Facebook PHP SDK being used did not ship with SharePress');
