@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.15
+Version: 2.1.16
 License: GPL2
 */
 
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) exit;
 // we depend on this...
 require('lib/facebook.php');
 // we don't care about certificate verification
-BaseFacebook::$CURL_OPTS = BaseFacebook::$CURL_OPTS + array(
+SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
 );
   

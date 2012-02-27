@@ -15,17 +15,13 @@
  * under the License.
  */
 
-if (!class_exists('BaseFacebook')) {
-  require_once "base_facebook.php";
-} else {
-  SharePress::log('WARNING: The Facebook PHP SDK being used did not ship with SharePress');
-}
+require_once "base_facebook.php";
 
 /**
- * Extends the BaseFacebook class with the intent of using
+ * Extends the SpBaseFacebook class with the intent of using
  * PHP sessions to store user ids and access tokens.
  */
-class SharePressFacebook extends BaseFacebook
+class SharePressFacebook extends SpBaseFacebook
 {
   private $use_session = true;
 
@@ -75,7 +71,7 @@ class SharePressFacebook extends BaseFacebook
     $result = $http->request($url, $args);
  
     if (is_wp_error($result)) {
-      throw new FacebookApiException(array(
+      throw new SpFacebookApiException(array(
         'error_code' => (int) $result->get_error_code(),
         'error' => array(
           'message' => $result->get_error_message(),
