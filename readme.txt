@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.16
+Stable tag: 2.1.17
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -49,6 +49,10 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.17 =
+* Fixed: Sometimes, the server would fail to verify Bit.ly's SSL certificate; we set sslverify => false, so this shouldn't happen again
+* Added: Global default Twitter hashtag
 
 = 2.1.16 =
 * Fixed: Using the core Facebook classes is breaking installations. Going back to renaming the core classes.
