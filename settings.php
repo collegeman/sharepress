@@ -494,7 +494,15 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           <br />
 
         <?php } ?>
-
+        <table class="form-table">
+          <tr>
+            <td style="width:160px;">Default Hashtag:</td>
+            <td>
+              <input type="text" class="regular-text" name="<?php echo self::OPTION_SETTINGS ?>[twitter_default_hashtag]" value="<?php echo esc_attr(self::setting('twitter_default_hashtag')) ?>" />
+            </td>
+          </tr>
+        </table>
+        <br />
         <p>
           <a href="#" onclick="test_twitter_settings(); return false;" class="button">Test Twitter Settings</a>
           <?php if (self::twitter_ready()) { ?>
@@ -503,6 +511,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
             &nbsp; <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
           <?php } ?>
         </p>
+
         <script>
           (function($) {
             window.test_twitter_settings = function() {
