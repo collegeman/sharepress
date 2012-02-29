@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.17
+Version: 2.1.18
 License: GPL2
 */
 
@@ -304,13 +304,13 @@ class Sharepress {
   
   static function log($message, $level = 'INFO') {
     if (SHAREPRESS_DEBUG) {
-      global $thread_id;
+      global $thread_id, $blog_id;
       if (is_null($thread_id)) {
         $thread_id = substr(md5(uniqid()), 0, 6);
       }
       $dir = dirname(__FILE__);
       $filename = $dir.'/sharepress-'.gmdate('Ymd').'.log';
-      $message = sprintf("%s %s %-5s %s\n", $thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), $level, $message);
+      $message = sprintf("%-2s-%s %s %-5s %s\n", (string) $blog_id, $thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), $level, $message);
       if (!@file_put_contents($filename, $message, FILE_APPEND)) {
         error_log("Failed to access SharePress log file [$filename] for writing: add write permissions to directory [$dir]?");
       }
@@ -1010,7 +1010,7 @@ class Sharepress {
       && !get_post_meta($post->ID, self::META_ERROR)
     );
 
-    self::log("Loaded for {$post->ID}: ".print_r($meta, true));
+    self::log("Loaded for {$post->ID}: ".json_encode($meta));
     
     return ($can_post_on_facebook ? $meta : false);
   }
@@ -1098,10 +1098,8 @@ class Sharepress {
         'sslverify' => false
       )), array('method' => 'GET'));
 
-      // SharePress::log('Bit.ly result: '.print_r($response, true));
-
       if (is_wp_error($response)) {
-        SharePress::log('Bit.ly issue: '.print_r($response, true), 'ERROR');
+        SharePress::log('Bit.ly issue: '.json_encode($response), 'ERROR');
         return $permalink;
 
       } else {
@@ -1109,7 +1107,7 @@ class Sharepress {
         if ($result->status_code == 200) {
           return $result->data->url;
         } else {
-          SharePress::log('Bit.ly issue: '.print_r($response, true), 'ERROR');
+          SharePress::log('Bit.ly issue: '.json_encode($response), 'ERROR');
           return $permalink;
         }
         
@@ -1195,7 +1193,7 @@ class Sharepress {
           }
 
           $result = $client->post($tweet);
-          SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", print_r($result, true)));
+          SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", json_encode($result)));
           add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
 
         }

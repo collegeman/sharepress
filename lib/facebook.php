@@ -36,6 +36,19 @@ class SharePressFacebook extends SpBaseFacebook
   public function __construct($config, $use_session = true) {
     $this->use_session = $use_session;
     parent::__construct($config);
+    /*
+    if (!$this->use_session && ($access_token = $this->getUserAccessToken(true))) {
+      if (!$this->getPersistentData('token_extended')) {
+        $access_token = self::api('/oauth/access_token', 'POST', array(
+          'client_id' => $this->getAppId(),
+          'client_secret' => $this->getAppSecret(),
+          'grant_type' => 'fb_exchange_token',
+          'fb_exchange_token' => $access_token
+        ));
+        SharePress::log($access_token, 'WARN');
+      }
+    }
+    */
   }
 
   public function useFileUploadSupport() {
@@ -43,7 +56,7 @@ class SharePressFacebook extends SpBaseFacebook
   }
 
   protected static $kSupportedKeys =
-    array('state', 'code', 'access_token', 'user_id');
+    array('state', 'code', 'access_token', 'user_id', 'token_extended');
 
     protected function makeRequest($url, $params, $ch=null) {
     $http = _wp_http_get_object();
@@ -83,11 +96,26 @@ class SharePressFacebook extends SpBaseFacebook
     return $result['body'];
   }
 
-  protected function getUserAccessToken() {
+  public function getUserAccessToken($read_only = false) {
     // first, consider using the stored access token,
     // so long as the session storage is not $_SESSION
     if (!$this->use_session && ( $access_token = $this->getPersistentData('access_token') )) {
+      if (class_exists('Sharepress')) {
+        SharePress::log("Using stored access token: {$access_token}");
+      }
       return $access_token;
+    } else {
+      if (class_exists('Sharepress')) {
+        if ($this->use_session) {
+          SharePress::log(sprintf('Facebook SDK is in session mode - not using stored access token. %s %s', json_encode($_SESSION), json_encode($_REQUEST)), 'WARN');
+        } else {
+          SharePress::log('No access token on file.', 'WARN');
+        }
+      }
+    }
+
+    if ($read_only) {
+      return;
     }
 
     // first, consider a signed request if it's supplied.

@@ -34,11 +34,11 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
         </p>  
         
-        <?php /* ?>
         <p style="padding:10px; background-color:#ffffcc;">
           <b style="color:red;">Breaking Change</b>
-          &nbsp;&nbsp;<a href="http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation" target="_blank">Read this</a> to learn how to properly configure your Facebook application to avoid disruption of service.
-        </p> */ ?>
+          &nbsp;Are you having to run SharePress setup repeatedly? You need to enable <code>offline_access</code> deprecation.
+          &nbsp;<a href="http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation" target="_blank">Read more &rarr;</a>
+        </p>
 
         <table class="form-table">
           <tr>
@@ -310,22 +310,22 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <div style="max-height: 365px; overflow:auto; border:1px solid #ccc;">
           <table class="widefat post fixed" cellspacing="0">
             <thead>
-             	<tr>
-             	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
-             	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
-             	</tr>
+              <tr>
+                <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
+                <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
+              </tr>
             </thead>
 
             <tfoot>
-             	<tr>
-             	  <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
-             	  <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
+              <tr>
+                <th scope="col" id="cb" class="manage-column column-cb check-column" style=""><input type="checkbox"></th>
+                <th scope="col" id="title" class="manage-column column-title" style="">Target</th>
               </tr>
-           	</tfoot>
+            </tfoot>
 
             <tbody>
-             	<!-- our blog owner's wall -->
-             	<tr id="" class="alternate">
+              <!-- our blog owner's wall -->
+              <tr id="" class="alternate">
                 <th scope="row" class="check-column">
                   <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
                 </th>
@@ -687,11 +687,36 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <br />
         <h3 class="title">Run Setup Again</h3>
 
-        <p>If you need to change Facebook Application keys, run setup again.</p>        
+        <p>If you need to change Facebook Application keys, run setup again.</p>      
 
         <p>
           <a href="options-general.php?page=sharepress&amp;action=clear_session" class="button">Run Setup Again</a>
         </p>
+
+        <br />
+        <p>For your reference, here are the keys and token being used by SharePress:</p>
+
+        <table class="form-table">
+          <tr>
+            <td style="width:160px;">App ID:</td>
+            <td>
+              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_API_KEY)) ?>" />
+            </td>
+          </tr>
+          <tr>
+            <td>App Secret:</td>
+            <td>
+              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_APP_SECRET)) ?>" />
+            </td>
+          </tr>
+          <tr>
+            <td>Access Token:</td>
+            <td>
+              <input type="text" class="regular-text" style="width:500px;" readonly="readonly" value="<?php echo esc_attr(self::facebook()->getUserAccessToken(true)) ?>" />
+              &nbsp;<a target="_blank" href="https://developers.facebook.com/tools/debug/access_token?q=<?php echo esc_attr(self::facebook()->getUserAccessToken(true)) ?>">Debug</a>
+            </td>
+          </tr>
+        </table>
 
       <?php } ?>
 

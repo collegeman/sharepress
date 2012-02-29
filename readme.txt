@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.17
+Stable tag: 2.1.18
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -49,6 +49,13 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.18 =
+* Added: Better debugging output for MU sites that use Domain Mapping
+* Added: More concise logging of Facebook meta data and Bit.ly API results
+* Added: Read-only fields for Facebook App ID, Secret, and the current User Access token
+* Added: Link for jumping to Facebook's Debugger to view details about the User Access token
+* Fixed: Restored text about the offline access deprecation and link to my blog post about it (http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation/)
 
 = 2.1.17 =
 * Fixed: Sometimes, the server would fail to verify Bit.ly's SSL certificate; we set sslverify => false, so this shouldn't happen again
