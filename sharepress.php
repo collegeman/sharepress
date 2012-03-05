@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.12
+Version: 2.1.18
 License: GPL2
 */
 
@@ -32,14 +32,14 @@ if (!defined('ABSPATH')) exit;
 // we depend on this...
 require('lib/facebook.php');
 // we don't care about certificate verification
-spFacebook::$CURL_OPTS = spFacebook::$CURL_OPTS + array(
+SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
 );
   
 define('SHAREPRESS', dirname(__FILE__));
 
 // override this in functions.php
-@define('SHAREPRESS_DEBUG', false);
+@define('SHAREPRESS_DEBUG', true);
 
 class Sharepress {
   
@@ -234,7 +234,7 @@ class Sharepress {
           'og:site_name' => get_bloginfo('name'),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
           'og:description' => $this->strip_shortcodes($excerpt),
-          'og:locale' => 'en_US'
+          'og:locale' => $this->setting('og_locale', 'en_US')
         );
 
       } else {
@@ -246,7 +246,7 @@ class Sharepress {
           'og:image' => $this->get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
           'og:description' => $this->strip_shortcodes(get_bloginfo('description')),
-          'og:locale' => 'en_US'
+          'og:locale' => $this->setting('og_locale', 'en_US')
         );
         
       }
@@ -321,13 +321,13 @@ class Sharepress {
   
   static function log($message, $level = 'INFO') {
     if (SHAREPRESS_DEBUG) {
-      global $thread_id;
+      global $thread_id, $blog_id;
       if (is_null($thread_id)) {
         $thread_id = substr(md5(uniqid()), 0, 6);
       }
       $dir = dirname(__FILE__);
       $filename = $dir.'/sharepress-'.gmdate('Ymd').'.log';
-      $message = sprintf("%s %s %-5s %s\n", $thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), $level, $message);
+      $message = sprintf("%-2s-%s %s %-5s %s\n", (string) $blog_id, $thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), $level, $message);
       if (!@file_put_contents($filename, $message, FILE_APPEND)) {
         error_log("Failed to access SharePress log file [$filename] for writing: add write permissions to directory [$dir]?");
       }
@@ -368,10 +368,10 @@ class Sharepress {
   static function facebook() {
     if (!self::$facebook) {
       if (($api_key = self::api_key()) && ($app_secret = self::app_secret())) {
-        self::$facebook = new spFacebook(array(
+        self::$facebook = new SharePressFacebook(array(
           'appId' => $api_key,
           'secret' => $app_secret
-        ));
+        ), false);
       } else {
         return null;
       }
@@ -564,7 +564,7 @@ class Sharepress {
 
     if (!$meta['let_facebook_pick_pic']) { // use featured image, fallback on first image in post, come to rest on global default
       
-      if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), '150x150' )) {
+      if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), array(150, 150) )) {
         $picture = $src[0];
       }
 
@@ -606,7 +606,7 @@ class Sharepress {
       'numberposts' => 1,
     )) );
 
-    if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, '150x150') )) {
+    if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, array(150, 150)) )) {
       return $src[0];
     
     #
@@ -693,10 +693,10 @@ class Sharepress {
     if (!$twitter_meta) {
       // defaults:
       $twitter_meta = array(
-        'enabled' => Sharepress::setting('twitter_behavior', 'on')
+        'enabled' => Sharepress::setting('twitter_behavior', 'on'),
+        'hash_tag' => self::setting('twitter_default_hashtag')
       );
     }
-
     $twitter_enabled = $twitter_meta['enabled'] == 'on';
 
     // stash $meta globally for access from Sharepress::sort_by_selected
@@ -1013,7 +1013,7 @@ class Sharepress {
       && !get_post_meta($post->ID, self::META_ERROR)
     );
 
-    self::log("Loaded for {$post->ID}: ".print_r($meta, true));
+    self::log("Loaded for {$post->ID}: ".json_encode($meta));
     
     return ($can_post_on_facebook ? $meta : false);
   }
@@ -1097,15 +1097,22 @@ class Sharepress {
         'login' => $login,
         'apikey' => $apikey,
         'longUrl' => $this->get_permalink($post->ID),
-        'format' => 'txt'
+        'format' => 'json',
+        'sslverify' => false
       )), array('method' => 'GET'));
 
       if (is_wp_error($response)) {
-        // TODO: log this?
+        SharePress::log('Bit.ly issue: '.json_encode($response), 'ERROR');
         return $permalink;
 
       } else {
-        return $response['body'];
+        $result = json_decode($response['body']);
+        if ($result->status_code == 200) {
+          return $result->data->url;
+        } else {
+          SharePress::log('Bit.ly issue: '.json_encode($response), 'ERROR');
+          return $permalink;
+        }
         
       }   
 
@@ -1189,7 +1196,7 @@ class Sharepress {
           }
 
           $result = $client->post($tweet);
-          SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", print_r($result, true)));
+          SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", json_encode($result)));
           add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
 
         }

@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.12
+Stable tag: 2.1.18
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -49,6 +49,32 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.18 =
+* Added: Better debugging output for MU sites that use Domain Mapping
+* Added: More concise logging of Facebook meta data and Bit.ly API results
+* Added: Read-only fields for Facebook App ID, Secret, and the current User Access token
+* Added: Link for jumping to Facebook's Debugger to view details about the User Access token
+* Fixed: Restored text about the offline access deprecation and link to my blog post about it (http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation/)
+
+= 2.1.17 =
+* Fixed: Sometimes, the server would fail to verify Bit.ly's SSL certificate; we set sslverify => false, so this shouldn't happen again
+* Added: Global default Twitter hashtag
+
+= 2.1.16 =
+* Fixed: Using the core Facebook classes is breaking installations. Going back to renaming the core classes.
+
+= 2.1.15 =
+* Fixed: Trapping for wrong Facebook class, resulting in upgrades failing if some class named Facebook already exists in the stack
+
+= 2.1.14 =
+* Fixed: Custom values for og:locale were not displaying in meta tags
+* Fixed: Deleted the remaining Fancybox stuff... I thought I did this once before, but it came back!
+* Fixed: Reimplemented Facebook PHP SDK, making better use of OOP design, and correcting some problems with session management
+* Added: Better logging for Bit.ly issues
+
+= 2.1.13 =
+* Fixed: Was using '150x150' to control og:image thumbnail size, but it needed to be array(150, 150)
 
 = 2.1.12 =
 * Fixed: "Fatal error: Call to undefined function get_post_thumbnail_id() in /home/chicagop/public_html/wp-content/plugins/sharepress/sharepress.php on line 564"
@@ -215,7 +241,7 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 * Ron Kochanowski reported a strange problem with brand new posts displaying the message "This post is older than the date on which SharePress was activated." in the editor. I couldn't fix the problem, so I eliminated the "feature." Problem solved.
 
 = 1.0.7 =
-* Added "sp" prefix to the Facebook classes, now "spFacebook" and "spFacebookApiException" - was creating namespace conflicts with other Facebook plugins (thanks [Ben Gillbanks](http://twitter.com/binarymoon) of [WPVOTE](http://www.wpvote.com))
+* Added "sp" prefix to the Facebook classes, now "spFacebook" and "spSpFacebookApiException" - was creating namespace conflicts with other Facebook plugins (thanks [Ben Gillbanks](http://twitter.com/binarymoon) of [WPVOTE](http://www.wpvote.com))
 
 = 1.0.6 =
 * Addressing some inconsistencies in the way the plugin is named, and the way that name is used internally.
