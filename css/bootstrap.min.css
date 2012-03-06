@@ -125,6 +125,7 @@ body{margin:0;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:
 .wp_bootstrap input[type="image"],.wp_bootstrap input[type="checkbox"],.wp_bootstrap input[type="radio"]{width:auto;height:auto;padding:0;margin:3px 0;*margin-top:0;line-height:normal;cursor:pointer;-webkit-border-radius:0;-moz-border-radius:0;border-radius:0;border:0 \9;}
 .wp_bootstrap input[type="image"]{border:0;}
 .wp_bootstrap input[type="file"]{width:auto;padding:initial;line-height:initial;border:initial;background-color:#ffffff;background-color:initial;-webkit-box-shadow:none;-moz-box-shadow:none;box-shadow:none;}
+.wp_bootstrap input[type="text"],.wp_bootstrap input[type="password"],.wp_bootstrap textarea{-moz-box-sizing:initial;-webkit-box-sizing:initial;-ms-box-sizing:initial;box-sizing:initial;}
 .wp_bootstrap input[type="button"],.wp_bootstrap input[type="reset"],.wp_bootstrap input[type="submit"]{width:auto;height:auto;}
 .wp_bootstrap select,.wp_bootstrap input[type="file"]{height:28px;*margin-top:4px;line-height:28px;}
 .wp_bootstrap input[type="file"]{line-height:18px \9;}
