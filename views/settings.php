@@ -5,7 +5,7 @@
   <div class="pagetitle">
     <h2>
       SharePress
-      <span>a WordPress plugin from <a href="http://fatpandadev.com" target="_blank">Fat Panda</a></span>
+      <span>a plugin from <a href="http://fatpandadev.com" target="_blank">Fat Panda</a></span>
     </h2>
   </div>
 
@@ -60,7 +60,8 @@
           </div>
         </div>
 
-        <div rel="3" class="panel">
+        <!--
+        <div class="panel">
           <div class="inner">
             <div class="btn-group">
               <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Facebook <span class="caret"></span></a>
@@ -72,8 +73,15 @@
             </div>
           </div>
         </div>
+      -->
 
-        <div rel="3" class="add panel">
+        <div class="add panel">
+          <div class="inner">
+            <a class="btn" href="#" onclick="jQuery('#sharepress-facebook-settings').modal(); return false;"><i class="icon-share"></i> Connect Facebook</a>
+          </div>
+        </div>
+
+        <div class="add panel">
           <div class="inner">
             <a class="btn" href="#" onclick="jQuery('#sharepress-twitter-settings').modal(); return false;"><i class="icon-share"></i> Connect Twitter</a>
           </div>

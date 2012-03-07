@@ -5,6 +5,7 @@
 .rail .panel { padding: 20px 20px 20px 0; position: relative; float: left; width: 350px; }
 .rail .panel .remove { display: none; position: absolute; right: 7px; top: 9px; text-indent: -9999px; width: 28px; height: 28px; background: url(<?php echo $this->url('img/close.png') ?>);}
 .rail .panel .inner { -moz-transition: all 0.25s; -webkit-transition: all 0.25s; border: 1px solid #ddd; padding: 8px; min-height: 800px; background-color: white; }
+.rail .panel.add .inner { margin-bottom:-8px; }
 .rail .panel:hover .inner { border-color: #bbb; }
 .rail .panel.add { width: 330px; padding: 0; margin: 20px 20px 20px 0; min-height: 800px; background: none; border: 5px dashed #ccc; padding: 0; }
 .rail .panel .inner > span.title { font-size: 13px; color: #333; display: block; font-weight: normal; padding: 2px 5px 10px; }
@@ -30,7 +31,7 @@
 .rail .panel.add p { text-align: center; padding: 0 10%; color: #ccc; padding-top: 50%; font-size: 3.0em; line-height: 1.1em; }
 .rail .panel.add > .inner { text-align:center; background-color: transparent; border: 0; }
 .rail .panel.add > .inner .btn { margin-top: 50%; }
-.wrap .pagetitle { height: 40px; }
+.wrap .pagetitle { height: 45px; }
 .wrap .pagetitle h2 { float: left; }
 .wrap .pagetitle h2 span { font-size: 0.75em; padding-left: 20px; }
 .wrap .pagetitle form { float: left; position: relative; }

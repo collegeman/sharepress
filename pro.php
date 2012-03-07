@@ -589,7 +589,7 @@ function like(/* dynamic args */) {
   if (!$script_out) {
     ?>
       <div id="fb-root"></div>
-      <script src="http://connect.facebook.net/en_US/all.js#appId=<?php echo get_option(Sharepress::OPTION_API_KEY) ?>&amp;xfbml=1"></script>
+      <script src="http://connect.facebook.net/en_US/all.js#appId=<?php echo get_option(Sharepress::OPTION_FB_APP_ID) ?>&amp;xfbml=1"></script>
     <?php
     $script_out = true;
   }

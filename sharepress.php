@@ -43,13 +43,16 @@ define('SHAREPRESS', dirname(__FILE__));
 
 class Sharepress {
   
-  const OPTION_API_KEY = 'sharepress_api_key';
-  const OPTION_APP_SECRET = 'sharepress_app_secret';
-  const OPTION_PUBLISHING_TARGETS = 'sharepress_publishing_targets';
-  const OPTION_NOTIFICATIONS = 'sharepress_notifications';
+  const OPTION_FB_APP_ID = 'sharepress_api_key';
+  const OPTION_FB_APP_SECRET = 'sharepress_app_secret';
+  const OPTION_TW_APP_ID = 'sharepress_twitter_app_key';
+  const OPTION_TW_APP_SECRET = 'sharepress_twitter_app_secret';
+
+  const OPTION_FB_PUBLISHING_TARGETS = 'sharepress_publishing_targets';
+  const OPTION_FB_NOTIFICATIONS = 'sharepress_notifications';
   const OPTION_DEFAULT_PICTURE = 'sharepress_default_picture';
   const OPTION_SETTINGS = 'sharepress_settings';
-  const OPTION_SESSION_ARG = 'sharepress_%s';
+  const OPTION_FB_SESSION_ARG = 'sharepress_%s';
 
   //const META_MESSAGE_ID = 'sharepress_message_id';
   const META_RESULT = 'sharepress_result';
@@ -97,44 +100,13 @@ class Sharepress {
       return false;
     }
 
-    /* For testing custom post type support:
-    $labels = array(
-      'name' => _x('Books', 'post type general name'),
-      'singular_name' => _x('Book', 'post type singular name'),
-      'add_new' => _x('Add New', 'book'),
-      'add_new_item' => __('Add New Book'),
-      'edit_item' => __('Edit Book'),
-      'new_item' => __('New Book'),
-      'all_items' => __('All Books'),
-      'view_item' => __('View Book'),
-      'search_items' => __('Search Books'),
-      'not_found' =>  __('No books found'),
-      'not_found_in_trash' => __('No books found in Trash'), 
-      'parent_item_colon' => '',
-      'menu_name' => 'Books'
-
-    );
-    $args = array(
-      'labels' => $labels,
-      'public' => true,
-      'publicly_queryable' => true,
-      'show_ui' => true, 
-      'show_in_menu' => true, 
-      'query_var' => true,
-      'rewrite' => true,
-      'capability_type' => 'post',
-      'has_archive' => true, 
-      'hierarchical' => false,
-      'menu_position' => null,
-      'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' )
-    ); 
-    register_post_type('book', $args); */
+    add_action('wp_ajax_save_keys', array($this, 'ajax_save_keys'));
 
     if (is_admin()) {
+      
       add_action('admin_notices', array($this, 'admin_notices'));
       add_action('admin_menu', array($this, 'admin_menu'));
       add_action('admin_init', array($this, 'admin_init'));
-      add_action('wp_ajax_fb_save_keys', array($this, 'ajax_fb_save_keys'));
       add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
       add_filter('plugin_action_links_sharepress/sharepress.php', array($this, 'plugin_action_links'), 10, 4);
 
@@ -142,15 +114,7 @@ class Sharepress {
         wp_enqueue_style('theme-editor');
       }
 
-      if ($_REQUEST['page'] == 'sharepress-3.0') {
-        
-        // these request are loaded in an iframe, so hide noise
-        if (isset($_REQUEST['settings'])) {
-          define('IFRAME_REQUEST', true);
-          add_filter('admin_footer_text', '__return_false');
-          add_filter('update_footer', '__return_false');
-        }
-
+      if ($_REQUEST['page'] == 'sharepress') {
         wp_enqueue_style('sharepress-bootstrap-min', $this->url('css/bootstrap.min.css'));
         wp_enqueue_style('sharepress-admin', $this->url('css/admin.css'));
         wp_enqueue_script('sharepress-bootstrap-min', $this->url('js/bootstrap.min.js'), array('jquery'));
@@ -223,7 +187,7 @@ class Sharepress {
 
         global $post;
         if (!($excerpt = $post->post_excerpt)) {
-          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s+/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('descrption');
+          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s\s+/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('descrption');
         }
 
         $defaults = array(
@@ -232,7 +196,7 @@ class Sharepress {
           'og:title' => get_the_title(),
           'og:image' => $picture,
           'og:site_name' => get_bloginfo('name'),
-          'fb:app_id' => get_option(self::OPTION_API_KEY),
+          'fb:app_id' => get_option(self::OPTION_FB_APP_ID),
           'og:description' => $this->strip_shortcodes($excerpt),
           'og:locale' => $this->setting('og_locale', 'en_US')
         );
@@ -244,7 +208,7 @@ class Sharepress {
           'og:title' => get_the_title(),
           'og:site_name' => get_bloginfo('name'),
           'og:image' => $this->get_default_picture(),
-          'fb:app_id' => get_option(self::OPTION_API_KEY),
+          'fb:app_id' => get_option(self::OPTION_FB_APP_ID),
           'og:description' => $this->strip_shortcodes(get_bloginfo('description')),
           'og:locale' => $this->setting('og_locale', 'en_US')
         );
@@ -306,15 +270,6 @@ class Sharepress {
 
   }
 
-  static function twitter_ready() {
-    return self::unlocked() 
-      && self::load()->setting('twitter_is_ready', 1)
-      && self::load()->setting('twitter_consumer_key') 
-      && self::load()->setting('twitter_consumer_secret') 
-      && self::load()->setting('twitter_access_token') 
-      && self::load()->setting('twitter_access_token_secret');
-  }
-  
   static function err($message) {
     self::log($message, 'ERROR');
   }
@@ -334,29 +289,50 @@ class Sharepress {
     }
   }
   
-  static function api_key() {
-    return get_option(self::OPTION_API_KEY, '');
+  static function app_id($app = 'fb') {
+    if ($app == 'fb') {
+      return get_option(self::OPTION_FB_APP_ID, '');
+    } else {
+
+    }
   }
   
-  static function app_secret() {
-    return get_option(self::OPTION_APP_SECRET, '');
+  static function app_secret($app = 'fb') {
+    if ($app == 'fb') {
+      return get_option(self::OPTION_FB_APP_SECRET, '');
+    } else {
+
+    }
   }
 
-  static function session() {
-    if (!self::api_key() || !self::app_secret()) {
-      return false;
-    }
+  static function session($app = 'fb') {
+    if ($app == 'fb') {
 
-    try {
-      return self::me(null, true);
-    } catch (Exception $e) {
-      // log this...?
-      return false;
+      if (!self::app_id() || !self::app_secret()) {
+        return false;
+      }
+
+      try {
+        return self::me(null, true);
+      } catch (Exception $e) {
+        // log this...?
+        return false;
+      }
+
+    } else if ($app == 'twitter') {
+
+      return self::unlocked() 
+        && self::load()->setting('twitter_is_ready', 1)
+        && self::load()->setting('twitter_consumer_key') 
+        && self::load()->setting('twitter_consumer_secret') 
+        && self::load()->setting('twitter_access_token') 
+        && self::load()->setting('twitter_access_token_secret');
+
     }
   }
   
   static function targets($id = null) {
-    $targets = get_option(self::OPTION_PUBLISHING_TARGETS, false);
+    $targets = get_option(self::OPTION_FB_PUBLISHING_TARGETS, false);
     if ($targets === false) {
       $targets = array('wall' => 1);
     }
@@ -367,9 +343,9 @@ class Sharepress {
   static $facebook;
   static function facebook() {
     if (!self::$facebook) {
-      if (($api_key = self::api_key()) && ($app_secret = self::app_secret())) {
+      if (($app_id = self::app_id('fb')) && ($app_secret = self::app_secret('fb'))) {
         self::$facebook = new SharePressFacebook(array(
-          'appId' => $api_key,
+          'appId' => $app_id,
           'secret' => $app_secret
         ), false);
       } else {
@@ -969,6 +945,7 @@ class Sharepress {
 
   }
   
+  // TODO: implement this for og:description, or get rid of it...
   function get_excerpt($post = null, $text = null) {
     if (!is_null($post)) {
       $text = $post->post_excerpt ? $post->post_excerpt : $post->post_content;
@@ -994,8 +971,10 @@ class Sharepress {
   
   private function can_post_on_facebook($post) {
     $can_post_on_facebook = (
+      self::session('fb')
+
       // post only if defined
-      $post 
+      && $post 
       
       // post only if sharepress meta data is available
       && ($meta = get_post_meta($post->ID, self::META, true)) 
@@ -1021,7 +1000,7 @@ class Sharepress {
   private function can_post_on_twitter($post) {
     $can_post_on_twitter = (
       // has twitter been configured?
-      self::twitter_ready()
+      self::session('twitter')
 
       // post only if defined
       && $post 
@@ -1235,16 +1214,26 @@ class Sharepress {
   /**
    * As part of setup, save the client-side session data - we don't trust cookies
    */
-  function ajax_fb_save_keys() {
+  function ajax_save_keys() {
     if (current_user_can('activate_plugins')) {
-      if (!self::is_mu()) {
-        update_option(self::OPTION_API_KEY, $_REQUEST['api_key']);
-        update_option(self::OPTION_APP_SECRET, $_REQUEST['app_secret']);
+      if ($_POST['app'] == 'fb') {
+
+        update_option(self::OPTION_FB_APP_ID, $_REQUEST['app_id']);
+        update_option(self::OPTION_FB_APP_SECRET, $_REQUEST['app_secret']);
+      
+        echo self::facebook()->getLoginUrl(array(
+          'redirect_uri' => $_REQUEST['current_url'],
+          'scope' => 'read_stream,publish_stream,manage_pages,share_item'
+        ));
+
+      } else if ($_POST['app'] == 'twitter') {
+
+        update_option(self::OPTION_TW_APP_ID, $_REQUEST['app_id']);
+        update_option(self::OPTION_TW_APP_SECRET, $_REQUEST['app_secret']);
+
+      } else {
+        header('Status: 500 Internal Error');
       }
-      echo self::facebook()->getLoginUrl(array(
-        'redirect_uri' => $_REQUEST['current_url'],
-        'scope' => 'read_stream,publish_stream,manage_pages,share_item'
-      ));
         
     } else {
       header('Status: 403 Not Allowed');
@@ -1254,50 +1243,33 @@ class Sharepress {
   
   
   function admin_init() {
-    if ($action = @$_REQUEST['action']) {
+    if ($action = @$_REQUEST['sharepress_action']) {
       
-      // when the user clicks "Setup" tab on the settings screen:
-      if ($action == 'clear_session') {      
-        if (current_user_can('administrator')) {
+      if (current_user_can('administrator')) {
+        
+        if ($action == 'disconnect_fb') {      
           self::facebook()->clearAllPersistentData();
           delete_transient(self::TRANSIENT_IS_BUSINESS);
           self::clear_cache();
-          wp_redirect('options-general.php?page=sharepress&step=1');
+          wp_redirect('options-general.php?page=sharepress');
           exit;
-        } else {
-          wp_die("You're not allowed to do that.");
         }
-      }
 
-      if ($action == 'reset_twitter_settings') {
-        if (current_user_can('administrator')) {
+        if ($action == 'disconnect_fb_twitter') {
           $settings = get_option(self::OPTION_SETTINGS);
           $settings['twitter_is_ready'] = 0;
           update_option(self::OPTION_SETTINGS, $settings);
           wp_redirect('options-general.php?page=sharepress');
-          exit;
-        } else {
-          wp_die("You're not allowed to do that.");
         }
-      }
-      
-      // clear the cache
-      if ($action == 'clear_cache') {
-        if (current_user_can('administrator')) {
+        
+        if ($action == 'clear_cache') {
           self::clear_cache();
           wp_redirect('options-general.php?page=sharepress');
-        } else {
-          wp_die("You're not allowed to do that.");
         }
+
       }
       
     }
-
-    register_setting('fb-step1', self::OPTION_API_KEY);
-    register_setting('fb-step1', self::OPTION_APP_SECRET);
-    register_setting('fb-settings', self::OPTION_PUBLISHING_TARGETS);
-    register_setting('fb-settings', self::OPTION_NOTIFICATIONS);
-    register_setting('fb-settings', self::OPTION_SETTINGS, array($this, 'sanitize_settings'));
   }
 
   function sanitize_settings($settings) {
@@ -1309,12 +1281,12 @@ class Sharepress {
     return $settings;
   }
 
-  static function has_keys() {
-    return ( self::api_key() && self::app_secret() );
+  static function has_keys($app = 'fb') {
+    return ( self::app_id($app) && self::app_secret($app) );
   }
   
-  static function installed() {
-    return ( self::has_keys() && self::session() );
+  static function installed($app = 'fb') {
+    return ( self::has_keys($app) && self::session($app) );
   }
   
   static function is_mu() {
@@ -1339,6 +1311,7 @@ class Sharepress {
           </div>
         <?php
       } else if (@$_REQUEST['page'] == 'sharepress' && self::session() && !self::$pro) {
+        // TODO: redo this
         if ($this->setting('license_key') && strlen($this->setting('license_key')) != 32) {
           ?>
             <div class="error">
@@ -1358,34 +1331,12 @@ class Sharepress {
   
   function admin_menu() {
     add_submenu_page('options-general.php', 'SharePress', 'SharePress', 'administrator', 'sharepress', array($this, 'settings'));
-    add_submenu_page('options-general.php', 'SharePress 3.0', 'SharePress 3.0', 'administrator', 'sharepress-3.0', array($this, 'settings_3'));
   }
 
-  function settings_3() {
+  function settings() {
     require(SHAREPRESS.'/views/settings.php');
   }
   
-  function settings() {
-    if (isset($_REQUEST['log'])) {
-      require('console.php');
-      return;
-    }
-
-    if (empty($_REQUEST['step']) || isset($_REQUEST['updated'])) {
-      if (!self::api_key() || !self::app_secret()) {
-        $_REQUEST['step'] = '1';
-      } else {
-        $_REQUEST['step'] = 'config';
-      }
-    }
-
-    if (self::api_key() && self::app_secret() && self::session()) {
-      $_REQUEST['step'] = 'config';
-    }
-    
-    require('settings.php');
-  }
-
   static function getCurrentUrl() {
     if (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1)
       || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
@@ -1471,22 +1422,22 @@ class Sharepress {
   }
   
   static function get_error_email() {
-    $options = get_option(self::OPTION_NOTIFICATIONS);
+    $options = get_option(self::OPTION_FB_NOTIFICATIONS);
     return (@$options['on_error_email']) ? $options['on_error_email'] : get_option('admin_email');
   }
   
   static function notify_on_error() {
-    $options = get_option(self::OPTION_NOTIFICATIONS);
+    $options = get_option(self::OPTION_FB_NOTIFICATIONS);
     return $options ? $options['on_error'] == '1' : true;
   }
   
   static function get_success_email() {
-    $options = get_option(self::OPTION_NOTIFICATIONS);
+    $options = get_option(self::OPTION_FB_NOTIFICATIONS);
     return (@$options['on_success_email']) ? $options['on_success_email'] : get_option('admin_email');
   }
   
   static function notify_on_success() {
-    $options = get_option(self::OPTION_NOTIFICATIONS);
+    $options = get_option(self::OPTION_FB_NOTIFICATIONS);
     return $options ? $options['on_success'] == '1' : true;
   }
 
@@ -1920,6 +1871,6 @@ Sharepress::load();
 
 #
 # Don't be a dick. I like to eat, too.
-# http://aaroncollegeman/sharepress/
+# http://aaroncollegeman.com/sharepress/
 #
 if (Sharepress::unlocked()) require('pro.php');

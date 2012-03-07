@@ -42,12 +42,12 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
         <table class="form-table">
           <tr>
-            <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
-            <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_API_KEY ?>" name="<?php echo self::OPTION_API_KEY ?>" value="<?php echo htmlentities(self::api_key()) ?>" /></td>
+            <th><label for="<?php echo self::OPTION_FB_APP_ID ?>">App ID</label></th>
+            <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_FB_APP_ID ?>" name="<?php echo self::OPTION_FB_APP_ID ?>" value="<?php echo htmlentities(self::app_id()) ?>" /></td>
           </tr>
           <tr>
-            <th><label for="<?php echo self::OPTION_APP_SECRET ?>">App Secret</label></th>
-            <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_APP_SECRET ?>" name="<?php echo self::OPTION_APP_SECRET ?>" value="<?php echo htmlentities(self::app_secret()) ?>" /></td>
+            <th><label for="<?php echo self::OPTION_FB_APP_SECRET ?>">App Secret</label></th>
+            <td><input type="text" style="width:25em;" id="<?php echo self::OPTION_FB_APP_SECRET ?>" name="<?php echo self::OPTION_FB_APP_SECRET ?>" value="<?php echo htmlentities(self::app_secret()) ?>" /></td>
           </tr>
           <tr>
             <td></td>
@@ -89,8 +89,8 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
       
       <script>
         (function($) {
-          var api_key = $('#<?php echo self::OPTION_API_KEY ?>').focus();
-          var app_secret = $('#<?php echo self::OPTION_APP_SECRET ?>');
+          var api_key = $('#<?php echo self::OPTION_FB_APP_ID ?>').focus();
+          var app_secret = $('#<?php echo self::OPTION_FB_APP_SECRET ?>');
           var btn = $('#btnConnect');
 
           $('#settings_form').submit(function() {
@@ -556,10 +556,10 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           <th>When errors happen:</th>
           <td>
             <label>
-              <input type="checkbox" id="notify_on_error" onclick="if (this.checked) jQuery('#on_error_email').focus();" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_error]" <?php if (self::notify_on_error()) echo 'checked="checked"' ?> value="1" />
+              <input type="checkbox" id="notify_on_error" onclick="if (this.checked) jQuery('#on_error_email').focus();" name="<?php echo self::OPTION_FB_NOTIFICATIONS ?>[on_error]" <?php if (self::notify_on_error()) echo 'checked="checked"' ?> value="1" />
               Send an e-mail to:
             </label>
-            <input style="width:25em;" type="text" id="on_error_email" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_error_email]" value="<?php echo htmlentities(self::get_error_email()) ?>" />
+            <input style="width:25em;" type="text" id="on_error_email" name="<?php echo self::OPTION_FB_NOTIFICATIONS ?>[on_error_email]" value="<?php echo htmlentities(self::get_error_email()) ?>" />
             <div style="color:red; display:none;" id="on_error_email_error">Please use a valid e-mail address</div>
           </td>
         </tr>
@@ -568,10 +568,10 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           <th>When successes happen:</th>
           <td>
             <label>
-              <input type="checkbox" id="notify_on_success" onclick="if (this.checked) jQuery('#on_success_email').focus();" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_success]" <?php if (self::notify_on_success()) echo 'checked="checked"' ?> value="1" />
+              <input type="checkbox" id="notify_on_success" onclick="if (this.checked) jQuery('#on_success_email').focus();" name="<?php echo self::OPTION_FB_NOTIFICATIONS ?>[on_success]" <?php if (self::notify_on_success()) echo 'checked="checked"' ?> value="1" />
               Send an e-mail to:
             </label>
-            <input style="width:25em;" type="text" id="on_success_email" name="<?php echo self::OPTION_NOTIFICATIONS ?>[on_success_email]" value="<?php echo htmlentities(self::get_success_email()) ?>" />
+            <input style="width:25em;" type="text" id="on_success_email" name="<?php echo self::OPTION_FB_NOTIFICATIONS ?>[on_success_email]" value="<?php echo htmlentities(self::get_success_email()) ?>" />
             <div style="color:red; display:none;" id="on_success_email_error">Please use a valid e-mail address</div>
           </td>
         </tr>
@@ -700,13 +700,13 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           <tr>
             <td style="width:160px;">App ID:</td>
             <td>
-              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_API_KEY)) ?>" />
+              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_FB_APP_ID)) ?>" />
             </td>
           </tr>
           <tr>
             <td>App Secret:</td>
             <td>
-              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_APP_SECRET)) ?>" />
+              <input type="text" class="regular-text" readonly="readonly" value="<?php echo esc_attr(get_option(self::OPTION_FB_APP_SECRET)) ?>" />
             </td>
           </tr>
           <tr>

@@ -240,7 +240,7 @@ class SharePressFacebook extends SpBaseFacebook
     if ($this->use_session) {
       return $arg;
     } else {
-      return sprintf(SharePress::OPTION_SESSION_ARG, $arg);
+      return sprintf(SharePress::OPTION_FB_SESSION_ARG, $arg);
     }
   }
 }
