@@ -26,7 +26,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <p>
           Before you continue, you'll need to create a Facebook Application. 
           <a href="http://www.facebook.com/developers/createapp.php" target="_blank">Do this now</a>.
-          &nbsp;&nbsp;<b><a href="https://developers.facebook.com/docs/appsonfacebook/tutorial/#create" target="_blank">Need more help?</a></b>
+          &nbsp;&nbsp;<b><a href="http://aaroncollegeman.com/sharepress/help/how-to-setup-sharepress/" target="_blank">Need more help?</a></b>
         </p>
 
         <p>
@@ -34,12 +34,6 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           and your domain is <b><?php $url = parse_url(get_option('siteurl')); echo $url['host'] ?></b>.
         </p>  
         
-        <p style="padding:10px; background-color:#ffffcc;">
-          <b style="color:red;">Breaking Change</b>
-          &nbsp;Are you having to run SharePress setup repeatedly? You need to enable <code>offline_access</code> deprecation.
-          &nbsp;<a href="http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation" target="_blank">Read more &rarr;</a>
-        </p>
-
         <table class="form-table">
           <tr>
             <th><label for="<?php echo self::OPTION_API_KEY ?>">App ID</label></th>
@@ -52,12 +46,18 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           <tr>
             <td></td>
             <td>
-              <p class="submit">
+              <p class="submit" style="padding-top:0;">
                 <input id="btnConnect" type="submit" name="Submit" class="button-primary" value="Connect" />
               </p>
             </td>
           </tr>
         </table>
+
+        <p style="padding:10px; background-color:#ffffcc;">
+          <b style="color:red;">Breaking Change</b>
+          &nbsp;Are you having to run SharePress setup repeatedly? You need to enable <code>offline_access</code> deprecation.
+          &nbsp;<a href="http://aaroncollegeman.com/2012/02/03/breaking-change-configuring-your-facebook-application-for-offline_access-deprecation" target="_blank">Read more &rarr;</a>
+        </p>
 
       <?php } else if (self::has_keys()) { ?>
 
