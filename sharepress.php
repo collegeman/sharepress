@@ -206,7 +206,7 @@ class Sharepress {
 
         global $post;
         if (!($excerpt = $post->post_excerpt)) {
-          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('description');
+          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s\s+/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('description');
         }
 
         $defaults = array(

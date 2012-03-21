@@ -53,6 +53,7 @@ You need the pro version. All you have to do is [buy a key](http://aaroncollegem
 = 2.1.21 =
 * Fixed: Press-This tool
 * Fixed: Somehow turned logging on by default; setting back to off by default
+* Fixed: Issue with preg_replace turning extra whitespace into funky characters in og:description
 
 = 2.1.20 =
 * Updated: Link to better setup instructions
