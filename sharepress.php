@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.20
+Version: 2.1.21
 License: GPL2
 */
 
@@ -206,7 +206,7 @@ class Sharepress {
 
         global $post;
         if (!($excerpt = $post->post_excerpt)) {
-          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s+/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('descrption');
+          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('description');
         }
 
         $defaults = array(
@@ -763,6 +763,8 @@ class Sharepress {
     } else {
       self::log('Not in CRON job');
     }
+
+    $is_pressthis = strpos($_POST['_wp_http_referer'], 'press-this.php') !== false;
     
     // verify permissions
     if (!$is_cron && !current_user_can('edit_post', $post->ID)) {
@@ -854,18 +856,18 @@ class Sharepress {
       
 
     #
-    # When save_post is invoked by XML-RPC the SharePress nonce won't be 
-    # available to test. So, we evaluate whether or not to post based on several
-    # criteria:
+    # When save_post is invoked by XML-RPC, a CRON job, or the Press This widget
+    # the SharePress nonce won't be  available to test. So, we evaluate whether 
+    # or not to post based on several criteria:
     # 1. SharePress must be configured to post to Facebook by default
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if (($is_xmlrpc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if (($is_pressthis || $is_xmlrpc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // is there already meta data stored?
       $meta = get_post_meta($post->ID, self::META, true);
       if ($meta && $meta['enabled'] && $meta['enabled'] != 'on') {
-        self::log("In XML-RPC or CRON job, but post is set not to share on Facebook; ignoring save_post($post_id)");
+        self::log("In XML-RPC, CRON job, or Press This widget, but post is set not to share on Facebook; ignoring save_post($post_id)");
         return;
       }
 
@@ -881,7 +883,7 @@ class Sharepress {
         'link' => $this->get_permalink($post),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
-        'targets' => array_keys(self::targets()),
+        'targets' => array_keys(( $targets = self::targets() ) ? $targets : array()),
         'enabled' => Sharepress::setting('default_behavior')
       );
 
