@@ -37,7 +37,7 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 );
   
 // override this in functions.php
-@define('SHAREPRESS_DEBUG', true);
+@define('SHAREPRESS_DEBUG', false);
 
 class Sharepress {
   
