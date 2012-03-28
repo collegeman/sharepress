@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.21
+Stable tag: 2.1.22
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -49,6 +49,10 @@ Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpre
 You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 == Changelog ==
+
+= 2.1.22 =
+* Fixed: sharepress_og_tag_<tagName> didn't include $post or $meta arguments the way sharepress_og_tags does
+* Added: Allow for open graph meta tag content to be overriden on a case-by-case basis by post meta data
 
 = 2.1.21 =
 * Fixed: Press-This tool
