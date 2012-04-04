@@ -46,7 +46,7 @@
     <fieldset>
       <legend>
         <label for="sharepress_meta_picture">
-          <b>Picture</b>
+          <b>Picture to Feature</b>
         </label>
       </legend>
 
@@ -56,17 +56,17 @@
   
       <label style="display:block; margin-bottom: 8px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="0" <?php if (!$meta['let_facebook_pick_pic']) echo 'checked="checked"' ?> /> 
-        Use this post's <a href="javascript:;" onclick="jQuery('#set-post-thumbnail').click();">Featured Image</a>
+        This post's <a href="javascript:;" onclick="jQuery('#set-post-thumbnail').click();">Featured Image</a>
       </label>
 
       <label style="display:block; margin-bottom: 8px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if ($meta['let_facebook_pick_pic'] == 1) echo 'checked="checked"' ?> /> 
-        Use the first image in the post
+        The first image in the gallery or content
       </label>
 
       <label style="display:block; margin-bottom: 8px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="2" <?php if ($meta['let_facebook_pick_pic'] == 2) echo 'checked="checked"' ?> /> 
-        Use the <a href="<?php echo admin_url('options-general.php?page=sharepress') ?>#picture" target="_blank">global default</a>
+        The <a href="<?php echo admin_url('options-general.php?page=sharepress') ?>#picture" target="_blank">global default</a>
       </label>
     </fieldset>
   

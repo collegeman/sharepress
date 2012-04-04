@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.22
+Stable tag: 2.1.23
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -12,43 +12,84 @@ Share the content you write in WordPress with your Facebook Fans and Twitter Fol
 
 SharePress is a WordPress plugin that helps you communicate with your [tribes](http://sethgodin.typepad.com/seths_blog/2008/01/tribal-manageme.html) on Facebook and Twitter by automatically publishing your WordPress posts the moment they become live on your site.
 
-[youtube http://youtube.com/watch?v=X6dRD0pd1nM]
+**With this FREE version of SharePress you'll be able to**
 
-(Awesome promo reel by [Keyframe Films](http://keyframefilms.com).)
+* Automatically publish your WordPress posts to your personal Facebook wall
+* Publish while you sleep: your post is automatically published when it goes live
 
-With SharePress you'll be able to
+**Upgrade to the PRO version and you'll be able to**
 
-* Publish your WordPress posts to any/all of the Facebook pages you manage
-* Publish to your Facebook wall
-* Publish to your Twitter followers **NEW!**
+* Publish to any/all of the Facebook pages you manage
+* Publish to your Twitter followers
 * Customize each Facebook status message
 * Control the image Facebook uses just by setting the post's featured image
-* Customize Twitter hashtag
+* Customize Twitter status hashtag
 * Delay SharePress' sharing for minutes, hours, or days after a post goes live
-* Publish while you sleep: social messaging is published when posts go live
 * Schedule reposts of your content: keep traffic flowing to your site day and night
+* Get e-mail based support directly from the developer, often on the same day
+
+Single-site licensing, and unlimited Developer license are available. SharePress is compatible with WordPress MU and WordPress Multi-Network.
 
 Want to read what our customers have said about SharePress? [Check this out](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=testimonials).
 
+[youtube http://youtube.com/watch?v=X6dRD0pd1nM]
+
+Awesome product promo video by [Keyframe Films](http://keyframefilms.com).
+
 == Installation ==
 
-Want to try SharePress for free?
+Want to try SharePress for FREE?
 
 1. Get the plugin. Activate the plugin.
 
-2. Create a Facebook application.
+2. [Create a Facebook application](http://aaroncollegeman.com/sharepress/help/how-to-setup-sharepress/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support#creating-your-facebook-application).
 
 3. Go to Settings / SharePress, and run setup.
 
-Need support? [Go here](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+Need support? [Go here](http://aaroncollegeman.com/sharepress/help?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Frequently Asked Questions ==
 
 = How do I post to the wall of my Facebook page? =
 
-You need the pro version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
+You need the PRO version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
+
+= Why do I need to pay for this essential feature (posting to my Facebook page)? =
+
+SharePress' features are without parallel. Being able to post automatically to your Facebook page is only the beginning. The reposting feature is the one that has the potential to bring the most traffic growth to your site.
+
+Plus, Facebook is a very difficult platform the work with - their motto is, "Move fast and break things." No joke. When you pay for SharePress you are paying for Fat Panda to constantly monitor and maintain this stable connection between your site and the social Web.
+
+= I'm posting to Facebook via Twitter. Isn't that the same thing? =
+
+No. SharePress PRO provides you with the ability to customize message (status update) and the photo that appears on Facebook. Posting via Twitter does not provide this feature.
+
+= When will SharePress support LinkedIn? =
+
+Soon. SharePress 3.0 is nigh.
+
+= When will SharePress support Google+? =
+
+At this time it is not possible to publish to Google+ as Google does not offer a writable API. 
+
+Other services and plugins support writing to Google+, but they do this by storing your Google account username and password, which is *extremely* dangerous.
+
+= I'm having trouble. Where can I get support? =
+
+Documentation for SharePress is available [here](http://aaroncollegeman.com/sharepress/help?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+
+E-mail based tech support is available to PRO customers. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.1.23 =
+* Fixed: When searching for images in post content, do not execute shortcodes - in some instances, this was creating content duplication on the page, in others content would not appear
+* Fixed: strtotime error that was appearing for any post that had been published to Facebook more than once
+* Fixed: When using the "Use the first image in the post" option, and when photos are set in the gallery, SharePress was selecting the last option, not the first
+* Fixed: Corrected the language "Use the first image in the post," (hopefully) made it less confusing
+* Added: Debugging (logging) can now be enabled via the settings screen in the admin
+* Change: Updated Plugin description to eliminate any confusion created by differences in FREE and PRO versions of SharePress
+* Change: Raised og:image size to 200x200 from 150x150
 
 = 2.1.22 =
 * Fixed: sharepress_og_tag_<tagName> didn't include $post or $meta arguments the way sharepress_og_tags does

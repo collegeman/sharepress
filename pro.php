@@ -420,7 +420,7 @@ class SharepressPro {
   }
 
   function post($meta, $post) {
-    if (SHAREPRESS_DEBUG) {
+    if (Sharepress::debug()) {
       Sharepress::log(sprintf('SharepressPro::post(%s, %s)', $meta['message'], is_object($post) ? $post->post_title : $post));
       Sharepress::log(sprintf('SharepressPro::post => count(SharepressPro::pages()) = %s', count(self::pages())));
       Sharepress::log(sprintf('SharperessPro::post => $meta["targets"] = %s', serialize($meta['targets'])));

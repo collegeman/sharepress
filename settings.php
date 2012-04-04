@@ -627,7 +627,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
               <div style="margin-bottom:5px;">
                 <label>
                   <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="1" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 1) echo 'checked="checked"' ?> />
-                  Use the first image in the post
+                  The first image in the gallery or content
                 </label>
               </div>
               <div style="margin-bottom:5px;">
@@ -642,7 +642,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
         <div>
           <p><b>Global default picture</b></p>
-          <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 150, 150, self::load()->get_default_picture()) ?>
+          <?php PostImage::ui('sharepress', self::OPTION_DEFAULT_PICTURE, null, 200, 200, self::load()->get_default_picture()) ?>
         </div>
         <div style="clear:left;"></div>
 
@@ -717,6 +717,41 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
             </td>
           </tr>
         </table>
+
+        <br />
+        <h3 class="title">Debugging Mode</h3>
+
+        <p>
+          Having problems? Enable debug mode to enable SharePress logging. This is especially 
+          useful when working with Fat Panda support. 
+          <?php if (!is_writable(dirname(__FILE__))) { ?>
+            <b>Note:</b> SharePress will not be able to create log files until you make the
+            SharePress plugin folder writeable, e.g., <code>CHMOD 777 <?php echo dirname(__FILE__) ?></code>
+          <?php } else { ?>
+            <a href="<?php echo admin_url('options-general.php').'?page='.$_REQUEST['page'].'&log=' ?>">Click here</a> to review log files.
+          <?php } ?>
+        </p>
+
+        <?php if (defined('SHAREPRESS_DEBUG') && SHAREPRESS_DEBUG) { ?>
+          <p><b>Debugging is enabled in code:</b> <code>SHAREPRESS_DEBUG</code> is set to <code>true</code>.</p>
+        <?php } else { ?>
+          <table class="form-table">
+            <tr>
+              <td style="width:160px;">Debugging:</td>
+              <td>
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[debugging]" value="1" <?php if (self::setting('debugging', '0') == '1') echo 'checked="checked"' ?> />
+                  Enabled
+                </label>
+                &nbsp;&nbsp;
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[debugging]" value="0" <?php if (self::setting('debugging', '0') == '0') echo 'checked="checked"' ?> />
+                  Disabled
+                </label>
+              </td>
+            </tr>
+          </table>
+        <?php } ?>        
 
       <?php } ?>
 

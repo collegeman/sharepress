@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.22
+Version: 2.1.23
 License: GPL2
 */
 
@@ -48,7 +48,7 @@ class Sharepress {
   const OPTION_DEFAULT_PICTURE = 'sharepress_default_picture';
   const OPTION_SETTINGS = 'sharepress_settings';
   const OPTION_SESSION_ARG = 'sharepress_%s';
-
+  
   //const META_MESSAGE_ID = 'sharepress_message_id';
   const META_RESULT = 'sharepress_result';
   const META_TWITTER_RESULT = 'sharepress_twitter_result';
@@ -305,9 +305,13 @@ class Sharepress {
   static function err($message) {
     self::log($message, 'ERROR');
   }
+
+  static function debug() {
+    return (defined('SHAREPRESS_DEBUG') && SHAREPRESS_DEBUG) || self::setting('debugging', '0') == '1';
+  }
   
   static function log($message, $level = 'INFO') {
-    if (SHAREPRESS_DEBUG) {
+    if (self::debug()) {
       global $thread_id, $blog_id;
       if (is_null($thread_id)) {
         $thread_id = substr(md5(uniqid()), 0, 6);
@@ -565,7 +569,7 @@ class Sharepress {
 
     if (!$meta['let_facebook_pick_pic']) { // use featured image, fallback on first image in post, come to rest on global default
       
-      if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), array(150, 150) )) {
+      if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), array(200, 200) )) {
         $picture = $src[0];
       }
 
@@ -602,12 +606,11 @@ class Sharepress {
       'post_type' => 'attachment',
       'post_mime_type' => 'image',
       'post_parent' => $post_id,
-      'orderby' => 'menu_order',
-      'order'  => 'ASC',
+      'order'  => 'DESC',
       'numberposts' => 1,
     )) );
 
-    if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, array(150, 150)) )) {
+    if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, array(200, 200)) )) {
       return $src[0];
     
     #
@@ -615,7 +618,8 @@ class Sharepress {
     #
     } else {
       $post = get_post($post_id);
-      if ($content = do_shortcode($post->post_content)) {
+      // if ($content = do_shortcode($post->post_content)) {
+      if ($post->post_content) {
         preg_match_all('/<img[^>]+>/i', $post->post_content, $matches);
         foreach($matches[0] as $img) {
           if (preg_match('#src="([^"]+)"#i', $img, $src)) {
@@ -920,7 +924,7 @@ class Sharepress {
   }
   
   function future_to_publish($post) {
-    if (SHAREPRESS_DEBUG) {
+    if (self::debug()) {
       self::log(sprintf("future_to_publish(%s)", is_object($post) ? $post->post_title : $post));
     }
     
@@ -928,12 +932,12 @@ class Sharepress {
   }
   
   function transition_post_status($new_status, $old_status, $post) {
-    if (SHAREPRESS_DEBUG) {
+    if (self::debug()) {
       self::log(sprintf("transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
     }
 
     if (@$_POST[self::META] || $new_status != 'publish') {
-      if (SHAREPRESS_DEBUG) {
+      if (self::debug()) {
         self::log(sprintf("Saving operation in progress; ignoring transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
       }
       return;
@@ -1058,7 +1062,7 @@ class Sharepress {
     
     if ($result = self::get_last_result($post)) {
       return $result['posted'];
-    } else if ($posted = get_post_meta($post->ID, self::META_POSTED)) {
+    } else if ($posted = get_post_meta($post->ID, self::META_POSTED, true)) {
       return strtotime($posted);
     } else {
       return false;
@@ -1132,7 +1136,7 @@ class Sharepress {
   }
   
   function share($post) {
-    if (SHAREPRESS_DEBUG) {
+    if (self::debug()) {
       self::log(sprintf("share(%s)", is_object($post) ? $post->post_title : $post));
     }
     
