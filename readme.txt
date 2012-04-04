@@ -17,7 +17,7 @@ SharePress is a WordPress plugin that helps you communicate with your [tribes](h
 * Automatically publish your WordPress posts to your personal Facebook wall
 * Publish while you sleep: your post is automatically published when it goes live
 
-**Upgrade to the PRO version and you'll be able to**
+**Upgrade to the [PRO version](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=pro-version) and you'll be able to**
 
 * Publish to any/all of the Facebook pages you manage
 * Publish to your Twitter followers
@@ -28,7 +28,7 @@ SharePress is a WordPress plugin that helps you communicate with your [tribes](h
 * Schedule reposts of your content: keep traffic flowing to your site day and night
 * Get e-mail based support directly from the developer, often on the same day
 
-Single-site licensing, and unlimited Developer license are available. SharePress is compatible with WordPress MU and WordPress Multi-Network.
+Single-site licensing, and unlimited Developer licensing are available. SharePress is compatible with WordPress MU and WordPress Multi-Network.
 
 Want to read what our customers have said about SharePress? [Check this out](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=testimonials).
 
