@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.1.23
+Stable tag: 2.1.24
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -81,6 +81,10 @@ Documentation for SharePress is available [here](http://aaroncollegeman.com/shar
 E-mail based tech support is available to PRO customers. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.1.24 =
+* Added: New filter: sharepress_user_can_edit_post($bool_can_edit, $wp_post) - return boolean indicating whether or not the current user has permission to modify sharepress meta data for the given $post
+* Added: New filter: sharepress_ignore_save_nonce($bool_can_ignore) - return boolean indicating whether or not a valid nonce should be required for modification a post's sharepress meta data
 
 = 2.1.23 =
 * Fixed: When searching for images in post content, do not execute shortcodes - in some instances, this was creating content duplication on the page, in others content would not appear

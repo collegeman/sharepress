@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.23
+Version: 2.1.24
 License: GPL2
 */
 
@@ -775,16 +775,17 @@ class Sharepress {
     $is_pressthis = strpos($_POST['_wp_http_referer'], 'press-this.php') !== false;
     
     // verify permissions
-    if (!$is_cron && !current_user_can('edit_post', $post->ID)) {
+    if (!$is_cron && !apply_filters('sharepress_user_can_edit_post', false, $post) && !current_user_can('edit_post', $post->ID)) {
       self::log("Current user is not allowed to edit posts; ignoring save_post($post_id)");
       return false;
     }
     
     $already_posted = get_post_meta($post->ID, self::META_POSTED, true);
     $is_scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
+    $ignore_nonce = apply_filters('sharepress_ignore_save_nonce', false);
 
     // if the nonce is present, update meta settings for this post from $_POST
-    if (wp_verify_nonce($_POST['sharepress-nonce'], plugin_basename(__FILE__))) {
+    if ($ignore_nonce || wp_verify_nonce($_POST['sharepress-nonce'], plugin_basename(__FILE__))) {
 
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
