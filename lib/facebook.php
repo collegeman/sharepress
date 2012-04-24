@@ -109,7 +109,7 @@ class SharePressFacebook extends SpBaseFacebook
         if ($this->use_session) {
           SharePress::log(sprintf('Facebook SDK is in session mode - not using stored access token. %s %s', json_encode($_SESSION), json_encode($_REQUEST)), 'WARN');
         } else {
-          SharePress::log('No access token on file.', 'WARN');
+          // SharePress::log('No access token on file.', 'WARN');
         }
       }
     }

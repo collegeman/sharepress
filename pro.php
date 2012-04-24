@@ -436,7 +436,7 @@ class SharepressPro {
         $result = Sharepress::api($page['id'].'/links', 'POST', array(
           'access_token' => $page['access_token'],
           'message' => $meta['message'],
-          'link' => $meta['link']
+          'link' => Sharepress::load()->get_permalink($post->ID)
         ));
         
         Sharepress::log(sprintf("posted to the page(%s): %s", $page['name'], serialize($result)));
@@ -466,9 +466,10 @@ class SharepressPro {
     }
 
     try {
-      $result = Sharepress::api(Sharepress::me('id').'/accounts', 'GET', array(), '1 hour');
+      $result = Sharepress::api(Sharepress::me('id').'/accounts', 'GET', array(), '30 days');
     } catch (Exception $e) {
-      return Sharepress::handleFacebookException($e);
+      Sharepress::handleFacebookException($e);
+      return array();
     }
 
     if ($result) {
@@ -487,9 +488,11 @@ class SharepressPro {
       // sort by page name, for sanity's sake
       usort($pages, array('SharepressPro', 'sort_by_name'));
       
-      return $default + $pages;
+      $result = $default + $pages;
+      return !$result || !is_array($result) ? array() : $result;
+
     } else {
-      return false;
+      return array();
     }
   }
   

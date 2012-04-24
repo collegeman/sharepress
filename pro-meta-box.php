@@ -91,7 +91,9 @@
             </label>
           </p>
           <?php 
-            $pages = self::pages(); usort($pages, array('Sharepress', 'sort_by_selected')); 
+            $pages = self::pages(); 
+            usort($pages, array('Sharepress', 'sort_by_selected')); 
+            
             foreach($pages as $page) { 
               if (self::is_excluded_page($page)) {
                 continue; 

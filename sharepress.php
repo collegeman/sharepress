@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.1.24
+Version: 2.2
 License: GPL2
 */
 
@@ -41,6 +41,8 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 
 class Sharepress {
   
+  const MAX_RETRIES = 3;
+
   const OPTION_API_KEY = 'sharepress_api_key';
   const OPTION_APP_SECRET = 'sharepress_app_secret';
   const OPTION_PUBLISHING_TARGETS = 'sharepress_publishing_targets';
@@ -65,6 +67,8 @@ class Sharepress {
   static $instance;
   // holds a reference to the pro version of the plugin
   static $pro;
+  // raise error flag
+  static $errors = array();
   
   static function load() {
     if (!self::$instance) {
@@ -153,21 +157,67 @@ class Sharepress {
       wp_schedule_event(time(), 'oneminute', 'sharepress_oneminute_cron');
     }
 
-    if (!wp_next_scheduled('sharepress_hourly_cron')) {
-      wp_schedule_event(time(), 'hourly', 'sharepress_hourly_cron');
-    }
-
-    add_action('sharepress_hourly_cron', array($this, 'hourly_cron'));
+    wp_clear_scheduled_hook('sharepress_hourly_cron');
 
     // triggers sharepress-mu loading, if present:
     do_action('sharepress_init');
+
+    add_action('admin_footer', array($this, 'admin_footer'));
   } 
 
-  function hourly_cron() {
-    // do something to keep access token current
-    self::me(null, false, true);
+  function admin_footer() {
+    if (self::$errors) {
+      ?>
+        <div class="error">
+          <p><b>Oops!</b> The Facebook API burped while loading your request. Wait a few seconds, then refresh this page.
+            <?php if (current_user_can('administrator')) { ?>
+              If this error message continues, you should <a href="<?php echo admin_url('options-general.php?page=sharepress&action=clear_session') ?>">reset SharePress</a>.</p>
+            <?php } else { ?>
+              Sorry for the hassle.
+            <?php } ?>
+        </div>
+      <?php
+    }
 
-    self::log('Hourly cron: trying to keep access token current.');
+    if (self::setting('intercom_enabled', '1')) {
+      global $current_user;
+      add_option("sharepress_user_{$current_user->ID}", time());
+      ?>  
+        <script id="IntercomSettingsScriptTag">
+          var intercomSettings = {
+            'app_id': 'p3uvsm9z',
+            'email': '<?php echo $current_user->user_email ?>', 
+            'created_at': <?php echo get_option("sharepress_user_{$current_user->ID}") ?>,
+            'custom_data': {
+              'sharepress_license': '<?php echo self::setting("license_key", "unlicensed") ?>'
+            }
+            /* , 'user_hash': '<?php echo sha1('foobar' . $current_user->user_email) ?>' */
+            <?php if (self::setting('intercom_enabled') != '2') { ?>
+              , 'widget': {
+                'activator': '#FatPandaIntercomWidget',
+                'label': 'SharePress Support'
+              }
+            <?php } ?>
+          };
+        </script>
+        <script>
+          (function() {
+            function async_load() {
+              var s = document.createElement('script');
+              s.type = 'text/javascript'; s.async = true;
+              s.src = 'https://api.intercom.io/api/js/library.js';
+              var x = document.getElementsByTagName('script')[0];
+              x.parentNode.insertBefore(s, x);
+            }
+            if (window.attachEvent) {
+              window.attachEvent('onload', async_load);
+            } else {
+              window.addEventListener('load', async_load, false);
+            }
+          })();
+        </script>
+      <?php
+    }
   }
 
   function cron_schedules($schedules) {
@@ -340,9 +390,14 @@ class Sharepress {
 
     try {
       return self::me(null, true);
+
     } catch (Exception $e) {
-      // log this...?
+      self::err($e->getMessage());
+      if ($_REQUEST['step'] != '1') {
+        self::$errors[] = $e;
+      }
       return false;
+
     }
   }
   
@@ -395,8 +450,6 @@ class Sharepress {
    * @return The result of the query
    */
   static function api($path, $method = 'GET', $params = array(), $cache_for = false) {
-    self::log(sprintf("api(%s, %s, %s, %s)", $path, $method, serialize($params), $cache_for));
-    
     if ($facebook = self::facebook()) {
       $cache = null;
       
@@ -434,8 +487,22 @@ class Sharepress {
       if ($cache) {
         return $cache['packet'];
       } else {
-        // this may throw an exception, but we don't care:
-        $result = call_user_func_array(array($facebook, 'api'), array($path, $method, $params));
+        $retries = self::MAX_RETRIES;
+        do {
+          self::log(sprintf("api(%s, %s)[%d]", $path, $method, self::MAX_RETRIES-$retries));
+          try {
+            $result = call_user_func_array(array($facebook, 'api'), array($path, $method, $params));
+            break;
+          } catch (Exception $e) {
+            $retries--;
+            if (!$retries) {
+              throw $e;
+            } else {
+              usleep(250*(self::MAX_RETRIES-$retries+1));
+            }
+          }
+        } while ($retries);
+    
         // if we're allowed to cache, do it!
         if ($cache_for !== false && $method == 'GET') {
           // if $cache_for is literally true, then cache never expires
@@ -467,11 +534,11 @@ class Sharepress {
   static function me($param = null, $rethrow = false, $flush = false) {
     try {
       if (self::is_business()) {
-        $accounts = self::api('/me/accounts', 'GET', array(), $flush ? false : '5 minutes');
+        $accounts = self::api('/me/accounts', 'GET', array(), $flush ? false : '30 days');
         $me = $accounts['data'][0];
         return ($param) ? $me[$param] : $me;
       } else {
-        $me = self::api('/me', 'GET', array(), $flush ? false : '5 minutes');
+        $me = self::api('/me', 'GET', array(), $flush ? false : '30 days');
         return ($param) ? $me[$param] : $me;
       } 
     } catch (Exception $e) {
@@ -489,24 +556,16 @@ class Sharepress {
     } else {
       $me = self::api('/me');
       $is_business = !$me;
-      set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600); 
+      set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600 * 30); 
       return $is_business;
     }
   }
   
   static function handleFacebookException($e) {
-    if (is_a($e, 'SharepressFacebookSessionException') || $e->getMessage() == 'Invalid OAuth access token signature.') {
-      if ($client = self::facebook()) {
-        $client->clearAllPersistentData();
-      }
-      delete_transient(self::TRANSIENT_IS_BUSINESS);
-      wp_die('Your Facebook session is no longer valid. <a href="options-general.php?page=sharepress&step=1">Setup sharepress again</a>, or go to your <a href="index.php">Dashboard</a>.');
-    } else if (is_admin()) {
-      wp_die(sprintf('There was a problem with SharePress: %s; This is probably an issue with the Facebook API. Check <a href="http://developers.facebook.com/live_status/" target="_blank">Facebook Live Status</a> for more information. You can also <a href="%s">try resetting SharePress</a>. If the problem persists, please <a href="http://aaroncollegeman.com/sharepress/help/#support_form" target="_blank">report it to Fat Panda</a>.', $e->getMessage(), admin_url('options-general.php?page=sharepress&amp;action=clear_session')));
-    } else {
-      self::err(sprintf("Exception thrown by Facebook API: %s; This is definitely an issue with the Facebook API. Check http://developers.facebook.com/live_status/ for more information. If the problem persists, please report it at http://aaroncollegeman.com/sharepress/help/.", $e->getMessage()));
-      throw new Exception("There is a problem with SharePress. Check the log.");
-    }
+    // log the error
+    self::err($e->getMessage());
+    // stack the error
+    self::$errors[] = $e;
   }
   
   static function pages() {
@@ -516,6 +575,7 @@ class Sharepress {
   }
   
   static function clear_cache() {
+    self::log('Clearing the cache.');
     global $wpdb;
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'sharepress_cache-%'");
   }
@@ -545,9 +605,12 @@ class Sharepress {
       $meta['description'] = $this->get_excerpt($post);
     }
     
+    /*
     if (!@$meta['link'] || @$meta['link_is_permalink']) {
       $meta['link'] = $this->get_permalink($post->ID);
     }
+    */
+    $meta['link'] = $this->get_permalink($post->ID);
     
     if (!@$meta['name']) {
       $meta['name'] = apply_filters('post_title', $post->post_title);
@@ -599,6 +662,7 @@ class Sharepress {
   }
 
   function get_first_image_for($post_id) {
+    /*
     #
     # try the DB first...
     #
@@ -619,17 +683,24 @@ class Sharepress {
     } else {
       $post = get_post($post_id);
       // if ($content = do_shortcode($post->post_content)) {
+    */
       if ($post->post_content) {
         preg_match_all('/<img[^>]+>/i', $post->post_content, $matches);
         foreach($matches[0] as $img) {
           if (preg_match('#src="([^"]+)"#i', $img, $src)) {
+            if (preg_match('/^data:image/i', $src[0])) {
+              continue;
+            }
             return $src[1];
           } else if (preg_match("#src='([^']+)'#i", $img, $src)) {
+            if (preg_match('/^data:image/i', $src[0])) {
+              continue;
+            }
             return $src[1];
           }
         }
       }
-    }
+    // }
   }
   
   static $meta;
@@ -889,7 +960,7 @@ class Sharepress {
         'title_is_message' => true,
         'picture' => null,
         'let_facebook_pick_pic' => self::setting('let_facebook_pick_pic_default', 0),
-        'link' => $this->get_permalink($post),
+        'link' => $this->get_permalink($post->ID),
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => array_keys(( $targets = self::targets() ) ? $targets : array()),
@@ -1089,7 +1160,7 @@ class Sharepress {
       return false;
     }
     
-    $permalink = $this->get_permalink($post);
+    $permalink = $this->get_permalink($post->ID);
 
     if (!$login = $this->setting('bitly_login')) {
       return $permalink;
@@ -1180,7 +1251,7 @@ class Sharepress {
             'message' => $meta['message'],
             'description' => $meta['description'],
             'picture' => $meta['picture'],
-            'link' => $meta['link']
+            'link' => $this->get_permalink($post->ID)
           ));
 
           self::log(sprintf("posted to the wall: %s", serialize($result)));
@@ -1194,35 +1265,31 @@ class Sharepress {
         // next, fire the sharepress_post action
         // the pro version picks this up
         do_action('sharepress_post', $meta, $post);
-      
-        if ($twitter_meta = $this->can_post_on_twitter($post)) {
-       
-          $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
-          $tweet = sprintf('%s %s', $post->post_title, $this->get_bitly_link($post));
-          if ($hash_tag = trim($twitter_meta['hash_tag'])) {
-            $tweet .= ' '.$hash_tag;
-          }
-
-          $result = $client->post($tweet);
-          SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", json_encode($result)));
-          add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
-
-        }
-
-        // success:
-        update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));
-        delete_post_meta($post->ID, self::META_SCHEDULED);
-        
+              
         $this->success($post, $meta);
-
-            
-        
     
       } catch (Exception $e) {
         self::err(sprintf("Exception thrown while in share: %s", $e->getMessage()));
-        
         $this->error($post, $meta, $e);
       }
+
+      if ($twitter_meta = $this->can_post_on_twitter($post)) {
+       
+        $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
+        $tweet = sprintf('%s %s', $post->post_title, $this->get_bitly_link($post));
+        if ($hash_tag = trim($twitter_meta['hash_tag'])) {
+          $tweet .= ' '.$hash_tag;
+        }
+
+        $result = $client->post($tweet);
+        SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", json_encode($result)));
+        add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
+
+      }
+
+      // success:
+      update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));
+      delete_post_meta($post->ID, self::META_SCHEDULED);
  
     }
     
@@ -1267,6 +1334,7 @@ class Sharepress {
       // when the user clicks "Setup" tab on the settings screen:
       if ($action == 'clear_session') {      
         if (current_user_can('administrator')) {
+          self::log('Clearing the session (running setup again?)');
           self::facebook()->clearAllPersistentData();
           delete_transient(self::TRANSIENT_IS_BUSINESS);
           self::clear_cache();
@@ -1322,7 +1390,8 @@ class Sharepress {
   }
   
   static function installed() {
-    return ( self::has_keys() && self::session() );
+    // return ( self::has_keys() && self::session() );
+    return self::has_keys();
   }
   
   static function is_mu() {
@@ -1346,7 +1415,7 @@ class Sharepress {
             <p>You haven't finished setting up <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">SharePress</a>.</p>
           </div>
         <?php
-      } else if (@$_REQUEST['page'] == 'sharepress' && self::session() && !self::$pro) {
+      } else if (@$_REQUEST['page'] == 'sharepress' && !self::$pro) {
         if ($this->setting('license_key') && strlen($this->setting('license_key')) != 32) {
           ?>
             <div class="error">

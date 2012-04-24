@@ -751,8 +751,42 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
               </td>
             </tr>
           </table>
-        <?php } ?>        
+        <?php } ?> 
 
+        <br />
+        <h3 class="title">Get Help</h3>       
+
+        <b>New!</b> Now you can get SharePress help directly from the developers at Fat Panda.
+        <?php if (!self::setting('license_key')) { ?>
+          Note that as an unlicensed user, your help will be limited to getting the free version up and running.
+        <?php } ?>
+        The <a href="http://aaroncollegeman.com/sharepress/help" target="_blank">documentation</a> is also awesome, and is available to everyone.
+
+        <table class="form-table">
+          <tr>
+            <td>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="1" <?php if (self::setting('intercom_enabled', '1') == '1') echo 'checked="checked"' ?> />
+                  Enabled
+                </label>
+              </div>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="2" <?php if (self::setting('intercom_enabled', '1') == '2') echo 'checked="checked"' ?> />
+                  Enabled, but hide the support tab
+                </label>
+              </div>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="0" <?php if (self::setting('intercom_enabled', '1') == '0') echo 'checked="checked"' ?> />
+                  Disabled
+                </label>
+              </div>
+            </td>
+          </tr>
+        </table>
+        
       <?php } ?>
 
       <br />
