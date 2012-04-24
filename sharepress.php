@@ -556,7 +556,7 @@ class Sharepress {
     } else {
       $me = self::api('/me');
       $is_business = !$me;
-      set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600 * 30); 
+      set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600 * 24 * 30); 
       return $is_business;
     }
   }
