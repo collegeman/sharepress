@@ -1267,6 +1267,10 @@ class Sharepress {
         do_action('sharepress_post', $meta, $post);
               
         $this->success($post, $meta);
+
+        // success:
+        update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));
+        delete_post_meta($post->ID, self::META_SCHEDULED);
     
       } catch (Exception $e) {
         self::err(sprintf("Exception thrown while in share: %s", $e->getMessage()));
@@ -1286,10 +1290,6 @@ class Sharepress {
         add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
 
       }
-
-      // success:
-      update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));
-      delete_post_meta($post->ID, self::META_SCHEDULED);
  
     }
     
