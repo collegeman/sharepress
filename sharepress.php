@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2
+Version: 2.2.1
 License: GPL2
 */
 
@@ -163,7 +163,23 @@ class Sharepress {
     do_action('sharepress_init');
 
     add_action('admin_footer', array($this, 'admin_footer'));
+    add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
   } 
+
+  private static $ok_to_show_support_here = false;
+  private static $on_settings_screen = false;
+
+  function admin_enqueue_scripts($hook) {
+    self::$on_settings_screen = $hook == 'settings_page_sharepress';
+
+    self::$ok_to_show_support_here = in_array($hook, array(
+      'settings_page_sharepress',
+      'plugins.php',
+      'post-new.php',
+      'post.php',
+      'index.php'
+    ));
+  }
 
   function admin_footer() {
     if (self::$errors) {
@@ -182,6 +198,7 @@ class Sharepress {
     if (self::setting('intercom_enabled', '1')) {
       global $current_user;
       add_option("sharepress_user_{$current_user->ID}", time());
+      $where = self::setting('intercom_show_on', 'all');
       ?>  
         <script id="IntercomSettingsScriptTag">
           var intercomSettings = {
@@ -192,7 +209,7 @@ class Sharepress {
               'sharepress_license': '<?php echo self::setting("license_key", "unlicensed") ?>'
             }
             /* , 'user_hash': '<?php echo sha1('foobar' . $current_user->user_email) ?>' */
-            <?php if (self::setting('intercom_enabled') != '2') { ?>
+            <?php if (self::$on_settings_screen || $where == 'all' || ( $where == 'sharepress' && self::$ok_to_show_support_here )) { ?>
               , 'widget': {
                 'activator': '#FatPandaIntercomWidget',
                 'label': 'SharePress Support'
@@ -681,9 +698,9 @@ class Sharepress {
     # fall back on sniffing out <img /> tags from post content
     #
     } else {
+    */
       $post = get_post($post_id);
       // if ($content = do_shortcode($post->post_content)) {
-    */
       if ($post->post_content) {
         preg_match_all('/<img[^>]+>/i', $post->post_content, $matches);
         foreach($matches[0] as $img) {

@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.2
+Stable tag: 2.2.1
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -81,6 +81,10 @@ Documentation for SharePress is available [here](http://aaroncollegeman.com/shar
 E-mail based tech support is available to PRO customers. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.1 =
+* Fixed: Big bug in "The first image in the content" option for Facebook post image
+* Added: Better control over new support features
 
 = 2.2 =
 * Change: Fail gracefully from Facebook API issues, and never clear stored session token unless asked to do so by an administrator (e.g., run setup again)

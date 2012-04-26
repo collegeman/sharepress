@@ -767,14 +767,14 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
             <td>
               <div style="margin-bottom:5px;">
                 <label>
-                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="1" <?php if (self::setting('intercom_enabled', '1') == '1') echo 'checked="checked"' ?> />
-                  Enabled
-                </label>
-              </div>
-              <div style="margin-bottom:5px;">
-                <label>
-                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="2" <?php if (self::setting('intercom_enabled', '1') == '2') echo 'checked="checked"' ?> />
-                  Enabled, but hide the support tab
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="1" <?php if (self::setting('intercom_enabled', '1')) echo 'checked="checked"' ?> />
+                  Enabled &mdash; display <b>SharePress Support</b> tab on
+                  <select name="<?php echo self::OPTION_SETTINGS ?>[intercom_show_on]">
+                    <option value="all" <?php if (self::setting('intercom_show_on', 'all') == 'all') echo 'selected="selected"' ?>>all screens</option>
+                    <option value="sharepress" <?php if (self::setting('intercom_show_on', 'all') == 'sharepress') echo 'selected="selected"' ?>>only SharePress-related screens</option>
+                    <option value="none" <?php if (self::setting('intercom_show_on', 'all') == 'none') echo 'selected="selected"' ?>>no screens</option>
+                  </select>
+                  in the admin.
                 </label>
               </div>
               <div style="margin-bottom:5px;">

@@ -61,7 +61,7 @@
 
       <label style="display:block; margin-bottom: 8px;">
         <input type="radio" name="sharepress_meta[let_facebook_pick_pic]" value="1" <?php if ($meta['let_facebook_pick_pic'] == 1) echo 'checked="checked"' ?> /> 
-        The first image in the gallery or content
+        The first image in the content
       </label>
 
       <label style="display:block; margin-bottom: 8px;">
