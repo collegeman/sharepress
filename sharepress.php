@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.1
+Version: 2.2.2
 License: GPL2
 */
 
@@ -41,6 +41,10 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 
 class Sharepress {
   
+  const MISSED_SCHEDULE_DELAY = 5;
+  const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
+
+
   const MAX_RETRIES = 3;
 
   const OPTION_API_KEY = 'sharepress_api_key';
@@ -164,6 +168,8 @@ class Sharepress {
 
     add_action('admin_footer', array($this, 'admin_footer'));
     add_action('admin_enqueue_scripts', array($this, 'admin_enqueue_scripts'));
+
+    $this->fix_missed_schedule();
   } 
 
   private static $ok_to_show_support_here = false;
@@ -847,21 +853,19 @@ class Sharepress {
     }
 
     $is_xmlrpc = defined('XMLRPC_REQUEST') && XMLRPC_REQUEST;
-    if ($is_xmlrpc) {
-      self::log('In XML-RPC request');
-    } else {
-      self::log('Not in XML-RPC request');
-    }
-
-    $is_cron = defined('DOING_CRON') && DOING_CRON;
-    if ($is_cron) {
-      self::log('In CRON job');
-    } else {
-      self::log('Not in CRON job');
-    }
-
-    $is_pressthis = strpos($_POST['_wp_http_referer'], 'press-this.php') !== false;
+    self::log($is_xmlrpc ? 'In XML-RPC request' : 'Not in XML-RPC request');
     
+    $is_cron = defined('DOING_CRON') && DOING_CRON;
+    self::log($is_cron ? 'In CRON job' : 'Not in CRON job');
+    
+    $is_pressthis = strpos($_POST['_wp_http_referer'], 'press-this.php') !== false;
+    self::log($is_pressthis ? 'In Press This widget request' : 'Not in Press This widget request');
+    
+    $is_quickpress = strpos($_POST['_wp_http_referer'], '/wp-admin/post.php') !== false;
+    self::log($is_quickpress ? 'In QuickPress widget request' : 'Not in QuickPress widget request');
+
+    $fixing_missed_schedule = defined('SP_FIXING_MISSED_SCHEDULE') && SP_FIXING_MISSED_SCHEDULE;
+
     // verify permissions
     if (!$is_cron && !apply_filters('sharepress_user_can_edit_post', false, $post) && !current_user_can('edit_post', $post->ID)) {
       self::log("Current user is not allowed to edit posts; ignoring save_post($post_id)");
@@ -953,26 +957,24 @@ class Sharepress {
       
 
     #
-    # When save_post is invoked by XML-RPC, a CRON job, or the Press This widget
-    # the SharePress nonce won't be  available to test. So, we evaluate whether 
-    # or not to post based on several criteria:
+    # When save_post is invoked by XML-RPC, a CRON job, the Press This widget, or the Quick press widget
+    # the SharePress nonce won't be  available to test. So, we evaluate whether or not to post based on several criteria:
     # 1. SharePress must be configured to post to Facebook by default
     # 2. The Post must not already have been posted by SharePress
     # 3. The Post must not be scheduled for future posting
     #
-    } else if (($is_pressthis || $is_xmlrpc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if (($fixing_missed_schedule || $is_quickpress || $is_pressthis || $is_xmlrpc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // is there already meta data stored?
       $meta = get_post_meta($post->ID, self::META, true);
       if ($meta && $meta['enabled'] && $meta['enabled'] != 'on') {
-        self::log("In XML-RPC, CRON job, or Press This widget, but post is set not to share on Facebook; ignoring save_post($post_id)");
+        self::log("Post is set not to share on Facebook; ignoring save_post($post_id)");
         return;
       }
 
       // remove any past failures
       delete_post_meta($post->ID, self::META_ERROR);
 
-      // setup meta with defaults
-      $meta = array(
+      $defaults = array(
         'message' => $post->post_title,
         'title_is_message' => true,
         'picture' => null,
@@ -983,6 +985,12 @@ class Sharepress {
         'targets' => array_keys(( $targets = self::targets() ) ? $targets : array()),
         'enabled' => Sharepress::setting('default_behavior')
       );
+
+      if ($fixing_missed_schedule) {
+        $meta = array_merge($defaults, is_array($meta) ? $meta : array());
+      } else {
+        $meta = $defaults;
+      }
 
       $meta = apply_filters('filter_'.self::META, $meta, $post);
 
@@ -995,9 +1003,21 @@ class Sharepress {
 
       update_post_meta($post->ID, self::META, $meta);
 
-      $meta = apply_filters('filter_'.self::META_TWITTER, array(
+      // === TWITTER =============================
+
+      $defaults = array(
         'enabled' => Sharepress::setting('twitter_behavior')
-      ));
+      );
+
+      $meta = get_post_meta($post->ID, self::META_TWITTER, true);
+
+      if ($fixing_missed_schedule) {
+        $meta = array_merge($defaults, is_array($meta) ? $meta : array());
+      } else {
+        $meta = $defaults;
+      }   
+
+      $meta = apply_filters('filter_'.self::META_TWITTER, $meta);  
 
       update_post_meta($post->ID, self::META_TWITTER, $meta);
 
@@ -1007,9 +1027,54 @@ class Sharepress {
       }
 
     } else {
-      self::log("SharePress nonce was invalid; ignoring save_post($post_id)");
+      self::log("{$is_scheduled} {$already_posted} SharePress nonce was invalid; ignoring save_post($post_id)");
       
     }
+  }
+
+  function fix_missed_schedule() {
+    global $wpdb;
+
+    define('SP_FIXING_MISSED_SCHEDULE', true);
+    
+    // check to see if the publishing window is up again...
+    $last = get_option(self::MISSED_SCHEDULE_OPTION, false);
+    if ($last && $last > ( time() - ( self::MISSED_SCHEDULE_DELAY * 60 ))) {
+      return;
+    }
+    update_option(self::MISSED_SCHEDULE_OPTION, time());
+    
+    self::log("Checking for missed schedules...");
+
+    // remove this so that we don't publish twice...
+    remove_action('publish_future_post', 'check_and_publish_future_post');
+
+    // locate any posts that should have been published but haven't been...
+    $post_ids = $wpdb->get_col("
+      SELECT `ID` FROM `{$wpdb->posts}` 
+      WHERE 
+        `post_status` = 'future'
+        AND `post_date_gmt` > 0 
+        AND `post_date_gmt` <= UTC_TIMESTAMP() 
+    ");
+
+    if ($post_ids) {
+      $permalinks = array_map('get_permalink', $post_ids);
+
+      foreach($post_ids as $post_id) {
+        if (!$post_id) {
+          continue;
+        }
+        wp_publish_post($post_id);
+      }
+
+      $this->error(false, false, "
+Oops! Schedule Missed on {$_SERVER['HTTP_HOST']} 
+
+This isn't necessarily a SharePress error, but is simply a failure of WordPress to post on schedule.
+
+So, these posts were published late...\n\n".implode("\n", $permalinks));
+    } 
   }
   
   function future_to_publish($post) {
@@ -1233,6 +1298,8 @@ class Sharepress {
       $post = get_post($post);
     }
 
+    $posted = $error = false;
+
     if ($meta = $this->can_post_on_facebook($post)) {
 
       // determine if this should be delayed
@@ -1285,29 +1352,36 @@ class Sharepress {
               
         $this->success($post, $meta);
 
-        // success:
-        update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));
         delete_post_meta($post->ID, self::META_SCHEDULED);
+
+        $posted = true;
     
       } catch (Exception $e) {
         self::err(sprintf("Exception thrown while in share: %s", $e->getMessage()));
         $this->error($post, $meta, $e);
+        $error = true;
       }
 
-      if ($twitter_meta = $this->can_post_on_twitter($post)) {
+    }
+
+    if ($twitter_meta = $this->can_post_on_twitter($post)) {
        
-        $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
-        $tweet = sprintf('%s %s', $post->post_title, $this->get_bitly_link($post));
-        if ($hash_tag = trim($twitter_meta['hash_tag'])) {
-          $tweet .= ' '.$hash_tag;
-        }
-
-        $result = $client->post($tweet);
-        SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", json_encode($result)));
-        add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
-
+      $client = new SharePress_TwitterClient(get_option(self::OPTION_SETTINGS));
+      $tweet = sprintf('%s %s', $post->post_title, $this->get_bitly_link($post));
+      if ($hash_tag = trim($twitter_meta['hash_tag'])) {
+        $tweet .= ' '.$hash_tag;
       }
- 
+
+      $result = $client->post($tweet);
+      SharePress::log(sprintf("Tweet Result for Post #{$post->ID}: %s", json_encode($result)));
+      add_post_meta($post->ID, Sharepress::META_TWITTER_RESULT, $result);
+
+      $posted = true;
+    }
+
+    if ($posted && !$error) {
+      // success:
+      update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));  
     }
     
    
@@ -1544,19 +1618,29 @@ class Sharepress {
     if (is_object($error)) {
       $error = $error->getMessage();
     }
+
+    if ($post) {
+      update_post_meta($post->ID, self::META_ERROR, $error);
+      if ($this->notify_on_error()) {
+        $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
+        wp_mail(
+          $this->get_error_email(),
+          "SharePress Error",
+          "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}"
+        );
+      }
+      error_log("SharePress Error: $error; while sending {$meta['message']} for post {$post->ID}");   
     
-    update_post_meta($post->ID, self::META_ERROR, $error);
-    
-    if ($this->notify_on_error()) {
-      $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
+    } else {
       wp_mail(
         $this->get_error_email(),
         "SharePress Error",
-        "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}"
+        $error
       );
+
     }
     
-    error_log("SharePress Error: $error; while sending {$meta['message']} for post {$post->ID}");
+   
   }
   
   static function get_error_email() {

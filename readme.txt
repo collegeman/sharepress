@@ -82,6 +82,11 @@ E-mail based tech support is available to PRO customers. All you have to do is [
 
 == Changelog ==
 
+= 2.2.2 =
+* Fixed: Twitter posting was broken in 2.2
+* Fixed: Posts created via the QuickPress on the Dashboard weren't posting to Facebook or Twitter
+* Added: A technique for recovering from "missed schedules" - not necessarily the fault of SharePress
+
 = 2.2.1 =
 * Fixed: Big bug in "The first image in the content" option for Facebook post image
 * Added: Better control over new support features
