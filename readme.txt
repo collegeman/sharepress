@@ -4,7 +4,7 @@ Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.3
-Stable tag: 2.2.1
+Stable tag: 2.2.2
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
