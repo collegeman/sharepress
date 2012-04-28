@@ -754,6 +754,25 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <?php } ?> 
 
         <br />
+        <h3 class="title">"Schedule Missed" Recovery</h3>
+        <table class="form-table">
+          <tr>
+            <td style="width:160px;">Debugging:</td>
+            <td>
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[fix_missed_schedule]" value="1" <?php if (self::setting('fix_missed_schedule', '0') == '1') echo 'checked="checked"' ?> />
+                Enabled
+              </label>
+              &nbsp;&nbsp;
+              <label>
+                <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[fix_missed_schedule]" value="0" <?php if (self::setting('fix_missed_schedule', '0') == '0') echo 'checked="checked"' ?> />
+                Disabled
+              </label>
+            </td>
+          </tr>
+        </table>
+
+        <br />
         <h3 class="title">Get Help</h3>       
 
         <b>New!</b> Now you can get SharePress help directly from the developers at Fat Panda.
