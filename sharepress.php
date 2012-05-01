@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.3
+Version: 2.2.4
 License: GPL2
 */
 
@@ -578,8 +578,15 @@ class Sharepress {
   static function is_business() {
     if (is_string($is_business = get_transient(self::TRANSIENT_IS_BUSINESS))) {
       return $is_business == '1';
+      
     } else {
-      $me = self::api('/me');
+      try {
+        $me = self::api('/me');
+      } catch (Exception $e) {
+        self::handleFacebookException($e);
+        return false;
+      }
+      
       $is_business = !$me;
       set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600 * 24 * 30); 
       return $is_business;
@@ -594,9 +601,14 @@ class Sharepress {
   }
   
   static function pages() {
-    $pages = array();
-    $pages = apply_filters('sharepress_pages', $pages);
-    return $pages;
+    try {
+      $pages = array();
+      $pages = apply_filters('sharepress_pages', $pages);
+      return $pages;
+    } catch (Exception $e) {
+      self::handleFacebookException($e);
+      return array();
+    }
   }
   
   static function clear_cache() {
@@ -1051,6 +1063,9 @@ class Sharepress {
     // remove this so that we don't publish twice...
     remove_action('publish_future_post', 'check_and_publish_future_post');
 
+    // don't fix anything older than 24 hours ago
+    $twenty_four_hours_ago = date('Y-m-d H:i:s', strtotime('-24 hours'));
+
     // locate any posts that should have been published but haven't been...
     $post_ids = $wpdb->get_col("
       SELECT `ID` FROM `{$wpdb->posts}` 
@@ -1058,6 +1073,8 @@ class Sharepress {
         `post_status` = 'future'
         AND `post_date_gmt` > 0 
         AND `post_date_gmt` <= UTC_TIMESTAMP() 
+        AND `post_date_gmt` >= '{$twenty_four_hours_ago}'
+        AND `post_type` = 'post'
     ");
 
     if ($post_ids) {

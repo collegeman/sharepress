@@ -461,11 +461,10 @@ class SharepressPro {
   }
   
   function pages($default = array()) {
-    if (SharePress::is_business()) {
-      return array();
-    }
-
     try {
+      if (SharePress::is_business()) {
+        return array();
+      }
       $result = Sharepress::api(Sharepress::me('id').'/accounts', 'GET', array(), '30 days');
     } catch (Exception $e) {
       Sharepress::handleFacebookException($e);

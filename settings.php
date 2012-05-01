@@ -755,9 +755,11 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
         <br />
         <h3 class="title">"Schedule Missed" Recovery</h3>
+        
+        <b>New!</b> Now SharePress can help you recovery from the dreaded "Missed schedule" error. <a href="http://aaroncollegeman.com/2012/04/15/how-to-fix-missed-schedule-errors/" target="_blank">Learn more &rarr;</a>
         <table class="form-table">
           <tr>
-            <td style="width:160px;">Debugging:</td>
+            <td style="width:160px;">Recovery:</td>
             <td>
               <label>
                 <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[fix_missed_schedule]" value="1" <?php if (self::setting('fix_missed_schedule', '0') == '1') echo 'checked="checked"' ?> />
