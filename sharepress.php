@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.4
+Version: 2.2.5
 License: GPL2
 */
 
@@ -40,10 +40,11 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 @define('SHAREPRESS_DEBUG', false);
 
 class Sharepress {
+
+  const VERSION = '2.2.5';
   
   const MISSED_SCHEDULE_DELAY = 5;
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
-
 
   const MAX_RETRIES = 3;
 
@@ -214,7 +215,8 @@ class Sharepress {
             'email': '<?php echo $current_user->user_email ?>', 
             'created_at': <?php echo get_option("sharepress_user_{$current_user->ID}") ?>,
             'custom_data': {
-              'sharepress_license': '<?php echo self::setting("license_key", "unlicensed") ?>'
+              'sharepress_license': '<?php echo self::setting("license_key", "unlicensed") ?>',
+              'version': '<?php echo self::VERSION ?>'
             }
             /* , 'user_hash': '<?php echo sha1('foobar' . $current_user->user_email) ?>' */
             <?php if (self::$on_settings_screen || $where == 'all' || ( $where == 'sharepress' && self::$ok_to_show_support_here )) { ?>
@@ -875,7 +877,7 @@ class Sharepress {
     $is_pressthis = strpos($_POST['_wp_http_referer'], 'press-this.php') !== false;
     self::log($is_pressthis ? 'In Press This widget request' : 'Not in Press This widget request');
     
-    $is_quickpress = strpos($_POST['_wp_http_referer'], '/wp-admin/post.php') !== false;
+    $is_quickpress = 'post-quickpress-publish' == $_POST['action'];
     self::log($is_quickpress ? 'In QuickPress widget request' : 'Not in QuickPress widget request');
 
     $fixing_missed_schedule = defined('SP_FIXING_MISSED_SCHEDULE') && SP_FIXING_MISSED_SCHEDULE;
