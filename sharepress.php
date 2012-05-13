@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.5
+Version: 2.2.6
 License: GPL2
 */
 
@@ -177,8 +177,13 @@ class Sharepress {
 
   private static $ok_to_show_support_here = false;
   private static $on_settings_screen = false;
+  private static $ok_to_show_error = false;
 
   function admin_enqueue_scripts($hook) {
+    if ($hook == 'plugins.php' || $hook == 'post-new.php' || $hook == 'post-edit.php' || $hook == 'index.php') {
+      self::$ok_to_show_error = true;
+    }
+
     self::$on_settings_screen = $hook == 'settings_page_sharepress';
 
     self::$ok_to_show_support_here = in_array($hook, array(
@@ -410,7 +415,7 @@ class Sharepress {
     return get_option(self::OPTION_APP_SECRET, '');
   }
 
-  static function session() {
+  static function session($report_errors = true) {
     if (!self::api_key() || !self::app_secret()) {
       return false;
     }
@@ -419,9 +424,11 @@ class Sharepress {
       return self::me(null, true);
 
     } catch (Exception $e) {
-      self::err($e->getMessage());
-      if ($_REQUEST['step'] != '1') {
-        self::$errors[] = $e;
+      if ($report_errors) {
+        self::err($e->getMessage());
+        if ($_REQUEST['step'] != '1') {
+          self::$errors[] = $e;
+        }
       }
       return false;
 
@@ -560,7 +567,7 @@ class Sharepress {
    */
   static function me($param = null, $rethrow = false, $flush = false) {
     try {
-      if (self::is_business()) {
+      if (self::is_business($rethrow)) {
         $accounts = self::api('/me/accounts', 'GET', array(), $flush ? false : '30 days');
         $me = $accounts['data'][0];
         return ($param) ? $me[$param] : $me;
@@ -577,7 +584,7 @@ class Sharepress {
     }
   }
 
-  static function is_business() {
+  static function is_business($rethrow = false) {
     if (is_string($is_business = get_transient(self::TRANSIENT_IS_BUSINESS))) {
       return $is_business == '1';
       
@@ -585,8 +592,12 @@ class Sharepress {
       try {
         $me = self::api('/me');
       } catch (Exception $e) {
-        self::handleFacebookException($e);
-        return false;
+        if ($rethrow) {
+          throw $e;
+        } else {
+          self::handleFacebookException($e);
+          return false;
+        }
       }
       
       $is_business = !$me;
@@ -596,6 +607,7 @@ class Sharepress {
   }
   
   static function handleFacebookException($e) {
+    // echo $e->getTraceAsString();
     // log the error
     self::err($e->getMessage());
     // stack the error
@@ -1520,8 +1532,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
 
   function admin_notices() {
     if (current_user_can('administrator')) {
-      $ok_to_show_error = preg_match('#/wp-admin/(post-new\.php|index\.php|plugins\.php)$#i', $_SERVER['SCRIPT_NAME']) && empty($_REQUEST['page']);
-      if ( !self::installed() && $ok_to_show_error ) {
+      if ( !self::installed() && self::$ok_to_show_error ) {
         ?>
           <div class="error">
             <p>You haven't finished setting up <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">SharePress</a>.</p>
@@ -1563,7 +1574,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       }
     }
 
-    if (self::api_key() && self::app_secret() && self::session()) {
+    if (self::api_key() && self::app_secret() && self::session(false)) {
       $_REQUEST['step'] = 'config';
     }
     

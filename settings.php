@@ -15,7 +15,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
   <form method="post" action="options.php" id="settings_form">
 
-    <?php if (!self::session()) { ?>
+    <?php if (!self::session(false)) { ?>
 
       <?php settings_fields('fb-step1') ?>
       
@@ -138,7 +138,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         <?php 
           #
           # Don't be a dick. I like to eat, too.
-          # http://aaroncollegeman/sharepress/
+          # http://aaroncollegeman.com/sharepress/
           #
           if (!self::unlocked()) { ?>
           <p>
