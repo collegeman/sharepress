@@ -3,8 +3,8 @@ Contributors: aaroncollegeman
 Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
-Tested up to: 3.4
-Stable tag: 2.2.7
+Tested up to: 3.4.1
+Stable tag: 2.2.8
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -81,6 +81,10 @@ Documentation for SharePress is available [here](http://aaroncollegeman.com/shar
 E-mail based tech support is available to PRO customers. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.8 =
+* Change: Compatible with WordPress 3.4.1
+* Added: Restore the ability to set image Facebook uses to be the first image in the Post's gallery
 
 = 2.2.7 =
 * Change: Version bump - compatible with WordPress 3.4

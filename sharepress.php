@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.7
+Version: 2.2.8
 License: GPL2
 */
 
@@ -55,6 +55,7 @@ class Sharepress {
   const OPTION_DEFAULT_PICTURE = 'sharepress_default_picture';
   const OPTION_SETTINGS = 'sharepress_settings';
   const OPTION_SESSION_ARG = 'sharepress_%s';
+  const OPTION_LAST_TOKEN_EXCHANGE = 'sharepress_last_token_exchange';
   
   //const META_MESSAGE_ID = 'sharepress_message_id';
   const META_RESULT = 'sharepress_result';
@@ -421,7 +422,29 @@ class Sharepress {
     }
 
     try {
-      return self::me(null, true);
+      if ($me = self::me(null, true)) {
+        // check token exchange
+        if (!($when = get_option(self::OPTION_LAST_TOKEN_EXCHANGE)) || (time() - $when) > 900) {
+          $result = _wp_http_get_object()->post(sprintf(
+            'https://graph.facebook.com/oauth/access_token?client_id=%s&client_secret=%s&grant_type=fb_exchange_token&fb_exchange_token=%s', 
+            self::api_key(),
+            self::app_secret(),
+            self::facebook()->getAccessToken()  
+          ));
+
+          if (!is_wp_error($result) && $result['response']['code'] == 200) {
+            parse_str($result['body'], $vars);
+            self::facebook()->setAccessToken($vars['access_token']);
+            $session_var_name = self::facebook()->getSessionVariableName('access_token');
+            $_SESSION[$session_var_name] = $vars['access_token'];
+            update_option($session_var_name, $vars['access_token']);
+            update_option(self::OPTION_LAST_TOKEN_EXCHANGE, time());
+          }
+        }
+      }
+      
+      return $me;
+
 
     } catch (Exception $e) {
       if ($report_errors) {
@@ -699,6 +722,14 @@ class Sharepress {
 
       $picture = $this->get_default_picture();
     
+    } else if ($meta['let_facebook_pick_pic'] == 4) { // explicitly set to use gallery, fail to global default
+
+      $picture = $this->get_gallery_image($post->ID);
+
+      if (!$picture) {
+        $picture = $this->get_default_picture();
+      }
+
     } else { // try to use the first image in the post, fail to global default
 
       $picture = $this->get_first_image_for($post->ID);
@@ -712,46 +743,44 @@ class Sharepress {
     return $picture;
   }
 
-  function get_first_image_for($post_id) {
-    /*
-    #
-    # try the DB first...
-    #
+  function get_gallery_image($post_id, $index = 0) {
     $images = array_values( get_children(array( 
       'post_type' => 'attachment',
       'post_mime_type' => 'image',
       'post_parent' => $post_id,
-      'order'  => 'DESC',
+      'order'  => 'ASC',
       'numberposts' => 1,
+      'orderby' => 'menu_order'
     )) );
 
-    if ($images && ( $src = wp_get_attachment_image_src($images[0]->ID, array(200, 200)) )) {
+    if (!isset($images[$index])) {
+      return false;
+    }
+
+    if ($images && ( $src = wp_get_attachment_image_src($images[$index]->ID, array(200, 200)) )) {
       return $src[0];
-    
-    #
-    # fall back on sniffing out <img /> tags from post content
-    #
-    } else {
-    */
-      $post = get_post($post_id);
-      // if ($content = do_shortcode($post->post_content)) {
-      if ($post->post_content) {
-        preg_match_all('/<img[^>]+>/i', $post->post_content, $matches);
-        foreach($matches[0] as $img) {
-          if (preg_match('#src="([^"]+)"#i', $img, $src)) {
-            if (preg_match('/^data:image/i', $src[0])) {
-              continue;
-            }
-            return $src[1];
-          } else if (preg_match("#src='([^']+)'#i", $img, $src)) {
-            if (preg_match('/^data:image/i', $src[0])) {
-              continue;
-            }
-            return $src[1];
+    }
+  }
+
+  function get_first_image_for($post_id) {
+    $post = get_post($post_id);
+    // if ($content = do_shortcode($post->post_content)) {
+    if ($post->post_content) {
+      preg_match_all('/<img[^>]+>/i', $post->post_content, $matches);
+      foreach($matches[0] as $img) {
+        if (preg_match('#src="([^"]+)"#i', $img, $src)) {
+          if (preg_match('/^data:image/i', $src[0])) {
+            continue;
           }
+          return $src[1];
+        } else if (preg_match("#src='([^']+)'#i", $img, $src)) {
+          if (preg_match('/^data:image/i', $src[0])) {
+            continue;
+          }
+          return $src[1];
         }
       }
-    // }
+    }
   }
   
   static $meta;
@@ -1460,6 +1489,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
         if (current_user_can('administrator')) {
           self::log('Clearing the session (running setup again?)');
           self::facebook()->clearAllPersistentData();
+          delete_option(self::OPTION_LAST_TOKEN_EXCHANGE);
           delete_transient(self::TRANSIENT_IS_BUSINESS);
           self::clear_cache();
           wp_redirect('options-general.php?page=sharepress&step=1');

@@ -627,7 +627,13 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
               <div style="margin-bottom:5px;">
                 <label>
                   <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="1" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 1) echo 'checked="checked"' ?> />
-                  The first image in the gallery or content
+                  The first image in the content
+                </label>
+              </div>
+              <div style="margin-bottom:5px;">
+                <label>
+                  <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[let_facebook_pick_pic_default]" value="4" <?php if (self::setting('let_facebook_pick_pic_default', 0) == 4) echo 'checked="checked"' ?> />
+                  The first image in the gallery
                 </label>
               </div>
               <div style="margin-bottom:5px;">

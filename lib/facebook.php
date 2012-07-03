@@ -243,4 +243,8 @@ class SharePressFacebook extends SpBaseFacebook
       return sprintf(SharePress::OPTION_SESSION_ARG, $arg);
     }
   }
+
+  function getSessionVariableName($key) {
+    return $this->constructSessionVariableName($key);
+  }
 }
