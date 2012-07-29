@@ -90,4 +90,12 @@ class Facebook extends BaseFacebook
                               $this->getAppId(),
                               $key));
   }
+
+  protected function getSignedRequestCookieName() {
+    return null;
+  }
+
+  protected function getMetadataCookieName() {
+    return null;
+  }
 }
