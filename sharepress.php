@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.8
+Version: 2.2.9
 License: GPL2
 */
 
@@ -221,7 +221,7 @@ class Sharepress {
             'email': '<?php echo $current_user->user_email ?>', 
             'created_at': <?php echo get_option("sharepress_user_{$current_user->ID}") ?>,
             'custom_data': {
-              'sharepress_license': '<?php echo self::setting("license_key", "unlicensed") ?>',
+              'sharepress_license': '<?php echo ($key = self::setting("license_key", false)) ? $key : "unlicensed" ?>',
               'version': '<?php echo self::VERSION ?>'
             }
             /* , 'user_hash': '<?php echo sha1('foobar' . $current_user->user_email) ?>' */
@@ -307,7 +307,7 @@ class Sharepress {
         $defaults = array(
           'og:type' => self::setting('page_og_type', 'blog'),
           'og:url' => is_front_page() ? get_bloginfo('siteurl') : $this->get_permalink(),
-          'og:title' => get_the_title(),
+          'og:title' => is_front_page() ? get_bloginfo('name') : get_the_title(),
           'og:site_name' => get_bloginfo('name'),
           'og:image' => $this->get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
@@ -365,11 +365,11 @@ class Sharepress {
         }
 
         foreach($og as $property => $content) {
-          echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
-            array('"', '<', '>'), 
-            array('&quot;', '&lt;', '&gt;'), 
-            $this->strip_shortcodes($content)
-          ));
+          echo sprintf(
+            '<meta property="%s" content="%s" />'."\n", 
+            htmlspecialchars( $property ),
+            htmlentities( $this->strip_shortcodes($content), ENT_NOQUOTES, 'UTF-8' )
+          );
         }
       }
     } 
@@ -979,12 +979,18 @@ class Sharepress {
         // if the post is published, then consider posting to facebook immediately
         if ($post->post_status == 'publish') {
           // if lite version or if publish time has already past
-          if (!self::$pro || ( ($time = self::$pro->get_publish_time()) < current_time('timestamp') )) {
+          if (!self::$pro || ( ($time = self::$pro->get_publish_time()) < time() )) {
             self::log("Posting to Facebook now; save_post($post_id)");
             $this->share($post);
             
           // otherwise, if $time specified, schedule future publish
           } else if ($time) {
+            /*
+            echo date('c', $time).'<br />';
+            echo date('c', time());
+            exit;
+            */
+
             self::log("Scheduling future repost at {$time}; save_post($post_id)");
             update_post_meta($post->ID, self::META_SCHEDULED, $time);
           
@@ -1230,7 +1236,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       && !get_post_meta($post->ID, self::META_POSTED, true)
       
       // on schedule
-      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= current_time('timestamp')) 
+      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= time()) 
       
       // post only if no errors precede this posting
       && !get_post_meta($post->ID, self::META_ERROR)
@@ -1382,8 +1388,8 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       }
     
       try {
-        // poke the linter
-        _wp_http_get_object()->request(sprintf('http://developers.facebook.com/tools/debug/og/object?q=%s', urlencode($meta['link'])));
+        // call for a rescrape
+        _wp_http_get_object()->post(sprintf('https://graph.facebook.com/?id=%s&scrape=true', urlencode($meta['link'])));
         
         // no targets? error.
         if (!$meta['targets'] && !self::is_business()) {

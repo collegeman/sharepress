@@ -164,16 +164,16 @@ class SharepressPro {
       if ($error) {
         echo '<span style="color:red;">'.__('Last Post Failed').': '.__($error).'</span><br /><a href="'.$edit.'">Try Again</a>';
       } else if ($posted) {
-        echo __('Posted').': '.date('Y/m/d g:ia', strtotime($posted) + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
+        echo __('Posted').': '.date_i18n('M d, Y @ g:ia', strtotime($posted) + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
       } else if ($delayed) {
-        echo '<span title="'.date('Y/m/d g:ia', $delayed).'">'.__('Delay for').' '.$delay.'</span><br /><a href="'.$edit.'">Edit</a>';
+        echo '<span title="'.date_i18n('M d, Y @ g:ia', $delayed).'">'.__('Delay for').' '.$delay.'</span><br /><a href="'.$edit.'">Edit</a>';
       } else if ($scheduled) {
-        echo __('Scheduled').': '.date('Y/m/d g:ia', $scheduled).'<br /><a href="'.$edit.'">Edit Schedule</a>';
+        echo __('Scheduled').': '.date_i18n('M d, Y @ g:ia', $scheduled + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Edit Schedule</a>';
       } else if ($last_posted) {
-        echo __('Posted').': '.date('Y/m/d g:ia', $last_posted + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
+        echo __('Posted').': '.date_i18n('M d, Y @ g:ia', $last_posted + ( get_option( 'gmt_offset' ) * 3600 )).'<br /><a href="'.$edit.'">Schedule Future Repost</a>';
       } else if ($post->post_status == 'future') {
         if ($meta['enabled'] == 'on') {
-          echo __('Scheduled').': '.date('Y/m/d g:ia', strtotime( $post->post_date )).'<br /><a href="'.$edit.'">Edit Schedule</a>';
+          echo __('Scheduled').': '.date_i18n('M d, Y @ g:ia', strtotime( $post->post_date )).'<br /><a href="'.$edit.'">Edit Schedule</a>';
         } else {
           'Not scheduled<br /><a href="'.$edit.'">Schedule Now</a>';
         }
@@ -383,7 +383,7 @@ class SharepressPro {
         )
     ",
       Sharepress::META_SCHEDULED,
-      current_time('timestamp'),
+      time(),
       Sharepress::META_POSTED
     ));
   }
@@ -502,8 +502,8 @@ class SharepressPro {
     }
     
     if ($mm = @$meta['mm']) {
-      $date = sprintf('%s/%s/%s %s:%s', (int) $meta['aa'], (int) $meta['mm'], (int) $meta['jj'], (int) $meta['hh'], (int) $meta['mn']);
-      return strtotime($date);
+      $date = sprintf('%s/%s/%s %s:%s:00', (int) $meta['aa'], (int) $meta['mm'], (int) $meta['jj'], (int) $meta['hh'], (int) $meta['mn']);
+      return strtotime($date) - (get_option('gmt_offset', 0) * 3600);
     } else {
       return false;
     }
@@ -518,7 +518,12 @@ class SharepressPro {
 
     // echo '<label for="timestamp" style="display: block;"><input type="checkbox" class="checkbox" name="edit_date" value="1" id="timestamp"'.$tab_index_attribute.' /> '.__( 'Edit timestamp' ).'</label><br />';
 
+    // time plus configured offset:
     $time_adj = current_time('timestamp');
+
+    if ($scheduled) {
+      $scheduled += ( get_option('gmt_offset') * 3600 );
+    }
     
     $jj = ($scheduled) ? date( 'd', $scheduled ) : gmdate( 'd', $time_adj );
     $mm = ($scheduled) ? date( 'm', $scheduled ) : gmdate( 'm', $time_adj );

@@ -33,11 +33,11 @@
         </a>
       <?php } ?>
       <?php if ($posted) { ?>
-        <span><?php echo date_i18n('M d, Y @ H:i', ( is_numeric($posted) ? $posted : strtotime($posted) ) + ( get_option( 'gmt_offset' ) * 3600 ), true) ?></span>
-      <?php } else if ($scheduled) { ?>
-        <span><?php echo date_i18n('M d, Y @ H:i', ( is_numeric($scheduled) ? $scheduled : strtotime($scheduled) ), true) ?></span>
+        <span><?php echo date_i18n('M d, Y @ g:ia', ( is_numeric($posted) ? $posted : strtotime($posted) ) + ( get_option( 'gmt_offset' ) * 3600 ), true) ?></span>
+      <?php } else if ($scheduled) { $scheduled += ( get_option('gmt_offset') * 3600 ); ?>
+        <span><?php echo date_i18n('M d, Y @ g:ia', ( is_numeric($scheduled) ? $scheduled : strtotime($scheduled) ), true) ?></span>
       <?php } else if ($last_posted) { ?>  
-        <span><?php echo date_i18n('M d, Y @ H:i', $last_posted + ( get_option( 'gmt_offset' ) * 3600 ), true) ?></span>
+        <span><?php echo date_i18n('M d, Y @ g:ia', $last_posted + ( get_option( 'gmt_offset' ) * 3600 ), true) ?></span>
       <?php } ?>
     </div>
     <?php if (!Sharepress::$pro) { ?>
