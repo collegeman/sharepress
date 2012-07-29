@@ -1,0 +1,6 @@
+#sp-buf-profile-ui { margin-top: -8px; padding-bottom: 10px; }
+.wrap.sp-buf h2 { padding-bottom: 20px; }
+.wrap.sp-buf form { margin-top: 15px; margin-bottom: 18px; }
+.wrap.sp-buf form span { margin-left: 10px; }
+.wrap.sp-buf .fb_login { min-width: 150px; text-align: center; text-decoration: none; display: inline-block; width: auto; height: 46px; padding: 0 15px 0 50px; font-family: "lucida sans unicode", "lucida grande", sans-serif; color: #fff !important; text-shadow: 0 1px 0 #395286; font-size: 18px; line-height: 46px; margin: 0px auto 4px auto; background: url(../img/fb_login.png) no-repeat 0 0; border: 1px solid #3a5ba0; border-top-color: #6685c6; -moz-border-radius: 5px; -webkit-border-radius: 5px; border-radius: 5px; }
+.wrap.sp-buf .fb_login:hover { border-top-color: #3a5ba0; text-decoration: none; }
