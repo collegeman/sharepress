@@ -2,13 +2,52 @@
 # RESTful API - not to be confused with AJAX stuff
 class SpApi_v1 extends AbstractSpApi {
 
-  function oauth($service) {
-    if (!$service) {
+  function modal() {
+    include(SP_DIR.'/views/buf-modal.php');
+    exit;
+  }
+
+  function media($id) {
+    if ($this->_isGet()) {
+      $thumb = wp_get_attachment_image_src($id, 'thumbnail');
+      $full = wp_get_attachment_image_src($id, 'full');
+      return array(
+        'id' => $id,
+        'thumb' => array(
+          'url' => $thumb[0],
+          'width' => $thumb[1],
+          'height' => $thumb[2]
+        ),
+        'full' => array(
+          'url' => $full[0],
+          'width' => $full[1],
+          'height' => $full[2]
+        )
+      );
+    }
+  }
+
+  function preview() {
+    $url = @filter_var($_REQUEST['url'], FILTER_VALIDATE_URL);
+    if (!$url) {
       return false;
     }
 
-    if (!is_user_logged_in()) {
-      // TODO: more sophisticated error here
+    if ($this->_isPost()) {
+      $result = _wp_http_get_object()->post(sprintf('https://graph.facebook.com?id=%s&scrape=true', urlencode($url)));
+    } else {
+      $result = _wp_http_get_object()->get(sprintf('https://graph.facebook.com?id=%s', urlencode($url)));
+    }
+
+    if ($result['response']['code'] == 200) {
+      return json_decode($result['body']);
+    } else {
+      return false;
+    }
+  }
+
+  function oauth($service) {
+    if (!$service) {
       return false;
     }
 
@@ -30,7 +69,7 @@ class SpApi_v1 extends AbstractSpApi {
             'scope' => 'read_stream,publish_stream,manage_pages,share_item'
           )) );
         } else {
-          buf_update_profile(array(
+          $profile = buf_update_profile(array(
             'service' => 'facebook',
             'service_id' => $user->id,
             'formatted_username' => $user->username,
@@ -38,16 +77,20 @@ class SpApi_v1 extends AbstractSpApi {
             'avatar' => 'https://graph.facebook.com/'.$user->id.'/picture'
           ));
 
-          if (empty($_REQUEST['redirect_uri'])) {
-            $_REQUEST['redirect_uri'] = 'edit.php?post_type=buffer';
-          }
-          if (!$host = parse_url($_REQUEST['redirect_uri'], PHP_URL_HOST)) {
-            wp_redirect( admin_url($_REQUEST['redirect_uri']) );
-          } else {
-            wp_redirect( $_REQUEST['redirect_uri'] );
-          }
+          return $this->_onAfterOAuth($user, $profile);
         } 
       }
+    }
+  }
+
+  function _onAfterOAuth($user, $profile) {
+    if (empty($_REQUEST['redirect_uri'])) {
+      $_REQUEST['redirect_uri'] = 'edit.php?post_type=buffer';
+    }
+    if (!$host = parse_url($_REQUEST['redirect_uri'], PHP_URL_HOST)) {
+      wp_redirect( admin_url($_REQUEST['redirect_uri']) );
+    } else {
+      wp_redirect( $_REQUEST['redirect_uri'] );
     }
   }
 
@@ -135,6 +178,13 @@ function sp_flush_rewrite_rules() {
 
 function sp_parse_request($wp) {
   if (isset($wp->query_vars['_sp'])) {
+    if (!is_user_logged_in()) {
+      // TODO: more sophisticated error here
+      wp_redirect(wp_login_url($_SERVER['REQUEST_URI']));
+      exit;
+    }
+
+    
     $class = "SpApi_v{$wp->query_vars['_v']}";
     if (!class_exists($class)) {
       return;

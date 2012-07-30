@@ -7,13 +7,20 @@
       <?php if (!buf_has_facebook()) { ?>
 
       <?php } else { ?>
-        <form>
-          <a href="#" class="fb_login">Facebook Profile</a>
+        <form action="/sp/1/oauth/facebook">
+          <input type="hidden" name="redirect_uri" value="<?php echo htmlentities($_REQUEST['redirect_uri']) ?>" />
+          <button type="submit" href="#" class="button_fb">Facebook Profile</button>
           <span>Connect your personal Facebook profile.</span>
         </form>
-        <form>
-          <a href="#" class="fb_login">Facebook Page</a>
+        <form action="/sp/1/oauth/facebook">
+          <input type="hidden" name="redirect_uri" value="<?php echo htmlentities($_REQUEST['redirect_uri']) ?>#sp-buf-facebook-pages" />
+          <button type="submit" href="#" class="button_fb">Facebook Page</button>
           <span>Connect any Facebook page that you manage.</span>
+        </form>
+        <form action="/sp/1/oauth/twitter">
+          <input type="hidden" name="redirect_uri" value="<?php echo htmlentities($_REQUEST['redirect_uri']) ?>#sp-buf-facebook-pages" />
+          <button type="submit" href="#" class="button_twitter">Connect Twitter</button>
+          <span>Connect any Twitter account.</span>
         </form>
       <?php } ?>
     </div>

@@ -1,0 +1,93 @@
+body { background: transparent; margin-bottom: 100px; }
+#sp-buf-profile-ui { margin-top: -8px; padding-bottom: 10px; }
+.wrap.sp-buf h2 { padding-bottom: 20px; }
+.wrap.sp-buf form { margin-top: 15px; margin-bottom: 18px; }
+.wrap.sp-buf form span { margin-left: 10px; }
+
+/*
+.wrap.sp-buf .fb_login { cursor: pointer; text-align: center; text-decoration: none; display: inline-block; height: 46px; padding: 0 15px 0 50px; font-family: "lucida sans unicode", "lucida grande", sans-serif; color: #fff !important; text-shadow: 0 1px 0 #395286; font-size: 18px; line-height: 46px; margin: 0px auto 4px auto; background: url(../img/fb_login.png) no-repeat 0 0; border: 1px solid #3a5ba0; border-top-color: #6685c6; -moz-border-radius: 5px; -webkit-border-radius: 5px; border-radius: 5px; width: 240px; }
+.wrap.sp-buf .fb_login:hover { border-top-color: #3a5ba0; text-decoration: none; }
+*/
+
+.wrap.sp-buf .button_fb, .button_twitter {cursor: pointer; display: inline-block; width: 240px; height: 46px; padding: 0 15px 0 50px; color: #fff !important; text-shadow: 0 1px 0 #395286; font-size: 18px; line-height: 46px; margin: 10px 10px 4px 10px; -moz-border-radius: 5px; -webkit-border-radius: 5px; border-radius: 5px;}
+.wrap.sp-buf .button_fb {font-family: "lucida sans unicode", "lucida grande", sans-serif; background: url(../img/fb_login.png) no-repeat 0 0; border: 1px solid #3a5ba0; border-top-color: #6685c6;  }
+.wrap.sp-buf .button_fb:hover {border-color: #3a5ba0; text-decoration: none;}
+.wrap.sp-buf .button_twitter {background: url(../img/twitter_login.png) no-repeat 0 0; border: 1px solid #166f9a; border-top-color: #3099c3;}
+.wrap.sp-buf .button_twitter:hover {border-color: #104e68; text-decoration: none; }
+
+
+#share .thumbnails { margin-left: -8px; margin-bottom: -5px; margin-top: 5px; }
+#share .thumbnails li { margin-left: 10px; margin-bottom: 8px; }
+#share .thumbnails a { width: 48px; height: 48px; display: inline-block; }
+#share .thumbnails a.thumbnail { border-width: 2px; position: relative; }
+#share .thumbnails a.thumbnail.selected {
+  border-color: #0088cc;
+  border-width: 2px;
+  -webkit-box-shadow: 0 1px 4px rgba(0, 105, 214, 0.25);
+     -moz-box-shadow: 0 1px 4px rgba(0, 105, 214, 0.25);
+          box-shadow: 0 1px 4px rgba(0, 105, 214, 0.25);
+}
+#share .thumbnails a.thumbnail span { 
+  display: block;
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 16px; height: 16px; 
+}
+#share .thumbnails a.thumbnail span.fb { background-image: url(../img/fb-icon.png); }
+#share .thumbnails a.thumbnail span.twitter { background-image: url(../img/twitter-icon.png); }
+#share .modal-body, #upload .modal-body { padding: 0; }
+#share textarea { 
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+      -ms-box-sizing: border-box;
+          box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+  height: 140px;
+  padding: 15px; 
+  border: none; 
+  box-shadow: none;
+  font-family: "lucida sans unicode", "lucida grande", sans-serif;
+  font-size: 18px;
+  line-height: 23px;
+  margin-bottom: 0;
+}
+
+div.modal-section {
+  padding: 15px 15px;
+}
+
+div.modal-section.border-bottom {
+  border-bottom: 1px solid #eeeeee;
+}
+
+div.modal-section.border-top {
+  border-top: 1px solid #eeeeee;
+}
+
+#share .modal-body { clear: both; }
+
+#share .fb-preview .title { font-weight: bold; font-size: 16px; line-height: 20px; }
+#share .fb-preview .url { color: #aaa; margin-bottom: 5px; overflow: hidden; height: 16px; }
+#share .fb-preview p { line-height: 16px; margin-bottom: 0; }
+#share-media { padding: 0; background-color: black; }
+#share-media img { display: block; margin: 0 auto; max-width: 550px; }
+#share-media .close { margin-right: 15px; margin-top: 9px; color: white; opacity: 0.8; }
+
+.modal { top: 40%; position: absolute; margin-bottom: 100px; }
+
+#upload { width: 650px; margin-left: -325px; }
+#upload .modal-body { max-height: 500px; }
+#upload iframe { width: 100%; height: 500px; border: none; }
+
+/* @group Media containers -- floated images and text with a hard margin */
+.media, .bd {overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1;}
+.media .img {float: left; margin-right: 10px; display: block;}
+.media .img img {display: block; padding: 0; margin: 0;}
+.media .img_right {float: right; margin-left: 10px; margin-right: 0;}
+
+.media_list {list-style: none; margin: 0 0 15px 0 !important; padding: 0 !important;}
+.media_list .media {margin-bottom: 20px;}
+.img.img_30 {width: 30px; height: 30px; overflow: hidden;}
+.img.img_30 img {max-width: 30px;}
+/* @end */

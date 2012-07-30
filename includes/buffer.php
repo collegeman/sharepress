@@ -1,9 +1,10 @@
 <?php
 # Emulate the awesome Buffer, bufferapp.com
 add_action('init', 'buf_init');
-add_action('admin_enqueue_scripts', 'buf_enqueue_scripts');
+add_action('admin_bar_menu', 'buf_admin_bar_menu', 1000);
 
 function buf_init() {
+  /*
   $labels = array(
     'name' => _x('Scheduled Posts', 'post type general name'),
     'singular_name' => _x('Post', 'post type singular name'),
@@ -19,19 +20,20 @@ function buf_init() {
     'parent_item_colon' => '',
     'menu_name' => __('Schedule')
   );
+  */
 
   $args = array(
-    'labels' => $labels,
+    // 'labels' => $labels,
     'public' => false,
     'publicly_queryable' => false,
-    'show_ui' => true, 
-    'show_in_menu' => true, 
+    'show_ui' => false, 
+    'show_in_menu' => false, 
     'query_var' => false,
     'rewrite' => false,
     'capability_type' => 'post',
-    'has_archive' => true, 
+    'has_archive' => false, 
     'hierarchical' => false,
-    'menu_position' => 2,
+    'menu_position' => null,
     'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' )
   ); 
 
@@ -52,14 +54,29 @@ function buf_init() {
   ); 
 
   register_post_type('profile', $args);
+
+  if (is_user_logged_in()) {
+    wp_enqueue_script('buffer-embed', plugins_url('js/embed.js', SHAREPRESS), array('jquery'));
+    wp_localize_script('buffer-embed', '_sp', array(
+      // the root URL of the API
+      'api' => site_url('/sp/1/'),
+      // the URL of the current request, for cross-domain communication
+      'host' => is_admin() ? admin_url($_SERVER['REQUEST_URI']) : site_url($_SERVER['REQUEST_URI'])
+    ));
+  }
 }
 
-function buf_enqueue_scripts($hook) {
-  $screen = get_current_screen();
-  if ($screen->id == 'buffer') {
-    wp_enqueue_script('buffer', plugins_url('js/buffer.js', SHAREPRESS), array('jquery'));
-    wp_enqueue_style('buffer-admin', plugins_url('css/admin.css', SHAREPRESS));
+function buf_admin_bar_menu() {
+  global $wp_admin_bar;
+  if (!is_admin_bar_showing()) {
+    return;
   }
+
+  $wp_admin_bar->add_menu(array(
+    'id' => 'sp-buf-schedule',
+    'title' => sprintf('<img src="%s">', plugins_url('img/admin-bar-wait.gif', SHAREPRESS)),
+    'href' => '#',
+  ));
 }
 
 function buf_has_facebook() {
