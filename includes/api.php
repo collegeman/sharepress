@@ -33,17 +33,20 @@ class SpApi_v1 extends AbstractSpApi {
       return false;
     }
 
-    if ($this->_isPost()) {
-      $result = _wp_http_get_object()->post(sprintf('https://graph.facebook.com?id=%s&scrape=true', urlencode($url)));
-    } else {
-      $result = _wp_http_get_object()->get(sprintf('https://graph.facebook.com?id=%s', urlencode($url)));
+    $key = '_fb-'.md5($url);
+    if (!isset($_REQUEST['flush']) && ($cached = get_transient($key))) {
+      return $cached;
     }
 
+    $result = _wp_http_get_object()->post(sprintf('https://graph.facebook.com?id=%s&scrape=true', urlencode($url)));
+
+    $preview = json_decode($result['body']);
+      
     if ($result['response']['code'] == 200) {
-      return json_decode($result['body']);
-    } else {
-      return false;
+      set_transient($key, $preview, 60 * 60 * 24 * 7);
     }
+
+    return $preview;
   }
 
   function oauth($service) {
