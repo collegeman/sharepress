@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 @define('SHAREPRESS', __FILE__);
 @define('SP_DIR', dirname(__FILE__));
+@define('SP_URL', plugins_url('', __FILE__));
 @define('SP_DEBUG', false);
 
 # bootstrap
