@@ -41,11 +41,10 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 
 class Sharepress {
 
-  const VERSION = '2.2.5';
+  const VERSION = '2.2.9';
   
   const MISSED_SCHEDULE_DELAY = 5;
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
-
   const MAX_RETRIES = 3;
 
   const OPTION_API_KEY = 'sharepress_api_key';
@@ -100,6 +99,10 @@ class Sharepress {
     return $supported;
   }
   
+  function is_supported_post_type($type) {
+    return in_array($type, self::supported_post_types());
+  }
+
   function init() {
     if (!apply_filters('sharepress_enabled', true)) {
       return false;
@@ -152,9 +155,12 @@ class Sharepress {
     }
     
     add_action('save_post', array($this, 'save_post'));
-    add_action('transition_post_status', array($this, 'transition_post_status'), 10, 3);
-    add_action('future_to_publish', array($this, 'future_to_publish'));
-    add_action('publish_post', array($this, 'publish_post'));
+
+    // These do not appear to be necessary - 2012/08/21
+    // add_action('transition_post_status', array($this, 'transition_post_status'), 10, 3);
+    // add_action('future_to_publish', array($this, 'future_to_publish'));
+    // add_action('publish_post', array($this, 'publish_post'));
+    
     add_filter('filter_'.self::META, array($this, 'filter_'.self::META), 10, 2);
     add_action('wp_head', array($this, 'wp_head'));
     add_filter('cron_schedules', array($this, 'cron_schedules'));
@@ -175,6 +181,23 @@ class Sharepress {
       $this->fix_missed_schedule();
     }
   } 
+
+  function getOgDescription($post) {
+    $post = !is_object($post) ? get_post($post) : $post;    
+
+    $content = $post->post_excerpt;
+    if (!$content) {
+      $content = $post->post_content;
+    }
+
+    if (defined('MARKDOWN_WP_POSTS') && MARKDOWN_WP_POSTS) {
+      $content = mdwp_MarkdownPost($content);
+    }
+
+    $description = preg_match('/^.{1,256}\b/s', preg_replace("/\s\s+/", ' ', strip_tags($content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('description');
+
+    return $description;
+  }
 
   private static $ok_to_show_support_here = false;
   private static $on_settings_screen = false;
@@ -288,9 +311,7 @@ class Sharepress {
         $picture = $this->get_og_image_url($post, $meta);
 
         global $post;
-        if (!($excerpt = $post->post_excerpt)) {
-          $excerpt = preg_match('/^.{1,256}\b/s', preg_replace("/\s\s+/", ' ', strip_tags($post->post_content)), $matches) ? trim($matches[0]).'...' : get_bloginfo('description');
-        }
+        $description = $this->getOgDescription($post);
 
         $defaults = array(
           'og:type' => 'article',
@@ -299,7 +320,7 @@ class Sharepress {
           'og:image' => $picture,
           'og:site_name' => get_bloginfo('name'),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
-          'og:description' => $this->strip_shortcodes($excerpt),
+          'og:description' => $this->strip_shortcodes($description),
           'og:locale' => $this->setting('og_locale', 'en_US')
         );
 
@@ -902,6 +923,11 @@ class Sharepress {
     }
     
     $post = get_post($post_id);
+
+    if (!$this->is_supported_post_type($post->post_type)) {
+      self::log("Post type not supported: [$post->post_type]");
+      return false;
+    }
     
     // make sure we're not working with a revision
     if ($post->post_status == 'auto-draft' || ( $parent_post_id = wp_is_post_revision($post) )) {
@@ -909,37 +935,37 @@ class Sharepress {
       return false;
     }
 
-    $is_xmlrpc = defined('XMLRPC_REQUEST') && XMLRPC_REQUEST;
-    self::log($is_xmlrpc ? 'In XML-RPC request' : 'Not in XML-RPC request');
-    
     $is_cron = defined('DOING_CRON') && DOING_CRON;
     self::log($is_cron ? 'In CRON job' : 'Not in CRON job');
+    
+    /* Pretending for a moment that none of this matters
+    $is_xmlrpc = defined('XMLRPC_REQUEST') && XMLRPC_REQUEST;
+    self::log($is_xmlrpc ? 'In XML-RPC request' : 'Not in XML-RPC request');
     
     $is_pressthis = strpos($_POST['_wp_http_referer'], 'press-this.php') !== false;
     self::log($is_pressthis ? 'In Press This widget request' : 'Not in Press This widget request');
     
     $is_quickpress = 'post-quickpress-publish' == $_POST['action'];
     self::log($is_quickpress ? 'In QuickPress widget request' : 'Not in QuickPress widget request');
-
-    $fixing_missed_schedule = defined('SP_FIXING_MISSED_SCHEDULE') && SP_FIXING_MISSED_SCHEDULE;
-
+    
     // verify permissions
+    */
+
     if (!$is_cron && !apply_filters('sharepress_user_can_edit_post', false, $post) && !current_user_can('edit_post', $post->ID)) {
       self::log("Current user is not allowed to edit posts; ignoring save_post($post_id)");
       return false;
     }
     
+    $fixing_missed_schedule = defined('SP_FIXING_MISSED_SCHEDULE') && SP_FIXING_MISSED_SCHEDULE;
+    
     $already_posted = get_post_meta($post->ID, self::META_POSTED, true);
     $is_scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
-    $ignore_nonce = apply_filters('sharepress_ignore_save_nonce', false);
+    
+    // remove any past failures
+    delete_post_meta($post->ID, self::META_ERROR);
 
-    // if the nonce is present, update meta settings for this post from $_POST
-    if ($ignore_nonce || wp_verify_nonce($_POST['sharepress-nonce'], plugin_basename(__FILE__))) {
-
-      // remove any past failures
-      delete_post_meta($post->ID, self::META_ERROR);
-
-      // update facebook meta?
+    // handling submission from Post editing screen?
+    if (isset($_POST[self::META])) {
       if (@$_POST[self::META]['publish_again'] || ( $_POST[self::META]['enabled'] == 'on' && !$already_posted && !$is_scheduled )) {
                 
         // if publish_action was set, make sure enabled = 'on'
@@ -958,6 +984,9 @@ class Sharepress {
         } else {
           $meta = apply_filters('filter_'.self::META, $_POST[self::META], $post);  
         }
+
+        // New SharePress... like "New Coke". Ha.
+        $meta['__new__'] = 1;
         
         // save the meta data
         update_post_meta($post->ID, self::META, $meta);
@@ -968,6 +997,8 @@ class Sharepress {
         } else {
           $twitter_meta = apply_filters('filter_'.self::META_TWITTER, $_POST[self::META_TWITTER], $post);  
         }
+
+        $twitter_meta['__new__'] = 1;
 
         if (empty($twitter_meta['enabled'])) {
           $twitter_meta['enabled'] = 'off';
@@ -1017,16 +1048,7 @@ class Sharepress {
         self::log("Post is already posted or is not allowed to be posted to facebook; save_post($post_id)");
       }
 
-      
-
-    #
-    # When save_post is invoked by XML-RPC, a CRON job, the Press This widget, or the Quick press widget
-    # the SharePress nonce won't be  available to test. So, we evaluate whether or not to post based on several criteria:
-    # 1. SharePress must be configured to post to Facebook by default
-    # 2. The Post must not already have been posted by SharePress
-    # 3. The Post must not be scheduled for future posting
-    #
-    } else if (($fixing_missed_schedule || $is_quickpress || $is_pressthis || $is_xmlrpc || $is_cron) && $this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
+    } else if ($this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // is there already meta data stored?
       $meta = get_post_meta($post->ID, self::META, true);
       if ($meta && $meta['enabled'] && $meta['enabled'] != 'on') {
@@ -1046,7 +1068,8 @@ class Sharepress {
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => array_keys(( $targets = self::targets() ) ? $targets : array()),
-        'enabled' => Sharepress::setting('default_behavior')
+        'enabled' => Sharepress::setting('default_behavior'),
+        '__new__' => 1
       );
 
       if ($fixing_missed_schedule) {
@@ -1078,7 +1101,9 @@ class Sharepress {
         $meta = array_merge($defaults, is_array($meta) ? $meta : array());
       } else {
         $meta = $defaults;
-      }   
+      } 
+
+      $meta['__new__'] = 1;  
 
       $meta = apply_filters('filter_'.self::META_TWITTER, $meta);  
 
@@ -1089,10 +1114,7 @@ class Sharepress {
         $this->share($post);
       }
 
-    } else {
-      self::log("{$is_scheduled} {$already_posted} SharePress nonce was invalid; ignoring save_post($post_id)");
-      
-    }
+    } 
   }
 
   function fix_missed_schedule() {
@@ -1242,6 +1264,11 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       && !get_post_meta($post->ID, self::META_ERROR)
     );
 
+    if (!$meta['__new__']) {
+      $can_post_on_facebook = false;
+      $this->scheduleError($post, $meta);
+    }
+
     self::log("Loaded for {$post->ID}: ".json_encode($meta));
     
     return ($can_post_on_facebook ? $meta : false);
@@ -1270,6 +1297,11 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       // post only if no errors precede this posting
       && !get_post_meta($post->ID, self::META_ERROR)
     );
+
+    if (!$meta['__new__']) {
+      $can_post_on_twitter = false;
+      $this->scheduleError($post,  $meta);
+    }
 
     return ($can_post_on_twitter ? $meta : false);
   }
@@ -1358,12 +1390,17 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   }
   
   function share($post) {
-    if (self::debug()) {
-      self::log(sprintf("share(%s)", is_object($post) ? $post->post_title : $post));
-    }
-    
     if (!is_object($post)) {
       $post = get_post($post);
+    }
+
+    if (!self::is_supported_post_type($post->post_type)) {
+      // don't log this...
+      return false;  
+    }
+
+    if (self::debug()) {
+      self::log(sprintf("share(%s)", is_object($post) ? $post->post_title : $post));
     }
 
     $posted = $error = false;
@@ -1680,6 +1717,17 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
         "Sent message \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nNeed to edit your post? Click here:\n{$link}"
       );
     }
+  }
+
+  function scheduleError($post, $meta) {
+    $error = 'Please reschedule.';
+    update_post_meta($post->ID, self::META_ERROR, $error);
+    $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
+    wp_mail(
+      $this->get_error_email(),
+      "SharePress Error",
+      "SharePress Error: When you upgraded to the latest SharePress, we fixed a bug in our scheduling features. You need to reschedule this post, and then everything will be OK!; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}"
+    );
   }
   
   function error($post, $meta, $error) {

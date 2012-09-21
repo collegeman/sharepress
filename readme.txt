@@ -86,7 +86,9 @@ E-mail based tech support is available to PRO customers. All you have to do is [
 * Fixed: Long-standing issue with encoding og:title and og:description fields
 * Fixed: Using incorrect title for og:title when is_front_page() is true
 * Fixed: Correctly report license for support purposes
+* Added: Dramatically expand compatability with other plugins including those that facilitate posting from the front-end, and certain post-by-email features
 * Added: Use Object Updater API to call for a rescrape before posting content to Facebook
+* Added: Automatically detect PHP Markdown plugin, and automatically parse og:description
 
 = 2.2.8 =
 * Change: Compatible with WordPress 3.4.1
