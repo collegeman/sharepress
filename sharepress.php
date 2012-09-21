@@ -1051,7 +1051,7 @@ class Sharepress {
     } else if ($this->setting('default_behavior') == 'on' && !$already_posted && !$is_scheduled) {
       // is there already meta data stored?
       $meta = get_post_meta($post->ID, self::META, true);
-      if ($meta && $meta['enabled'] && $meta['enabled'] != 'on') {
+      if ($meta && array_key_exists('enabled', $meta) && $meta['enabled'] != 'on') {
         self::log("Post is set not to share on Facebook; ignoring save_post($post_id)");
         return;
       }
@@ -1068,16 +1068,17 @@ class Sharepress {
         'description' => $this->get_excerpt($post),
         'excerpt_is_description' => true,
         'targets' => array_keys(( $targets = self::targets() ) ? $targets : array()),
-        'enabled' => Sharepress::setting('default_behavior'),
-        '__new__' => 1
+        'enabled' => Sharepress::setting('default_behavior')
       );
 
-      if ($fixing_missed_schedule) {
-        $meta = array_merge($defaults, is_array($meta) ? $meta : array());
+      if ($meta && !array_key_exists('__new__', $meta)) {
+        $meta['__new__'] = false;
       } else {
-        $meta = $defaults;
+        $meta['__new__'] = 1;
       }
 
+      $meta = array_merge($defaults, is_array($meta) ? $meta : array());
+    
       $meta = apply_filters('filter_'.self::META, $meta, $post);
 
       if (self::setting('append_link', 'on') == 'on') {
@@ -1097,14 +1098,14 @@ class Sharepress {
 
       $meta = get_post_meta($post->ID, self::META_TWITTER, true);
 
-      if ($fixing_missed_schedule) {
-        $meta = array_merge($defaults, is_array($meta) ? $meta : array());
+      if ($meta && !array_key_exists('__new__', $meta)) {
+        $meta['__new__'] = false;
       } else {
-        $meta = $defaults;
-      } 
+        $meta['__new__'] = 1;
+      }
 
-      $meta['__new__'] = 1;  
-
+      $meta = array_merge($defaults, is_array($meta) ? $meta : array());
+  
       $meta = apply_filters('filter_'.self::META_TWITTER, $meta);  
 
       update_post_meta($post->ID, self::META_TWITTER, $meta);
