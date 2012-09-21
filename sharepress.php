@@ -1426,7 +1426,10 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     
       try {
         // call for a rescrape
-        _wp_http_get_object()->post(sprintf('https://graph.facebook.com/?id=%s&scrape=true', urlencode($meta['link'])));
+        _wp_http_get_object()->post(
+          $url = sprintf('https://graph.facebook.com/?id=%s&scrape=true', urlencode($meta['link'])), 
+          array('blocking' => false)
+        );
         
         // no targets? error.
         if (!$meta['targets'] && !self::is_business()) {
