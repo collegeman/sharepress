@@ -358,34 +358,11 @@ class SharepressPro {
       return false;
     }
 
-    foreach($this->get_scheduled_posts() as $post) {
-      Sharepress::load()->share($post->ID);
+    $sp = Sharepress::load();
+
+    foreach($sp->get_scheduled_reposts() as $post) {
+      $sp->share($post->ID);
     }
-  }
-  
-  function get_scheduled_posts() {
-    // load list of posts that are scheduled and ready to post
-    global $wpdb;
-    return $wpdb->get_results(sprintf("
-      SELECT P.ID
-      FROM $wpdb->posts P 
-      INNER JOIN $wpdb->postmeta M ON (M.post_id = P.ID)
-      WHERE 
-        P.post_status = 'publish'
-        AND M.meta_key = '%s' 
-        AND M.meta_value <= %s
-        AND NOT EXISTS (
-          SELECT * FROM $wpdb->postmeta E
-          WHERE 
-            E.post_id = P.ID
-            AND E.meta_key = '%s'
-            AND E.meta_value IS NOT NULL
-        )
-    ",
-      Sharepress::META_SCHEDULED,
-      time(),
-      Sharepress::META_POSTED
-    ));
   }
   
   function ajax_get_excerpt() {

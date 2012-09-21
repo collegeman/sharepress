@@ -47,6 +47,7 @@ class Sharepress {
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
   const MAX_RETRIES = 3;
 
+  const OPTION_VERSION = 'sharepress_version';
   const OPTION_API_KEY = 'sharepress_api_key';
   const OPTION_APP_SECRET = 'sharepress_app_secret';
   const OPTION_PUBLISHING_TARGETS = 'sharepress_publishing_targets';
@@ -102,6 +103,15 @@ class Sharepress {
   function is_supported_post_type($type) {
     return in_array($type, self::supported_post_types());
   }
+
+  function activate() {
+    $current = get_option(self::OPTION_VERSION, '0');
+    if (version_compare($current, '2.2.9')) {
+      // in 2.2.9 we upgraded scheduling
+      $this->sendScheduleResetList();  
+    }
+    update_option(self::OPTION_VERSION, self::VERSION);
+  } 
 
   function init() {
     if (!apply_filters('sharepress_enabled', true)) {
@@ -1733,6 +1743,62 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       "SharePress Error: When you upgraded to the latest SharePress, we fixed a bug in our scheduling features. You need to reschedule this post, and then everything will be OK!; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}"
     );
   }
+
+  function get_scheduled_reposts() {
+    // load list of posts that are scheduled and ready to post
+    global $wpdb;
+    return $wpdb->get_results(
+      sprintf(
+        "
+          SELECT P.ID
+          FROM $wpdb->posts P 
+          INNER JOIN $wpdb->postmeta M ON (M.post_id = P.ID)
+          WHERE 
+            P.post_status = 'publish'
+            AND M.meta_key = '%s' 
+            AND M.meta_value <= %s
+            AND NOT EXISTS (
+              SELECT * FROM $wpdb->postmeta E
+              WHERE 
+                E.post_id = P.ID
+                AND E.meta_key = '%s'
+                AND E.meta_value IS NOT NULL
+            )
+        ",
+        Sharepress::META_SCHEDULED,
+        time(),
+        Sharepress::META_POSTED
+      )
+    );
+  }
+
+  function get_scheduled_posts() {
+    global $wpdb;
+    return $wpdb->get_results(
+      sprintf(
+        "
+          SELECT P.ID
+          FROM $wpdb->posts P
+          WHERE 
+            P.post_status = 'scheduled'
+            AND P.post_type IN (%s)
+        ", 
+        "'".implode("','", self::supported_post_types())."'"
+      )
+    );
+  }
+
+  function sendScheduleResetList() {
+    $scheduled = $this->get_scheduled_reposts();
+    foreach($this->get_scheduled_posts() as $post_id) {
+      if ($this->can_post_on_facebook($post_id)) {
+        $scheduled[] = $post_id;
+      }
+    }
+    if ($scheduled) {
+      print_r($scheduled);
+    }
+  }
   
   function error($post, $meta, $error) {
     if (is_object($error)) {
@@ -2115,7 +2181,7 @@ class SharePress_WordPressOAuth {
   }
 }
 
-Sharepress::load();
+add_action('activate_sharepress/sharepress.php', array(Sharepress::load(), 'activate'));
 
 #
 # Don't be a dick. I like to eat, too.
