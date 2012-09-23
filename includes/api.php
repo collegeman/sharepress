@@ -50,46 +50,35 @@ class SpApi_v1 extends AbstractSpApi {
   }
 
   function oauth($service) {
-    if (!$service) {
+    if (!$service = trim($service)) {
       return false;
     }
 
     $error = $user = false;
 
-    if ($service == 'facebook') {
-      if (buf_has_facebook()) {
-        if ($user = buf_facebook()->getUser()) {
-          try {
-            $user = buf_facebook()->api('/me');
-          } catch (Exception $e) {
-            $error = $e;
-            // TODO: figure out all of the possibilities
-          }
-        }
-
-        if (!$user && !$error) {
-          wp_redirect( buf_facebook()->getLoginUrl(array(
-            'scope' => 'read_stream,publish_stream,manage_pages,share_item'
-          )) );
-        } else {
-          $profile = buf_update_profile(array(
-            'service' => 'facebook',
-            'service_id' => $user->id,
-            'formatted_username' => $user->username,
-            'service_username' => $user->username,
-            'avatar' => 'https://graph.facebook.com/'.$user->id.'/picture'
-          ));
-
-          return $this->_onAfterOAuth($user, $profile);
-        } 
-      }
+    if (!$client = buf_client($service)) {
+      return false;
     }
-  }
 
-  function _onAfterOAuth($user, $profile) {
+    try {
+      $profile = $client->profile();
+    } catch (Exception $e) {
+      $error = $e;
+      // TODO: figure out all of the possibilities
+    }
+    
+    if (!$profile && !$error) {
+      wp_redirect( $client->loginUrl() );
+
+    } else {
+      $profile_ID = buf_update_profile($profile);
+    } 
+
     if (empty($_REQUEST['redirect_uri'])) {
-      $_REQUEST['redirect_uri'] = 'edit.php?post_type=buffer';
+      unset($profile->access_token);
+      return $profile;
     }
+
     if (!$host = parse_url($_REQUEST['redirect_uri'], PHP_URL_HOST)) {
       wp_redirect( admin_url($_REQUEST['redirect_uri']) );
     } else {

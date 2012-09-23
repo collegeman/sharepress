@@ -38,5 +38,6 @@ require(SP_DIR.'/lib/tmh/tmhOAuth.php');
 require(SP_DIR.'/lib/tmh/tmhUtilities.php');
 require(SP_DIR.'/includes/core.php');
 require(SP_DIR.'/includes/buffer.php');
+require(SP_DIR.'/includes/adapters.php');
 require(SP_DIR.'/includes/api.php');
 require(SP_DIR.'/includes/ajax.php');

@@ -79,37 +79,49 @@ function buf_admin_bar_menu() {
   // ));
 }
 
-function buf_has_facebook() {
-  $id = sp_get_opt('fb_app_id', constant('SP_FB_APP_ID'));
-  $secret = sp_get_opt('fb_secret', constant('SP_FB_SECRET'));
+function buf_has_installed($service) {
+  $lower = strtolower($service);
+  $upper = strtoupper($service);
+  
+  $id = sp_get_opt("{$lower}_app_id", constant("SP_{$upper}_APP_ID"));
+  $secret = sp_get_opt("{$lower}_secret", constant("SP_{$upper}_SECRET"));
+
+  $keys = false;
 
   if ($id && $secret) {
-    return (object) array(
+    $keys = (object) array(
       'id' => $id,
       'secret' => $secret
     );  
   }
-  return false;
+
+  if (apply_filters('buf_has_installed', $service, $keys)) {
+    return $keys;
+  }  
+
+  return $keys;
 }
 
-/**
- * @return Facebook client, when configured; otherwise, null.
- * @see buf_has_facebook()
- */
-function &buf_facebook() {
-  global $facebook;
+function &buf_client($service) {
+  global $buf_clients;
 
-  if (is_null($facebook)) {
-    if ($keys = buf_has_facebook()) {
+  if (!isset($buf_clients[$service])) {
+    if ($keys = buf_has_installed($service)) {
+      $class = sprintf('%sSharePressClient', ucwords($service));
+      if (!class_exists($class)) {
+        return false;
+      }
+
       @session_start();  
-      $facebook = new Facebook(array(
+      
+      $buf_clients[$service] = new $class(array(
         'appId' => $keys->id,
         'secret' => $keys->secret
       ));
     }
   }
 
-  return $facebook;
+  return $buf_clients[$service];
 }
 
 function buf_get_profiles($args = '') {
