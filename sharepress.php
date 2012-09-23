@@ -106,7 +106,7 @@ class Sharepress {
 
   function activate() {
     $current = get_option(self::OPTION_VERSION, '0');
-    if (version_compare($current, '2.2.9')) {
+    if (version_compare($current, '2.2.9', '<')) {
       // in 2.2.9 we upgraded scheduling
       $this->sendScheduleResetList();  
     }
@@ -1772,35 +1772,29 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     );
   }
 
-  function get_scheduled_posts() {
-    global $wpdb;
-    return $wpdb->get_results(
-      sprintf(
-        "
-          SELECT P.ID
-          FROM $wpdb->posts P
-          WHERE 
-            P.post_status = 'future'
-            AND P.post_type IN (%s)
-        ", 
-        "'".implode("','", self::supported_post_types())."'"
-      )
-    );
-  }
+  
 
   function sendScheduleResetList() {
-    $scheduled = $this->get_scheduled_reposts();
-    foreach($this->get_scheduled_posts() as $post) {
-      echo $post->ID;
-      if ($this->can_post_on_facebook($post->ID)) {
-        $scheduled[] = $post->ID;
+    if ($scheduled = $this->get_scheduled_reposts()) {
+      $urls = array();
+      foreach($scheduled as $post) {
+        $urls[] = admin_url('post.php?action=edit&post='.$post->ID);
       }
+
+      $message = sprintf(
+        "You recently updated SharePress to version %s. There was bug in previous versions of SharePress, and so now you'll need to reschedule the following reposts. Sorry for the inconvenience.\n\n%s",
+        self::VERSION,
+        implode("\n", $urls)
+      );
+
+      error_log($message);
+
+      wp_mail(
+        $this->get_error_email(),
+        "SharePress Error",
+        $message
+      );
     }
-    if ($scheduled) {
-      print_r($scheduled);
-    }
-      exit;
-    
   }
   
   function error($post, $meta, $error) {
