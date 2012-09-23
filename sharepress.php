@@ -1780,7 +1780,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
           SELECT P.ID
           FROM $wpdb->posts P
           WHERE 
-            P.post_status = 'scheduled'
+            P.post_status = 'future'
             AND P.post_type IN (%s)
         ", 
         "'".implode("','", self::supported_post_types())."'"
@@ -1790,14 +1790,17 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
 
   function sendScheduleResetList() {
     $scheduled = $this->get_scheduled_reposts();
-    foreach($this->get_scheduled_posts() as $post_id) {
-      if ($this->can_post_on_facebook($post_id)) {
-        $scheduled[] = $post_id;
+    foreach($this->get_scheduled_posts() as $post) {
+      echo $post->ID;
+      if ($this->can_post_on_facebook($post->ID)) {
+        $scheduled[] = $post->ID;
       }
     }
     if ($scheduled) {
       print_r($scheduled);
     }
+      exit;
+    
   }
   
   function error($post, $meta, $error) {
