@@ -134,19 +134,19 @@ abstract class AbstractSpApi {
   }
 
   function _isGet() {
-    return self::_method() == 'get';
+    return self::_method() === 'get';
   }
 
   function _isPost() {
-    return self::_method() == 'post';
+    return self::_method() === 'post';
   }
 
   function _isPut() {
-    return self::_method() == 'put';
+    return self::_method() === 'put';
   }
 
   function _isDelete() {
-    return self::_method() == 'delete';
+    return self::_method() === 'delete';
   }
 }
 
@@ -186,7 +186,6 @@ function sp_parse_request($wp) {
       wp_redirect(wp_login_url($_SERVER['REQUEST_URI']));
       exit;
     }
-
     
     $class = "SpApi_v{$wp->query_vars['_v']}";
     if (!class_exists($class)) {
