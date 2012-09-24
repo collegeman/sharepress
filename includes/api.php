@@ -66,12 +66,12 @@ class SpApi_v1 extends AbstractSpApi {
       $error = $e;
       // TODO: figure out all of the possibilities
     }
-    
+
     if (!$profile && !$error) {
       wp_redirect( $client->loginUrl() );
 
     } else {
-      $profile_ID = buf_update_profile($profile);
+      $profile = buf_update_profile($profile);
     } 
 
     if (empty($_REQUEST['redirect_uri'])) {

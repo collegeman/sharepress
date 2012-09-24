@@ -4,26 +4,7 @@ add_action('init', 'buf_init');
 add_action('admin_bar_menu', 'buf_admin_bar_menu', 1000);
 
 function buf_init() {
-  /*
-  $labels = array(
-    'name' => _x('Scheduled Posts', 'post type general name'),
-    'singular_name' => _x('Post', 'post type singular name'),
-    'add_new' => _x('Add New', 'buffer'),
-    'add_new_item' => __('Add New Scheduled Post'),
-    'edit_item' => __('Edit Scheduled Post'),
-    'new_item' => __('New Scheduled Post'),
-    'all_items' => __('All Scheduled Posts'),
-    'view_item' => __('View Scheduled Post'),
-    'search_items' => __('Search Schedule'),
-    'not_found' =>  __('No scheduled posts found'),
-    'not_found_in_trash' => __('No scheduled posts found in Trash'), 
-    'parent_item_colon' => '',
-    'menu_name' => __('Schedule')
-  );
-  */
-
-  $args = array(
-    // 'labels' => $labels,
+  register_post_type('buffer', array(
     'public' => false,
     'publicly_queryable' => false,
     'show_ui' => false, 
@@ -33,13 +14,10 @@ function buf_init() {
     'capability_type' => 'post',
     'has_archive' => false, 
     'hierarchical' => false,
-    'menu_position' => null,
-    'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' )
-  ); 
+    'menu_position' => null
+  ));
 
-  register_post_type('buffer', $args);
-
-  $args = array(
+  register_post_type('profile', array(
     'public' => false,
     'publicly_queryable' => false,
     'show_ui' => false, 
@@ -49,20 +27,31 @@ function buf_init() {
     'capability_type' => 'post',
     'has_archive' => false, 
     'hierarchical' => false,
-    'menu_position' => null,
-    'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' )
-  ); 
-
-  register_post_type('profile', $args);
+    'menu_position' => null
+  ));
 
   if (is_user_logged_in()) {
-    wp_enqueue_script('buffer-embed', plugins_url('js/embed.js', SHAREPRESS), array('jquery'));
-    wp_localize_script('buffer-embed', '_sp', array(
-      // the root URL of the API
-      'api' => site_url('/sp/1/'),
-      // the URL of the current request, for cross-domain communication
-      'host' => is_admin() ? admin_url($_SERVER['REQUEST_URI']) : site_url($_SERVER['REQUEST_URI'])
-    ));
+
+    wp_enqueue_script(
+      'buffer-embed', 
+      plugins_url(
+        'js/embed.js', 
+        SHAREPRESS
+      ), 
+      array('jquery')
+    );
+    
+    wp_localize_script(
+      'buffer-embed', 
+      '_sp', 
+      array(
+        // the root URL of the API
+        'api' => site_url('/sp/1/'),
+        // the URL of the current request, for cross-domain communication
+        'host' => is_admin() ? admin_url($_SERVER['REQUEST_URI']) : site_url($_SERVER['REQUEST_URI'])
+      )
+    );
+
   }
 }
 
@@ -79,7 +68,7 @@ function buf_admin_bar_menu() {
   // ));
 }
 
-function buf_has_installed($service) {
+function buf_has_keys($service) {
   $lower = strtolower($service);
   $upper = strtoupper($service);
   
@@ -106,7 +95,7 @@ function &buf_client($service) {
   global $buf_clients;
 
   if (!isset($buf_clients[$service])) {
-    if ($keys = buf_has_installed($service)) {
+    if ($keys = buf_has_keys($service)) {
       $class = sprintf('%sSharePressClient', ucwords($service));
       if (!class_exists($class)) {
         return false;
@@ -114,10 +103,7 @@ function &buf_client($service) {
 
       @session_start();  
       
-      $buf_clients[$service] = new $class(array(
-        'appId' => $keys->id,
-        'secret' => $keys->secret
-      ));
+      $buf_clients[$service] = new $class($keys->id, $keys->secret);
     }
   }
 
@@ -132,7 +118,21 @@ function buf_update_schedule($profile_id, $schedule) {
 
 }
 
-function buf_update_profile($settings, $user = false) {
+function buf_update_profile($profile) {
+  global $wpdb;
+
+  $profile = (object) $profile;
+
+  $post_id = $wpdb->get_var("
+    SELECT id FROM {$wpdb->posts}
+    JOIN {$wpdb->postmeta} post_ID = ID
+    WHERE meta_key = 'sp_profile_tag'
+    AND meta_value = '{$profile->service}:{$profile->service_id}'
+  ");
+
+  
+  
+
   /*
            "avatar" : "http://a3.twimg.com/profile_images/1405180232.png",
     "created_at" :  1320703028,
@@ -167,7 +167,7 @@ function buf_update_profile($settings, $user = false) {
     */
 }
 
-function buf_remove_profile($settings, $user = false) {
+function buf_remove_profile($profile) {
 
 }
 
