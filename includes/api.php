@@ -93,39 +93,77 @@ class SpApi_v1 extends AbstractSpApi {
     $this->_assertLoggedIn();
     
     if (!$id) {
-      // this is how Facebook Page profiles are born:
+      // create a new profile
       if ($this->_isPost()) {
-        unset($_POST['id']);
-        return buf_update_profile($_POST);
-
+        unset($_REQUEST['id']);
+        return buf_update_profile($_REQUEST);
+      // get profiles for current user
       } else {
         if (!$this->_isAdmin()) {
           $_GET['user_id'] = get_current_user_id();
         }
-        return buf_get_profiles($_GET);
+        $profiles = buf_get_profiles($_GET);
+        if ($this->_isAdmin()) {
+          foreach($profiles as $profile) {
+            $profile->test = site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post');
+          }
+        }
+        return $profiles;
       }
 
     } else {
+      // look up requested profile
       $profile = buf_get_profile($id);
       if ($profile->user_id != get_current_user_id()) {
         $this->_assertIsAdmin();
       }
 
       if (!$action) {
+        // update profile
         if ($this->_isPut()) {
 
+        // delete profile
         } else if ($this->_isDelete()) {
 
+        // load profile data
         } else {
           return $profile->toJSON();
         }
       }
 
-      if ($action === 'schedules') {
-        
+      // lookup subprofiles for this profile
+      if ($action === 'profiles') {
+        $client = buf_get_client($profile);
+        $profiles = array();
+
+        foreach($client->profiles() as $profile) {
+          // does the profile already exist?
+          if ($exists = buf_get_profile($profile)) {
+            $profile = $exists->toJSON();
+
+          // otherwise, if admin, add create URL for debugging
+          } else if ($this->_isAdmin()) {
+            $args = (array) $profile;
+            $args['_method'] = 'post';
+            $profile->create = site_url('/sp/1/profiles?').http_build_query($args);
+          }
+          $profiles[] = $profile;
+        }     
+
+        return $profiles;
       }
 
-      if ($action === 'test') {
+      if ($action === 'schedules') {
+        // update the schedules
+        if ($update) {
+
+        // just load the schedules
+        } else {
+
+        } 
+      }
+
+      if ($action === 'test' && $this->_isPost()) {
         $this->_assertIsAdmin();
         $client = buf_get_client($profile);
         return $client->test($_REQUEST['message'], $_REQUEST['url']);

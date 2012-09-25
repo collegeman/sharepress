@@ -64,6 +64,23 @@ class SharePressProfile {
       }
     }
 
+    $post = (object) $post;
+
+    if ($post->service && $post->service_id) {
+      global $wpdb;
+      $post = $wpdb->get_row($sql = "
+        SELECT * FROM {$wpdb->posts}
+        JOIN {$wpdb->postmeta} ON (post_id = ID)
+        WHERE 
+          post_type = 'sp_profile'
+          AND meta_key = 'service_tag'
+          AND meta_value = '{$post->service}:{$post->service_id}'
+      ");
+      if (!$post) {
+        return false;
+      }
+    }
+
     if ($post->post_type !== 'sp_profile') {
       return false;
     }
@@ -85,7 +102,7 @@ class SharePressProfile {
         $data['service'] = $service;
         $data['service_id'] = $service_id;
       } else {
-        $data[$meta_key] = $value;
+        $data[$meta_key] = maybe_unserialize($value);
       }
     }
    
@@ -196,7 +213,7 @@ function buf_get_profiles($args = '') {
 
   $profiles = array();
   foreach(get_posts($args) as $post) {
-    $profiles[] = buf_get_profile($post)->toJSON();
+    $profiles[] = (object) buf_get_profile($post)->toJSON();
   }
   return $profiles;
 }
@@ -242,7 +259,7 @@ function buf_update_profile($profile) {
   }
 
   if (array_key_exists('config', $profile)) {
-    $meta['config'] = (bool) $profile['config'];
+    $meta['config'] = (array) $profile['config'];
   }
 
   if (!empty($profile['service_username'])) {

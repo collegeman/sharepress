@@ -35,6 +35,12 @@ interface SharePressClient {
   function profile();
 
   /**
+   * @return Array of additional Profiles that are available by virtue
+   * of this client's configuration, e.g., Facebook Pages.
+   */
+  function profiles();
+
+  /**
    * @return The URL to which a user should be redirected for authentication.
    */
   function loginUrl();
@@ -109,6 +115,31 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
     return $this->getLoginUrl(array(
       'scope' => 'email,read_stream,publish_stream,manage_pages,share_item'
     ));
+  }
+
+  function profiles() {
+    if (empty($this->profile->config['is_page'])) {
+      try {
+        $profiles = array();
+        $response = $this->api($this->profile->service_id.'/accounts');
+        foreach($response['data'] as $page) {
+          if ($page['category'] != 'Application' && in_array('CREATE_CONTENT', $page['perms'])) {
+            $profiles[] = (object) array(
+              'service' => 'facebook',
+              'service_id' => $page['id'],
+              'user_token' => $page['access_token'],
+              'formatted_username' => $page['name'],
+              'service_username' => $page['id'],
+              'avatar' => 'https://graph.facebook.com/'.$page['id'].'/picture',
+              'config' => array('is_page' => true)
+            );
+          }
+        }
+        return $profiles;
+      } catch (Exception $e) {
+        return new WP_Error('error', $e->getMessage());
+      }
+    }
   }
 
   function post($message, $config = '') {
@@ -201,6 +232,10 @@ class TwitterSharePressClient implements SharePressClient {
     } 
   }
 
+  function profiles() {
+    return array();
+  }
+
   function loginUrl() {
     $oauth = oAuthRequest::from_consumer_and_token(
       $this->consumer,
@@ -267,9 +302,9 @@ class TwitterSharePressClient implements SharePressClient {
     if (is_wp_error($result = wp_remote_post('https://api.twitter.com/1/statuses/update.json', $params))) {
       return $result;
     } else {
-      return $result;
       if ($result['response']['code'] !== 200) {
-        return new WP_Error($result['response']['code'], $result['response']['message']);
+        $response = json_decode($result['body']);
+        return new WP_Error(strtolower($result['response']['message']), $response->error);
       } else {
         return json_decode($result['body']);
       }
