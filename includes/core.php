@@ -6,7 +6,7 @@ function sp_get_opt($option, $default = false) {
 }
 
 function sp_set_opt($option, $value) {
-  return update_option($option, apply_filters("sp_set_opt_{$option}", $value));
+  return update_option('sp_'.$option, apply_filters("sp_set_opt_{$option}", $value));
 }
 
 function sp_activate() {

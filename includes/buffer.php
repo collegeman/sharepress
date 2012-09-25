@@ -4,7 +4,7 @@ add_action('init', 'buf_init');
 add_action('admin_bar_menu', 'buf_admin_bar_menu', 1000);
 
 function buf_init() {
-  register_post_type('buffer', array(
+  register_post_type('sp_buffer', array(
     'public' => false,
     'publicly_queryable' => false,
     'show_ui' => false, 
@@ -17,7 +17,7 @@ function buf_init() {
     'menu_position' => null
   ));
 
-  register_post_type('profile', array(
+  register_post_type('sp_profile', array(
     'public' => false,
     'publicly_queryable' => false,
     'show_ui' => false, 
@@ -55,6 +55,62 @@ function buf_init() {
   }
 }
 
+class SharePressProfile {
+
+  static function forPost($post) {
+    if (is_numeric($post)) {
+      if (!$post = get_post($post_id = $post)) {
+        return false;
+      }
+    }
+
+    if ($post->post_type !== 'sp_profile') {
+      return false;
+    }
+
+    $data = array(
+      'id' => $post->ID,
+      'formatted_username' => $post->post_title,
+      'user_id' => $post->post_author
+    );
+
+    return new SharePressProfile($data);
+  }
+
+  private function __construct($data) {
+    foreach(get_post_custom($data['id']) as $meta_key => $values) {
+      $value = array_pop($values);
+      if ($meta_key == 'service_tag') {
+        list($service, $service_id) = explode(':', $value);
+        $data['service'] = $service;
+        $data['service_id'] = $service_id;
+      } else {
+        $data[$meta_key] = $value;
+      }
+    }
+   
+    foreach((array) $data as $key => $value) {
+      $this->{$key} = $value;
+    }
+
+    if (!isset($this->user_token)) {
+      $service_tag = "{$this->service}:{$this->service_id}";
+      $this->user_token = sp_get_opt("user_token_{$service_tag}");
+      $this->user_secret = sp_get_opt("user_secret_{$service_tag}");
+    }
+  }
+
+  function toJSON() {
+    $data = get_object_vars($this);
+    if (!current_user_can('list_users')) {
+      unset($data['user_token']);
+      unset($data['user_secret']);
+    }
+    return $data;
+  }
+
+}
+
 function buf_admin_bar_menu() {
   global $wp_admin_bar;
   if (!is_admin_bar_showing()) {
@@ -72,14 +128,14 @@ function buf_has_keys($service) {
   $lower = strtolower($service);
   $upper = strtoupper($service);
   
-  $id = sp_get_opt("{$lower}_app_id", constant("SP_{$upper}_APP_ID"));
+  $key = sp_get_opt("{$lower}_key", constant("SP_{$upper}_KEY"));
   $secret = sp_get_opt("{$lower}_secret", constant("SP_{$upper}_SECRET"));
 
   $keys = false;
 
-  if ($id && $secret) {
+  if ($key && $secret) {
     $keys = (object) array(
-      'id' => $id,
+      'key' => $key,
       'secret' => $secret
     );  
   }
@@ -91,27 +147,58 @@ function buf_has_keys($service) {
   return $keys;
 }
 
-function &buf_client($service) {
+function &buf_get_client($service, $profile = false) {
   global $buf_clients;
 
-  if (!isset($buf_clients[$service])) {
-    if ($keys = buf_has_keys($service)) {
-      $class = sprintf('%sSharePressClient', ucwords($service));
-      if (!class_exists($class)) {
-        return false;
-      }
-
-      @session_start();  
-      
-      $buf_clients[$service] = new $class($keys->id, $keys->secret);
-    }
+  if ($service instanceof SharePressProfile) {
+    $profile = $service;
+    $service = $profile->service;
   }
 
-  return $buf_clients[$service];
+  $class = sprintf('%sSharePressClient', ucwords($service));
+  if (!class_exists($class)) {
+    error_log("SharePress Error: No client exists for service [$service]");
+    return false;
+  }
+
+  if (!$keys = buf_has_keys($service)) {
+    error_log("SharePress Error: No keys configured for service [$service]");
+    return false;
+  }
+
+  @session_start();
+
+  if (!$profile) {
+    if (!isset($buf_clients[$service])) {
+      $buf_clients[$service] = new $class($keys->key, $keys->secret);
+    }
+    return $buf_clients[$service];
+  } else {
+    $client = new $class($keys->key, $keys->secret, $profile);
+  }
+
+  return $client;
+}
+
+function buf_get_profile($post = false) {
+  return SharePressProfile::forPost($post);
 }
 
 function buf_get_profiles($args = '') {
+  $args = wp_parse_args($args);
 
+  $args['post_type'] = 'sp_profile';
+
+  if (!empty($args['user_id'])) {
+    $args['author'] = $args['user_id'];
+    unset($args['user_id']);
+  }
+
+  $profiles = array();
+  foreach(get_posts($args) as $post) {
+    $profiles[] = buf_get_profile($post)->toJSON();
+  }
+  return $profiles;
 }
 
 function buf_update_schedule($profile_id, $schedule) {
@@ -121,17 +208,85 @@ function buf_update_schedule($profile_id, $schedule) {
 function buf_update_profile($profile) {
   global $wpdb;
 
-  $profile = (object) $profile;
+  $profile = (array) $profile;
 
-  $post_id = $wpdb->get_var("
+  $service_tag = false;
+  if (!empty($profile['service']) && !empty($profile['service_id'])) {
+    $service_tag = trim("{$profile['service']}:{$profile['service_id']}");
+  }
+
+  if (!$service_tag) {
+    return false;
+  }
+
+  $post_id = $wpdb->get_var($sql = "
     SELECT id FROM {$wpdb->posts}
-    JOIN {$wpdb->postmeta} post_ID = ID
-    WHERE meta_key = 'sp_profile_tag'
-    AND meta_value = '{$profile->service}:{$profile->service_id}'
+    JOIN {$wpdb->postmeta} ON (post_id = ID)
+    WHERE 
+      post_type = 'sp_profile'
+      AND meta_key = 'service_tag'
+      AND meta_value = '{$service_tag}'
   ");
 
+  $post = array();
+  $meta = array();
+
+  $post['post_type'] = 'sp_profile';
+
+  if (!empty($profile['formatted_username'])) {
+    $post['post_title'] = $profile['formatted_username'];
+  }
+
+  if (array_key_exists('default', $profile)) {
+    $meta['default'] = (bool) $profile['default'];
+  }
+
+  if (array_key_exists('config', $profile)) {
+    $meta['config'] = (bool) $profile['config'];
+  }
+
+  if (!empty($profile['service_username'])) {
+    $meta['service_username'] = $profile['service_username'];
+  }
+
+  if (!empty($profile['avatar'])) {
+    $meta['avatar'] = $profile['avatar'];
+  }
+
+  $meta['service_tag'] = $service_tag;
+
+
+  $post['post_name'] = "{$profile['service']}-{$profile['service_id']}";
+  $post['comment_status'] = $post['ping_status'] = 'closed';
   
-  
+  $post['post_status'] = 'publish';
+
+  if (!$post_id) {
+    if (is_user_logged_in()) {
+      $user = get_currentuserinfo();
+      $post['post_author'] = $user->ID;
+    }
+
+  } else {
+    $post['ID'] = $post_id;
+  }
+
+  if (is_wp_error($post_id = wp_insert_post($post))) {
+    return $post_id;
+  }
+
+  foreach($meta as $key => $value) {
+    update_post_meta($post_id, $key, $value);
+  }
+
+  if (array_key_exists('user_token', $profile)) {
+    sp_set_opt("user_token_{$service_tag}", $profile['user_token']);
+    sp_set_opt("user_secret_{$service_tag}", $profile['user_secret']);
+  }
+
+  return buf_get_profile($post_id);
+
+
 
   /*
            "avatar" : "http://a3.twimg.com/profile_images/1405180232.png",
