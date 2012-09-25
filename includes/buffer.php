@@ -4,7 +4,7 @@ add_action('init', 'buf_init');
 add_action('admin_bar_menu', 'buf_admin_bar_menu', 1000);
 
 function buf_init() {
-  register_post_type('sp_buffer', array(
+  register_post_type('sp_update', array(
     'public' => false,
     'publicly_queryable' => false,
     'show_ui' => false, 
@@ -60,7 +60,7 @@ class SharePressProfile {
   static function forPost($post) {
     if (is_numeric($post)) {
       if (!$post = get_post($post_id = $post)) {
-        return false;
+        return new WP_Error("Profile does not exist [{$post_id}]");
       }
     }
 
@@ -101,6 +101,9 @@ class SharePressProfile {
         list($service, $service_id) = explode(':', $value);
         $data['service'] = $service;
         $data['service_id'] = $service_id;
+      } else if ($meta_key == 'schedules') {
+        $values[] = $value;
+        $data['schedules'] = array_map('maybe_unserialize', $values);
       } else {
         $data[$meta_key] = maybe_unserialize($value);
       }
@@ -115,13 +118,144 @@ class SharePressProfile {
       $this->user_token = sp_get_opt("user_token_{$service_tag}");
       $this->user_secret = sp_get_opt("user_secret_{$service_tag}");
     }
+
+    if (!is_array($this->schedules)) {
+      $this->schedules = $this->schedules ? array($this->schedules) : array();
+    }
+  }
+
+  private $_time = 0;
+  private $_days = array();
+  private $_times = array();
+  private $_idx = 0;
+
+  function reset() {
+    $days = array();
+
+    $dayv = array('sun','mon','tue','wed','thu','fri','sat');
+
+    foreach($this->schedules as $schedule) {
+      foreach($schedule['days'] as $day) {
+        $d = array_search($day, $dayv);
+        if (!isset($days[$d])) {
+          $days[$d] = array();
+        }
+        foreach($schedule['times'] as $time) {
+          $days[$d][] = strlen($time) < 5 ? '0'.$time : $time;
+        }
+      }
+    }
+
+    ksort($days);
+    foreach($days as $d => &$times) {
+      sort($times);
+      foreach($times as $time) {
+        $this->_days[] = $dayv[$d];
+        $this->_times[] = $time;
+      }
+    }
+
+    // find the next calendar day
+    $next = time()-86400;
+    do {
+      $next += 86400;
+      $day = strtolower(gmdate('D', $next));
+      $idx = array_search($day, $this->_days);
+    } while ($idx === false);
+
+    $this->_idx = $idx;
+
+    $this->_time = time();
+  }
+
+  function next() {
+    if ($this->_time === 0) {
+      $this->reset();
+    }
+
+    if (!isset($this->_days[$this->_idx])) {
+      $this->_idx = 0;
+    }
+
+    $day = strtolower(gmdate('D', $this->_time));
+    $adjust = $day === $this->_days[$this->_idx] ? $this->_times[$this->_idx] : "{$this->_days[$this->_idx]} {$this->_times[$this->_idx]}";
+
+    $date = @gmdate('U', $time = strtotime($adjust, $this->_time));    
+    $this->_time = $time;
+
+    $this->_idx++;
+    
+    if ($time < time()) {
+      return $this->next();
+    }
+
+    return $date;
+  }
+
+  function toJSON() {
+    $data = get_object_vars($this);
+    foreach($data as $key => $value) {
+      if (strpos($key, '_') === 0) {
+        unset($data[$key]);
+      }
+    }
+    if (!current_user_can('list_users')) {
+      unset($data['user_token']);
+      unset($data['user_secret']);
+    }
+    return $data;
+  }
+
+}
+
+class SharePressUpdate {
+
+  static function forPost($post) {
+    if (is_numeric($post)) {
+      if (!$post = get_post($post_id = $post)) {
+        return false;
+      }
+    }
+
+    $post = (object) $post;
+
+    if ($post->post_type !== 'sp_update') {
+      return false;
+    }
+
+    $data = array(
+      'id' => $post->ID,
+      'user_id' => $post->post_author,
+      'status' => $post->post_status,
+      'text' => $post->post_content
+    );
+
+    return new SharePressUpdate($data);
+  }
+
+  function __construct($data) {
+    foreach(get_post_custom($data['id']) as $meta_key => $values) {
+      $value = array_pop($values);
+      $data[$meta_key] = maybe_unserialize($value);
+    }
+   
+    foreach((array) $data as $key => $value) {
+      $this->{$key} = $value;
+    }
+
+    if (!$this->status !== 'sent') {
+      $this->sent_at = false;
+      $this->service_update_id = false;
+    }
+
+    $profile = buf_get_profile($this->profile_id);
+    $this->profile_service = $profile !== false ? $profile->service : false;
   }
 
   function toJSON() {
     $data = get_object_vars($this);
     if (!current_user_can('list_users')) {
-      unset($data['user_token']);
-      unset($data['user_secret']);
+    
     }
     return $data;
   }
@@ -164,7 +298,7 @@ function buf_has_keys($service) {
   return $keys;
 }
 
-function &buf_get_client($service, $profile = false) {
+function buf_get_client($service, $profile = false) {
   global $buf_clients;
 
   if ($service instanceof SharePressProfile) {
@@ -205,21 +339,20 @@ function buf_get_profiles($args = '') {
   $args = wp_parse_args($args);
 
   $args['post_type'] = 'sp_profile';
+  $args['numberposts'] = !empty($args['limit']) ? $args['limit'] : -1;
 
   if (!empty($args['user_id'])) {
     $args['author'] = $args['user_id'];
     unset($args['user_id']);
   }
 
+  $args['post_status'] = 'any';
+
   $profiles = array();
   foreach(get_posts($args) as $post) {
     $profiles[] = (object) buf_get_profile($post)->toJSON();
   }
   return $profiles;
-}
-
-function buf_update_schedule($profile_id, $schedule) {
-
 }
 
 function buf_update_profile($profile) {
@@ -233,7 +366,7 @@ function buf_update_profile($profile) {
   }
 
   if (!$service_tag) {
-    return false;
+    return new WP_Error('invalid-service', 'Missing service and service_id args');
   }
 
   $post_id = $wpdb->get_var($sql = "
@@ -247,6 +380,10 @@ function buf_update_profile($profile) {
 
   $post = array();
   $meta = array();
+
+  if ($post_id) {
+    $post = (array) get_post($post_id);
+  }
 
   $post['post_type'] = 'sp_profile';
 
@@ -270,13 +407,17 @@ function buf_update_profile($profile) {
     $meta['avatar'] = $profile['avatar'];
   }
 
+  if (!empty($profile['timezone'])) {
+    $meta['timezone'] = $profile['timezone'];
+  }
+
   $meta['service_tag'] = $service_tag;
 
-
   $post['post_name'] = "{$profile['service']}-{$profile['service_id']}";
+
   $post['comment_status'] = $post['ping_status'] = 'closed';
   
-  $post['post_status'] = 'publish';
+  $post['post_status'] = empty($profile['status']) || $profile['status'] !== 'disabled' ? 'enabled' : 'disabled';
 
   if (!$post_id) {
     if (is_user_logged_in()) {
@@ -286,6 +427,15 @@ function buf_update_profile($profile) {
 
   } else {
     $post['ID'] = $post_id;
+  }
+
+  if (!$post_id && !array_key_exists('schedules', $profile)) {
+    $profile['schedules'] = array(
+      array(
+        'days' => explode(',','mon,tue,wed,thu,fri'),
+        'times' => explode(',','12:00,17:00')
+      )
+    );
   }
 
   if (is_wp_error($post_id = wp_insert_post($post))) {
@@ -301,45 +451,226 @@ function buf_update_profile($profile) {
     sp_set_opt("user_secret_{$service_tag}", $profile['user_secret']);
   }
 
+  if (array_key_exists('schedules', $profile)) {
+    $schedules = get_post_meta($post_id, 'schedules');
+    foreach($profile['schedules'] as $idx => $schedule) {
+      if ($schedule == 0) {
+        unset($schedules[(int) $idx]);
+      } else {
+        $schedules[(int) $idx] = $schedule;
+      }
+    }
+    delete_post_meta($post_id, 'schedules');
+    foreach($schedules as $schedule) {
+      add_post_meta($post_id, 'schedules', $schedule);
+    }
+  }
+
   return buf_get_profile($post_id);
-
-
-
-  /*
-           "avatar" : "http://a3.twimg.com/profile_images/1405180232.png",
-    "created_at" :  1320703028,
-    "default" : true,
-    "formatted_username" : "@skinnyoteam",
-    "id" : "4eb854340acb04e870000010",
-    "schedules" : [{ 
-        "days" : [ 
-            "mon",
-            "tue",
-            "wed",
-            "thu",
-            "fri"
-        ],
-        "times" : [ 
-            "12:00",
-            "17:00",
-            "18:00"
-        ]
-    }],
-    "service" : "twitter",
-    "service_id" : "164724445",
-    "service_username" : "skinnyoteam",
-    "statistics" : { 
-        "followers" : 246 
-    },
-    "team_members" : [
-        "4eb867340acb04e670000001"
-    ],
-    "timezone" : "Europe/London",
-    "user_id" : "4eb854340acb04e870000010"
-    */
 }
 
-function buf_remove_profile($profile) {
-
+function buf_delete_profile($profile) {
+  if (!is_object($profile)) {
+    $profile = buf_get_profile($profile_id = $profile);
+    if (!$profile) {
+      return false;
+    }
+  }
+  return false !== wp_delete_post($profile->id, true);
 }
 
+function buf_update_update($update) {
+  global $wpdb;
+
+  $update = (array) $update;
+
+  $post_id = !empty($update['id']) ? $update['id'] : false;
+
+  $post = array();
+  $meta = array();
+  $profile = false;
+
+  if (!is_user_logged_in()) {
+    return new WP_Error('auth', 'You must be logged in');
+  }
+
+  if ($post_id === false) {
+    $meta['created_at'] = time();
+
+    if (!$update['profile_id']) {
+      return new WP_Error('profile', 'Missing profile_id arg');
+    }
+
+    if (!$profile = buf_get_profile($update['profile_id'])) {
+      return new WP_Error('profile', "Profile does not exist [{$update['profile_id']}]");
+    }
+
+    if ($profile->user_id !== get_current_user_id()) {
+      if (!buf_current_user_is_admin()) {
+        return new WP_Error('finish-this', 'Need to support team_members concept');
+      }
+    }
+
+    $meta['profile_id'] = $update['profile_id'];
+
+    $post['post_status'] = 'buffer';
+
+    $post['post_title'] = "{$profile->id}-{$meta['created_at']}";
+
+    $post['post_author'] = get_current_user_id();
+
+    $post['post_type'] = 'sp_update';
+
+    $post['comment_status'] = $post['ping_status'] = 'closed';
+  
+  } else {
+    if (!$existing = get_post($post_id)) {
+      return new WP_Error("Update does not exist [{$post_id}]");
+    }
+
+    if ($existing->post_type !== 'sp_update') {
+      return new WP_Error("Not an update [{$post_id}]");
+    }
+
+    $post = (array) $existing;
+
+    $profile = buf_get_profile(get_post_meta($post_id, 'profile_id', true));
+  }
+
+  if (array_key_exists('text', $update)) {
+    $post['post_content'] = $update['text'];
+  }
+
+  if (is_wp_error($post_id = wp_insert_post($post))) {
+    return $post_id;
+  }
+
+  foreach($meta as $key => $value) {
+    update_post_meta($post_id, $key, $value);
+  }
+
+  buf_update_buffer($profile);
+
+  return buf_get_update($post_id);
+}
+
+function buf_current_user_is_admin() {
+  return current_user_can('list_users');
+}
+
+function buf_update_buffer($profile) {
+  if (!$profile = buf_get_profile($profile_ref = $profile)) {
+    return false;
+  }
+
+  $updates = get_posts(array(
+    'post_type' => 'sp_update',
+    'post_status' => 'buffer',
+    'orderby' => 'menu_order',
+    'order' => 'DESC',
+    'numberposts' => -1
+  ));
+
+  $menu_order = count($updates);
+
+  while($updates) {
+    $update = array_shift($updates);
+    $next = $profile->next();
+    $update->menu_order = $menu_order;
+    $menu_order--;
+    $update->post_date_gmt = gmdate('Y-m-d H:i:s', $next);
+    $update->post_date = gmdate('Y-m-d H:i:s', $next + ( $offset = get_option('gmt_offset') ? $offset : 0 ));
+    wp_insert_post($update); 
+    update_post_meta($update->ID, 'due_at', $next);
+    update_post_meta($update->ID, 'due_time', gmdate('H:i a', $next));
+  }
+}
+
+function buf_get_update($update) {
+  return SharePressUpdate::forPost($update);
+}
+
+function buf_get_updates($args = '') {
+  global $wpdb;
+
+  $args = wp_parse_args($args);
+
+  if (!$profile = buf_get_profile($args['profile_id'])) {
+    return new WP_Error("Profile does not exist [{$args['profile_id']}]");
+  }
+
+  $args['post_type'] = 'sp_update';
+
+  if (!empty($args['user_id'])) {
+    $args['author'] = $args['user_id'];
+    unset($args['user_id']);
+  }
+
+  if (!empty($args['status'])) {
+    $args['post_status'] = $args['status'];
+    unset($args['status']);
+  }
+
+  $args['numberposts'] = ($limit = (int) $args['count']) ? $limit : 100;
+  $args['offset'] = ((($offset = (int) $args['page']) ? $offset : 1) - 1) * $args['numberposts'];
+  $args['orderby'] = 'post_date_gmt';
+  $args['order'] = 'ASC';
+
+  $results = $wpdb->prepare("
+    SELECT * FROM {$wpdb->posts}
+    JOIN {$wpdb->postmeta} ON (post_ID = ID)
+    WHERE 
+      post_type = %s
+      AND post_status = %s
+      AND meta_key = 'profile_id'
+      AND meta_value = %s
+    ORDER BY
+      {$args['orderby']} {$args['order']}
+    LIMIT %d OFFSET %d
+  ",
+    $args['post_type'],
+    $args['post_status'],
+    $profile->id,
+    $args['numberposts'],
+    $args['offset']
+  );
+
+  $count = $wpdb->prepare("
+    SELECT COUNT(*) FROM {$wpdb->posts}
+    JOIN {$wpdb->postmeta} ON (post_ID = ID)
+    WHERE 
+      post_type = %s
+      AND post_status = %s
+      AND meta_key = 'profile_id'
+      AND meta_value = %s
+  ",
+    $args['post_type'],
+    $args['post_status'],
+    $profile->id,
+    $args['numberposts'],
+    $args['offset']
+  );
+
+  $count = $wpdb->get_var($count);
+  $posts = $wpdb->get_results($results);
+
+  $updates = array();
+  foreach($posts as $post) {
+    $updates[] = (object) buf_get_update($post)->toJSON();
+  }
+  
+  return (object) array(
+    'count' => $count,
+    'updates' => $updates
+  );
+}
+
+function buf_delete_update($update) {
+  if (!is_object($update)) {
+    $update = buf_get_update($update_id = $update);
+    if (!$update) {
+      return false;
+    }
+  }
+  return false !== wp_delete_post($update->id, true);
+}

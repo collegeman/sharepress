@@ -12,7 +12,8 @@ class SpApi_v1 extends AbstractSpApi {
     if ($this->_isGet()) {
       $thumb = wp_get_attachment_image_src($id, 'thumbnail');
       $full = wp_get_attachment_image_src($id, 'full');
-      return array(
+      
+      return (object) array(
         'id' => $id,
         'thumb' => array(
           'url' => $thumb[0],
@@ -25,6 +26,7 @@ class SpApi_v1 extends AbstractSpApi {
           'height' => $full[2]
         )
       );
+
     } else {
       $this->_assertLoggedIn();
     }
@@ -84,11 +86,6 @@ class SpApi_v1 extends AbstractSpApi {
     }
   }
 
-  function updates() {
-    $this->_assertLoggedIn();
-    
-  }
-
   function profiles($id = null, $action = false, $update = false) {
     $this->_assertLoggedIn();
     
@@ -105,7 +102,16 @@ class SpApi_v1 extends AbstractSpApi {
         $profiles = buf_get_profiles($_GET);
         if ($this->_isAdmin()) {
           foreach($profiles as $profile) {
-            $profile->test = site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post');
+            $profile->actions = (object) array(
+              'test' => site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post'),
+              'delete' => site_url('/sp/1/profiles/'.$profile->id.'?_method=delete'),
+              'profiles' => site_url('/sp/1/profiles/'.$profile->id.'/profiles'),
+              'schedules' => site_url('/sp/1/profiles/'.$profile->id.'/schedules'),
+              'updates' => (object) array(
+                'pending' => site_url('/sp/1/profiles/'.$profile->id.'/updates/pending'),
+                'sent' => site_url('/sp/1/profiles/'.$profile->id.'/updates/sent')
+              )
+            );
           }
         }
         return $profiles;
@@ -124,7 +130,7 @@ class SpApi_v1 extends AbstractSpApi {
 
         // delete profile
         } else if ($this->_isDelete()) {
-
+          return array('success' => buf_delete_profile($profile));
         // load profile data
         } else {
           return $profile->toJSON();
@@ -136,37 +142,94 @@ class SpApi_v1 extends AbstractSpApi {
         $client = buf_get_client($profile);
         $profiles = array();
 
-        foreach($client->profiles() as $profile) {
-          // does the profile already exist?
-          if ($exists = buf_get_profile($profile)) {
-            $profile = $exists->toJSON();
+        if ($source = $client->profiles()) {
+          foreach($source as $profile) {
+            // does the profile already exist?
+            if ($exists = buf_get_profile($profile)) {
+              $profile = $exists->toJSON();
 
-          // otherwise, if admin, add create URL for debugging
-          } else if ($this->_isAdmin()) {
-            $args = (array) $profile;
-            $args['_method'] = 'post';
-            $profile->create = site_url('/sp/1/profiles?').http_build_query($args);
-          }
-          $profiles[] = $profile;
-        }     
+            // otherwise, if admin, add create URL for debugging
+            } else if ($this->_isAdmin()) {
+              $args = (array) $profile;
+              $args['_method'] = 'post';
+              $profile->actions = array(
+                'create' => site_url('/sp/1/profiles?').http_build_query($args)
+              );
+            }
+            $profiles[] = $profile;
+          }     
+        }
 
         return $profiles;
       }
 
       if ($action === 'schedules') {
         // update the schedules
-        if ($update) {
+        if ($update || $this->_isPut()) {
+          $profile = buf_update_profile(array(
+            'service' => $profile->service,
+            'service_id' => $profile->service_id,
+            'schedules' => $_REQUEST['schedules']
+          ));
+          if (is_wp_error($profile)) {
+            return $profile;
+          }
+        }
 
-        // just load the schedules
+        return $profile->schedules ? $profile->schedules : array();
+      }
+
+      if ($action === 'updates' && $update) {
+        $args = $_GET;
+        if ($update === 'pending') {
+          $args['status'] = 'buffer';
+        } else if ($update === 'sent') {
+          $args['status'] = 'sent';
         } else {
+          return new WP_Error("Invalid updates query [{$update}]");
+        }
 
-        } 
+        $args['profile_id'] = $id;
+
+        return buf_get_updates($args);  
       }
 
       if ($action === 'test' && $this->_isPost()) {
         $this->_assertIsAdmin();
         $client = buf_get_client($profile);
         return $client->test($_REQUEST['message'], $_REQUEST['url']);
+      }
+    }
+  }
+
+  function updates($id, $action = null) {
+    $this->_assertLoggedIn();
+
+    if ($id === 'create') {
+      $action = 'create';
+      $id = null;
+    }
+
+    if ($this->_isPost() || $action === 'create') {
+      unset($_REQUEST['id']);
+      $update = buf_update_update($_REQUEST);
+
+    } else if ($id && ( $this->_isPut() || $action === 'update' )) {
+      $_REQUEST['id'] = $id;
+      $update = buf_update_update($_REQUEST);
+
+    } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
+      return array('success' => buf_delete_update($id));
+
+    } else if ($id) {
+      $update = buf_get_update($id);
+    }
+
+    if ($update) {
+      if (is_wp_error($update)) {
+        return $update;
+      } else {
+        return $update->toJSON();
       }
     }
   }
@@ -203,13 +266,13 @@ abstract class AbstractSpApi {
 
   function _assertLoggedIn() {
     if (!is_user_logged_in()) {
-      wp_redirect(wp_login_url($_SERVER['REQUEST_URI']));
+      wp_redirect(wp_login_url($_SERVER['RESTfulQUEST_URI']));
       exit;
     }
   }
 
   function _isAdmin() {
-    return current_user_can('list_users');
+    return buf_current_user_is_admin();
   }
 
   function _assertIsAdmin() {

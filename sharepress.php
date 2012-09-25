@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: SharePress
-Plugin URI: http://fatpandadev.com/sharepress
+Plugin URI: http://getsharepress.com
 Description: SharePress: your content, your schedule. Curate awesome content from around the Web, and autopost to Facebook, Twitter, and LinkedIn.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
@@ -33,10 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 @define('SP_DEBUG', false);
 
 # bootstrap
-require(SP_DIR.'/lib/facebook-sdk/facebook.php');
 require(SP_DIR.'/includes/oauth.php');
 require(SP_DIR.'/includes/core.php');
 require(SP_DIR.'/includes/buffer.php');
-require(SP_DIR.'/includes/clients.php');
 require(SP_DIR.'/includes/api.php');
 require(SP_DIR.'/includes/ajax.php');
