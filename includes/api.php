@@ -86,6 +86,14 @@ class SpApi_v1 extends AbstractSpApi {
     }
   }
 
+  function _addUpdateActions(&$update) {
+    if ($this->_isAdmin() || $update->user_id === get_current_user_id()) {
+      $update->actions = array(
+        'delete' => site_url('/sp/1/updates/'.$update->id.'/destroy')
+      );
+    }
+  }
+
   function profiles($id = null, $action = false, $update = false) {
     $this->_assertLoggedIn();
     
@@ -104,10 +112,11 @@ class SpApi_v1 extends AbstractSpApi {
           foreach($profiles as $profile) {
             $profile->actions = (object) array(
               'test' => site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post'),
-              'delete' => site_url('/sp/1/profiles/'.$profile->id.'?_method=delete'),
               'profiles' => site_url('/sp/1/profiles/'.$profile->id.'/profiles'),
+              'delete' => site_url('/sp/1/profiles/'.$profile->id.'?_method=delete'),
               'schedules' => site_url('/sp/1/profiles/'.$profile->id.'/schedules'),
               'updates' => (object) array(
+                'create' => site_url('/sp/1/updates/create?profile_id='.$profile->id.'&text='),
                 'pending' => site_url('/sp/1/profiles/'.$profile->id.'/updates/pending'),
                 'sent' => site_url('/sp/1/profiles/'.$profile->id.'/updates/sent')
               )
@@ -191,7 +200,9 @@ class SpApi_v1 extends AbstractSpApi {
 
         $args['profile_id'] = $id;
 
-        return buf_get_updates($args);  
+        $data = buf_get_updates($args);
+        array_map(array($this, '_addUpdateActions'), $data->updates);
+        return $data;
       }
 
       if ($action === 'test' && $this->_isPost()) {
@@ -229,6 +240,7 @@ class SpApi_v1 extends AbstractSpApi {
       if (is_wp_error($update)) {
         return $update;
       } else {
+        $this->_addUpdateActions($update);
         return $update->toJSON();
       }
     }

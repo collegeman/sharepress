@@ -254,9 +254,6 @@ class SharePressUpdate {
 
   function toJSON() {
     $data = get_object_vars($this);
-    if (!current_user_can('list_users')) {
-    
-    }
     return $data;
   }
 
@@ -522,6 +519,10 @@ function buf_update_update($update) {
     $post['post_type'] = 'sp_update';
 
     $post['comment_status'] = $post['ping_status'] = 'closed';
+
+    if (!$text = trim($update['text'])) {
+      return new WP_Error('text', 'Cannot create empty Update');
+    }
   
   } else {
     if (!$existing = get_post($post_id)) {
@@ -538,7 +539,7 @@ function buf_update_update($update) {
   }
 
   if (array_key_exists('text', $update)) {
-    $post['post_content'] = $update['text'];
+    $post['post_content'] = trim($update['text']);
   }
 
   if (is_wp_error($post_id = wp_insert_post($post))) {
@@ -666,11 +667,15 @@ function buf_get_updates($args = '') {
 }
 
 function buf_delete_update($update) {
+  $profile = false;
   if (!is_object($update)) {
     $update = buf_get_update($update_id = $update);
     if (!$update) {
       return false;
     }
+    $profile = buf_get_profile($update->profile_id);
   }
-  return false !== wp_delete_post($update->id, true);
+  $result = false !== wp_delete_post($update->id, true);
+  buf_update_buffer($profile);
+  return $result;
 }
