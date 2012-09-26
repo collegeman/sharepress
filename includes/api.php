@@ -95,6 +95,21 @@ class SpApi_v1 extends AbstractSpApi {
     }
   }
 
+  function _addProfileActions(&$profile) {
+    $profile->actions = (object) array(
+      'test' => site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post'),
+      'profiles' => site_url('/sp/1/profiles/'.$profile->id.'/profiles'),
+      'delete' => site_url('/sp/1/profiles/'.$profile->id.'?_method=delete'),
+      'schedules' => site_url('/sp/1/profiles/'.$profile->id.'/schedules'),
+      'updates' => (object) array(
+        'create' => site_url('/sp/1/updates/create?profile_ids[]='.$profile->id.'&text='),
+        'pending' => site_url('/sp/1/profiles/'.$profile->id.'/updates/pending'),
+        'sent' => site_url('/sp/1/profiles/'.$profile->id.'/updates/sent'),
+        'errors' => site_url('/sp/1/profiles/'.$profile->id.'/updates/errors')
+      )
+    );
+  }
+
   function profiles($id = null, $action = false, $update = false) {
     $this->_assertLoggedIn();
     
@@ -110,19 +125,7 @@ class SpApi_v1 extends AbstractSpApi {
         }
         $profiles = buf_get_profiles($_GET);
         if ($this->_isAdmin()) {
-          foreach($profiles as $profile) {
-            $profile->actions = (object) array(
-              'test' => site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post'),
-              'profiles' => site_url('/sp/1/profiles/'.$profile->id.'/profiles'),
-              'delete' => site_url('/sp/1/profiles/'.$profile->id.'?_method=delete'),
-              'schedules' => site_url('/sp/1/profiles/'.$profile->id.'/schedules'),
-              'updates' => (object) array(
-                'create' => site_url('/sp/1/updates/create?profile_ids[]='.$profile->id.'&text='),
-                'pending' => site_url('/sp/1/profiles/'.$profile->id.'/updates/pending'),
-                'sent' => site_url('/sp/1/profiles/'.$profile->id.'/updates/sent')
-              )
-            );
-          }
+          array_map(array($this, '_addProfileActions'), $profiles);
         }
         return $profiles;
       }
@@ -131,8 +134,9 @@ class SpApi_v1 extends AbstractSpApi {
       // look up requested profile
       $profile = buf_get_profile($id);
       if ($profile->user_id != get_current_user_id()) {
-        // TODO: implement team_members
-        $this->_assertIsAdmin();
+        if (!$this->_isAdmin() && !in_array(get_current_user_id(), $profile->team_members)) {
+          return new WP_Error('access-denied', "You are not allowed to post to this Profile [{$profile_id}]");
+        }
       }
 
       if (!$action) {
@@ -146,6 +150,19 @@ class SpApi_v1 extends AbstractSpApi {
         } else {
           return $profile->toJSON();
         }
+      }
+
+      if ($action === 'team_members') {
+        if ($update === 'add') {
+          foreach($_REQUEST['user_ids'] as $user_id) {
+            buf_add_team_member($profile, $user_id);
+          }
+        } else if ($update === 'remove') {
+          foreach($_REQUEST['user_ids'] as $user_id) {
+            buf_remove_team_member($profile, $user_id);
+          }
+        }
+        return buf_get_profile($profile->id)->toJSON();
       }
 
       // lookup subprofiles for this profile
@@ -210,6 +227,8 @@ class SpApi_v1 extends AbstractSpApi {
             $args['status'] = 'buffer';
           } else if ($update === 'sent') {
             $args['status'] = 'sent';
+          } else if ($update === 'errors') {
+            $args['status'] = 'error';
           } else {
             return new WP_Error("Invalid updates query [{$update}]");
           }
@@ -245,7 +264,9 @@ class SpApi_v1 extends AbstractSpApi {
       if (is_wp_error($result = buf_update_update($_REQUEST))) {
         return $result;
       }
-      array_map(array($this, '_addUpdateActions'), $result->updates);
+      if ($result->updates) {
+        array_map(array($this, '_addUpdateActions'), $result->updates);
+      }
       return $result;
 
     } else if ($id && ( $this->_isPut() || $action === 'update' )) {

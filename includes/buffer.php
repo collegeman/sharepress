@@ -60,7 +60,7 @@ class SharePressProfile {
   static function forPost($post) {
     if (is_numeric($post)) {
       if (!$post = get_post($post_id = $post)) {
-        return new WP_Error("Profile does not exist [{$post_id}]");
+        return false;
       }
     }
 
@@ -92,6 +92,10 @@ class SharePressProfile {
     );
 
     return new SharePressProfile($data);
+  }
+
+  function __toString() {
+    return "sp_profile:{$this->id}";
   }
 
   private function __construct($data) {
@@ -214,10 +218,10 @@ class SharePressProfile {
         unset($data[$key]);
       }
     }
-    if (!current_user_can('list_users')) {
+    // if (!current_user_can('list_users')) {
       unset($data['user_token']);
       unset($data['user_secret']);
-    }
+    // }
     return $data;
   }
 
@@ -246,6 +250,10 @@ class SharePressUpdate {
     );
 
     return new SharePressUpdate($data);
+  }
+
+  function __toString() {
+    return "sp_update:{$this->id}";
   }
 
   function __construct($data) {
@@ -348,13 +356,11 @@ function buf_get_client($service, $profile = false) {
 
   $class = sprintf('%sSharePressClient', ucwords($service));
   if (!class_exists($class)) {
-    error_log("SharePress Error: No client exists for service [$service]");
-    return false;
+    return new WP_Error('client', "SharePress Error: No client exists for service [$service]");
   }
 
   if (!$keys = buf_has_keys($service)) {
-    error_log("SharePress Error: No keys configured for service [$service]");
-    return false;
+    return new WP_Error('keys', "SharePress Error: No keys configured for service [$service]");
   }
 
   @session_start();
@@ -371,8 +377,37 @@ function buf_get_client($service, $profile = false) {
   return $client;
 }
 
-function buf_get_profile($post = false) {
-  return SharePressProfile::forPost($post);
+function buf_add_team_member($profile, $user_id) {
+  if (!$profile = buf_get_profile($profile_ref = $profile)) {
+    return new WP_Error('profile', "Profile does not exist [{$profile_ref}]");
+  }
+  $team_members = get_post_meta($profile->id, 'team_members', true);
+  if (!is_array($team_members)) {
+    $team_members = array($user_id);
+  } else if (!in_array($user_id, $team_members)) {
+    $team_members[] = $user_id;
+  }
+  return update_post_meta($profile->id, 'team_members', $team_members);
+}
+
+function buf_remove_team_member($profile, $user_id) {
+  if (!$profile = buf_get_profile($profile_ref = $profile)) {
+    return new WP_Error('profile', "Profile does not exist [{$profile_ref}]");
+  }
+  $team_members = get_post_meta($profile->id, 'team_members', true);
+  if (!is_array($team_members)) {
+    return true;
+  } else if (($idx = array_search($user_id, $team_members)) !== false) {
+    unset($team_members[$idx]);
+  }
+  return update_post_meta($profile->id, 'team_members', $team_members);
+}
+
+function buf_get_profile($profile) {
+  if ($profile instanceof SharePressProfile) {
+    return $profile;
+  }
+  return SharePressProfile::forPost($profile);
 }
 
 function buf_get_profiles($args = '') {
@@ -429,10 +464,6 @@ function buf_update_profile($profile) {
 
   if (!empty($profile['formatted_username'])) {
     $post['post_title'] = $profile['formatted_username'];
-  }
-
-  if (array_key_exists('default', $profile)) {
-    $meta['default'] = (bool) $profile['default'];
   }
 
   if (array_key_exists('config', $profile)) {
@@ -553,8 +584,8 @@ function buf_update_update($update) {
         return new WP_Error('profile', "Profile does not exist [{$profile_id}]");
       }
       if ($profile->user_id !== get_current_user_id()) {
-        if (!buf_current_user_is_admin()) {
-          return new WP_Error('finish-this', 'Need to support team_members concept');
+        if (!buf_current_user_is_admin() && !in_array(get_current_user_id(), $profile->team_members)) {
+          return new WP_Error('access-denied', "You are not allowed to post to this Profile [{$profile_id}]");
         }
       }
       $profiles[$profile->id] = $profile;
@@ -602,50 +633,114 @@ function buf_update_update($update) {
 
   $post_ids = array();
 
-  if (!empty($update['now'])) {
-    // send!
+  foreach($profiles as $profile) {
+    $meta['profile_id'] = $profile->id;
 
+    if (is_wp_error($post_id = wp_insert_post($post))) {
+      return $post_id;
+    }
+
+    foreach($meta as $key => $value) {
+      update_post_meta($post_id, $key, $value);
+    }
+
+    $post_ids[] = $post_id;    
+  }
+
+  $errors = array();
+
+  if (!empty($update['now'])) {
+    foreach($post_ids as $post_id) {
+      if (is_wp_error($update = buf_post_update($post_id))) {
+        $errors[] = $update;
+      } else {
+        $updates[] = $update;
+      }
+    }
+
+    $result = array(
+      'success' => !$errors,
+      'updates' => $updates
+    );
+
+    if ($errors) {
+      $result['errors'] = $errors;
+    }
+
+    return (object) $result;
   } else {
     foreach($profiles as $profile) {
-      $meta['profile_id'] = $profile->id;
-
-      if (is_wp_error($post_id = wp_insert_post($post))) {
-        return $post_id;
-      }
-
-      foreach($meta as $key => $value) {
-        update_post_meta($post_id, $key, $value);
-      }
-
-      $post_ids[] = $post_id;    
+      buf_update_buffer($profile);
     }
+
+    foreach($post_ids as $post_id) {
+      $updates[] = (object) buf_get_update($post_id)->toJSON();
+    }
+    
+    $result = array(
+      'success' => true,
+      'buffer_count' => null,
+      'buffer_percentage' => null
+    );
+
+    if ($create) {
+      $result['updates'] = $updates;
+    } else {
+      $result['update'] = array_shift($updates);
+    }
+
+    return (object) $result;
   }  
-
-  foreach($profiles as $profile) {
-    buf_update_buffer($profile);
-  }
-
-  foreach($post_ids as $post_id) {
-    $updates[] = (object) buf_get_update($post_id)->toJSON();
-  }
-
-  $result = array(
-    'success' => true,
-    'buffer_count' => null,
-    'buffer_percentage' => null
-  );
-
-  if ($create) {
-    $result['updates'] = $updates;
-  } else {
-    $result['update'] = array_shift($updates);
-  }
-
-  return (object) $result;
 }
 
 function buf_current_user_is_admin() {
   return current_user_can('list_users');
+}
+
+function buf_set_error_status($update, $error) {
+  if (!$update = buf_get_update($update_ref = $update)) {
+    return new WP_Error('update', "Update does not exist [{$update_ref}]");
+  }
+  $post = get_post($update->id);
+  $post->post_status = 'error';
+  wp_insert_post($post);
+  update_post_meta($update->id, 'error', $error);
+}
+
+function buf_post_update($update) {
+  if (!$update = buf_get_update($update_ref = $update)) {
+    return new WP_Error('update', "Update does not exist [{$update_ref}]");
+  }
+  if (!$profile = buf_get_profile($update->profile_id)) {
+    $error = WP_Error('profile', "Profile does not exist [{$update->profile_id}]"); 
+    buf_set_error_status($update, $error);
+    $error->add_data(array(
+      'update' => $update->toJSON()
+    ));
+    return $error;
+  }
+  if (is_wp_error($client = buf_get_client($profile))) {
+    $client->add_data(array(
+      'update' => $update->toJSON()
+    ));
+    buf_set_error_status($update, $client);
+    return $client;
+  }
+  if (is_wp_error($result = $client->post($update->text_formatted))) {
+    $result->add_data(array(
+      'profile' => $profile->toJSON(),
+      'update' => $update->toJSON()
+    ));
+    buf_set_error_status($update, $result);
+    return $result;
+  }
+  $post = get_post($update->id);
+  $post->post_status = 'sent';
+  wp_insert_post($post);
+  update_post_meta($update->id, 'sent_at', time());
+  update_post_meta($update->id, 'service_update_id', $result->service_update_id);
+  update_post_meta($update->id, 'sent_data', $result->service_update_id);
+  return (object) buf_get_update($update->id)->toJSON();
 }
 
 function buf_update_buffer($profile, $order = null, $offset = null) {
@@ -707,6 +802,9 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
 }
 
 function buf_get_update($update) {
+  if ($update instanceof SharePressUpdate) {
+    return $update;
+  }
   return SharePressUpdate::forPost($update);
 }
 

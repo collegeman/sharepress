@@ -10,7 +10,7 @@ License: GPL2
 */
 
 /*
-Copyright (C)2011 Fat Panda, LLC
+Copyright (C)2011-2012 Fat Panda, LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -31,6 +31,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 @define('SP_DIR', dirname(__FILE__));
 @define('SP_URL', plugins_url('', __FILE__));
 @define('SP_DEBUG', false);
+@define('SP_TEST_MESSAGE', "I'm testing SharePress: a plugin for WordPress that helps you curate and autopost to Facebook, Twitter, and LinkedIn!");
+@define('SP_TEST_URL', 'http://getsharepress.com');
 
 # bootstrap
 require(SP_DIR.'/includes/oauth.php');
