@@ -45,10 +45,6 @@
       $('#share').modal('show');
     },
 
-    showAddNewAccount: function() {
-
-    },
-
     showUpload: function() {
       $('#upload iframe').attr('src', $('#upload iframe').data('target'));
       $('.modal').modal('hide');
@@ -79,16 +75,11 @@
       return false;
     });
 
-    $('#share [data-account]').click(function() {
+    $('#share [data-profile-id]').click(function() {
       $this = $(this);
       $this.toggleClass('selected');
       return false;
     }).tooltip();
-
-    $('[data-action="add-new-account"]').click(function() {
-      app.showAddNewAccount();
-      return false;
-    });
 
     $('[data-action="remove-media"]').click(function() {
       app.removeMedia();

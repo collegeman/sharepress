@@ -1,5 +1,4 @@
 body { background: transparent; margin-bottom: 100px; }
-#sp-buf-profile-ui { margin-top: -8px; padding-bottom: 10px; }
 .wrap.sp-buf h2 { padding-bottom: 20px; }
 .wrap.sp-buf form { margin-top: 15px; margin-bottom: 18px; }
 .wrap.sp-buf form span { margin-left: 10px; }
@@ -17,9 +16,8 @@ body { background: transparent; margin-bottom: 100px; }
 
 
 #share .thumbnails { margin-left: -8px; margin-bottom: -5px; margin-top: 5px; }
-#share .thumbnails li { margin-left: 10px; margin-bottom: 8px; }
-#share .thumbnails a { width: 48px; height: 48px; display: inline-block; }
-#share .thumbnails a.thumbnail { border-width: 2px; position: relative; }
+#share .thumbnails li.profile { margin-left: 10px; margin-bottom: 8px; }
+#share .thumbnails a.thumbnail { width: 48px; height: 48px; display: inline-block; border-width: 2px; position: relative; }
 #share .thumbnails a.thumbnail.selected {
   border-color: #0088cc;
   border-width: 2px;
@@ -33,7 +31,7 @@ body { background: transparent; margin-bottom: 100px; }
   bottom: 0; right: 0;
   width: 16px; height: 16px; 
 }
-#share .thumbnails a.thumbnail span.fb { background-image: url(../img/fb-icon.png); }
+#share .thumbnails a.thumbnail span.facebook { background-image: url(../img/fb-icon.png); }
 #share .thumbnails a.thumbnail span.twitter { background-image: url(../img/twitter-icon.png); }
 #share .modal-body, #upload .modal-body { padding: 0; }
 #share textarea { 

@@ -158,3 +158,8 @@ class TwitterSharePressClient implements SharePressClient {
   }
 
 }
+
+add_action('sp_add_new_account_menu', 'add_new_account_menu_twitter');
+function add_new_account_menu_twitter() {
+  echo '<li><a tabindex="-1" href="#">Twitter Profile</a></li>';
+}

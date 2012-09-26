@@ -78,8 +78,12 @@ interface SharePressClient {
   function post($message, $config = '');
 
   /**
-   * Test the client as configured.
+   * Test the client as configured by posting to the service
+   * using SharePressClient::post(SP_TEST_MESSAGE, array('url' => SP_TEST_URL)),
+   * or $message and/or $url, when supplied.
+   * @param string $message (optional) will use SP_TEST_MESSAGE instead
+   * @param string $url (optional) will use SP_TEST_URL instead
    */
-  function test();
+  function test($message = false, $url = false);
 
 }

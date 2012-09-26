@@ -9,28 +9,25 @@
       <div class="modal-header">
         <button type="button" class="close" rel="tooltip" title="Cancel this post" data-dismiss="host">&times;</button>
         <ul class="thumbnails">
-          <li>
-            <a href="#" class="thumbnail" data-account="" title="Aaron Collegeman">
-              <img src="http://graph.facebook.com/aaroncollegeman/picture" alt="">
-              <span class="fb"></span>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="thumbnail" data-account="" title="Fat Panda">
-              <img src="http://graph.facebook.com/fatpandadev/picture" alt="">
-              <span class="fb"></span>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="thumbnail" data-account="" title="@collegeman">
-              <img src="https://api.twitter.com/1/users/profile_image/collegeman" alt="">
-              <span class="twitter"></span>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="thumbnail" data-action="add-new-account" title="Add new Account">
+          <?php foreach(buf_get_profiles() as $profile) { ?>
+            <li class="profile">
+              <a href="#" class="thumbnail" data-profile-id="<?php echo $profile->id ?>" title="<?php echo esc_attr($profile->formatted_username) ?>">
+                <img src="<?php echo $profile->avatar ?>">
+                <span class="<?php echo $profile->service ?>"></span>
+              </a>
+            </li>
+          <?php } ?>
+          <li class="profile btn-group">
+            <a href="#" class="thumbnail" data-toggle="dropdown" title="Add new Account">
               <img src="<?php echo plugins_url('img/add-new-account.png', SHAREPRESS) ?>" alt="">
             </a>
+            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+              <?php do_action('sp_add_new_account_menu') ?>
+              <?php if (!buf_has_keys('linkedin')) { ?>
+                <li class="divider"></li>
+                <li><a tabindex="-1" href="#">Get More</a></li>
+              <?php } ?>
+            </ul>
           </li>
         </ul>
       </div>
@@ -59,7 +56,7 @@
           <a href="#" tabindex="3" class="btn" data-action="upload"><i class="icon-picture"></i></a>
         </div>
         <a href="#" tabindex="4" class="btn" data-dismiss="host">Post Now</a>
-        <a href="#" tabindex="2" class="btn btn-primary" data-dismiss="host"><i class="icon-time icon-white"></i> Add to Schedule</a>
+        <a href="#" tabindex="2" class="btn btn-primary" data-dismiss="host"><i class="icon-time icon-white"></i> SharePress</a>
       </div>
     </div>
 

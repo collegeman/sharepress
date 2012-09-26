@@ -320,19 +320,19 @@ function buf_admin_bar_menu() {
     return;
   }
 
-  // $wp_admin_bar->add_menu(array(
-  //   'id' => 'sp-buf-schedule',
-  //   'title' => sprintf('<img src="%s">', plugins_url('img/admin-bar-wait.gif', SHAREPRESS)),
-  //   'href' => '#',
-  // ));
+  $wp_admin_bar->add_menu(array(
+    'id' => 'sp-buf-schedule',
+    'title' => sprintf('<img src="%s">', plugins_url('img/admin-bar-wait.gif', SHAREPRESS)),
+    'href' => '#',
+  ));
 }
 
 function buf_has_keys($service) {
   $lower = strtolower($service);
   $upper = strtoupper($service);
   
-  $key = sp_get_opt("{$lower}_key", constant("SP_{$upper}_KEY"));
-  $secret = sp_get_opt("{$lower}_secret", constant("SP_{$upper}_SECRET"));
+  $key = @sp_get_opt("{$lower}_key", constant("SP_{$upper}_KEY"));
+  $secret = @sp_get_opt("{$lower}_secret", constant("SP_{$upper}_SECRET"));
 
   $keys = false;
 
@@ -358,9 +358,12 @@ function buf_get_client($service, $profile = false) {
     $service = $profile->service;
   }
 
-  $class = sprintf('%sSharePressClient', ucwords($service));
+  $class = sprintf('%sSharePressClientPro', ucwords($service));
   if (!class_exists($class)) {
-    return new WP_Error('client', "SharePress Error: No client exists for service [$service]");
+    $class = sprintf('%sSharePressClient', ucwords($service));
+    if (!class_exists($class)) {
+      return new WP_Error('client', "SharePress Error: No client exists for service [$service]");
+    }
   }
 
   if (!$keys = buf_has_keys($service)) {
