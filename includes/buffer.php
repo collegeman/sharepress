@@ -126,6 +126,10 @@ class SharePressProfile {
     if (!is_array($this->schedules)) {
       $this->schedules = $this->schedules ? array($this->schedules) : array();
     }
+
+    if (empty($this->team_members)) {
+      $this->team_members = array();
+    }
   }
 
   private $_time = 0;
