@@ -89,6 +89,7 @@ class SpApi_v1 extends AbstractSpApi {
   function _addUpdateActions(&$update) {
     if ($this->_isAdmin() || $update->user_id === get_current_user_id()) {
       $update->actions = array(
+        'update' => site_url('/sp/1/updates/'.$update->id.'/update'),
         'delete' => site_url('/sp/1/updates/'.$update->id.'/destroy')
       );
     }
@@ -116,7 +117,7 @@ class SpApi_v1 extends AbstractSpApi {
               'delete' => site_url('/sp/1/profiles/'.$profile->id.'?_method=delete'),
               'schedules' => site_url('/sp/1/profiles/'.$profile->id.'/schedules'),
               'updates' => (object) array(
-                'create' => site_url('/sp/1/updates/create?profile_id='.$profile->id.'&text='),
+                'create' => site_url('/sp/1/updates/create?profile_ids[]='.$profile->id.'&text='),
                 'pending' => site_url('/sp/1/profiles/'.$profile->id.'/updates/pending'),
                 'sent' => site_url('/sp/1/profiles/'.$profile->id.'/updates/sent')
               )
@@ -130,6 +131,7 @@ class SpApi_v1 extends AbstractSpApi {
       // look up requested profile
       $profile = buf_get_profile($id);
       if ($profile->user_id != get_current_user_id()) {
+        // TODO: implement team_members
         $this->_assertIsAdmin();
       }
 
@@ -183,26 +185,43 @@ class SpApi_v1 extends AbstractSpApi {
           if (is_wp_error($profile)) {
             return $profile;
           }
-        }
-
-        return $profile->schedules ? $profile->schedules : array();
+          return array('success' => true);
+        } else {
+          return $profile->schedules ? $profile->schedules : array();
+        }        
       }
 
-      if ($action === 'updates' && $update) {
-        $args = $_GET;
-        if ($update === 'pending') {
-          $args['status'] = 'buffer';
-        } else if ($update === 'sent') {
-          $args['status'] = 'sent';
+      if ($action === 'updates') {
+        if ($update === 'reorder') {
+          if (is_wp_error($result = buf_update_buffer($profile, $_REQUEST['order'], $_REQUEST['offset']))) {
+            return $result;
+          }
+          // TODO: consider using offset her to limit size of reply
+          $result = buf_get_updates(array('profile_id' => $id));
+          array_map(array($this, '_addUpdateActions'), $result->updates);
+          return array(
+            'success' => true,
+            'updates' => $result->updates
+          );
+
         } else {
-          return new WP_Error("Invalid updates query [{$update}]");
+          $args = $_GET;
+          if ($update === 'pending') {
+            $args['status'] = 'buffer';
+          } else if ($update === 'sent') {
+            $args['status'] = 'sent';
+          } else {
+            return new WP_Error("Invalid updates query [{$update}]");
+          }
+
+          $args['profile_id'] = $id;
+
+          if (is_wp_error($result = buf_get_updates($args))) {
+            return $result;
+          }
+          array_map(array($this, '_addUpdateActions'), $result->updates);
+          return $result;
         }
-
-        $args['profile_id'] = $id;
-
-        $data = buf_get_updates($args);
-        array_map(array($this, '_addUpdateActions'), $data->updates);
-        return $data;
       }
 
       if ($action === 'test' && $this->_isPost()) {
@@ -223,26 +242,29 @@ class SpApi_v1 extends AbstractSpApi {
 
     if ($this->_isPost() || $action === 'create') {
       unset($_REQUEST['id']);
-      $update = buf_update_update($_REQUEST);
+      if (is_wp_error($result = buf_update_update($_REQUEST))) {
+        return $result;
+      }
+      array_map(array($this, '_addUpdateActions'), $result->updates);
+      return $result;
 
     } else if ($id && ( $this->_isPut() || $action === 'update' )) {
       $_REQUEST['id'] = $id;
-      $update = buf_update_update($_REQUEST);
+      if (is_wp_error($result = buf_update_update($_REQUEST))) {
+        return $result;
+      }
+      $this->_addUpdateActions($result->update);
+      return $result;
 
     } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
       return array('success' => buf_delete_update($id));
 
     } else if ($id) {
-      $update = buf_get_update($id);
-    }
-
-    if ($update) {
-      if (is_wp_error($update)) {
+      if (is_wp_error($update = buf_get_update($id))) {
         return $update;
-      } else {
-        $this->_addUpdateActions($update);
-        return $update->toJSON();
       }
+      $this->_addUpdateActions($update);
+      return $update->toJSON();
     }
   }
 

@@ -47,7 +47,13 @@ interface SharePressClient {
 
   /**
    * Send a message to the remote system on behalf of the current session.
-   * @return Response data from third-party API, or WP_Error
+   * @return Response data from third-party API, or WP_Error. If response
+   * from third-party API, must be formatted as follows:
+   *
+   * return (object) array(
+   *   'service_update_id' => '', // primary key of response
+   *   'data' => ... // complete response packet
+   * );
    */
   function post($message, $config = '');
 
@@ -144,13 +150,21 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
 
   function post($message, $config = '') {
     try {
-      return $this->api(
+      $response = $this->api(
         $this->profile->service_id.'/links',
         'POST',
         array(
           'message' => $message,
           'link' => $config['url']
         )
+      );
+
+      $id = $response['id'];
+      unset($response['id']);
+      
+      return (object) array(
+        'service_update_id' => $id,
+        'data' => (object) $response
       );
     } catch (Exception $e) {
       return new WP_Error(($code = $e->getCode()) ? $code : 'error', $e->getMessage());
@@ -281,7 +295,8 @@ class TwitterSharePressClient implements SharePressClient {
       'POST',
       'https://api.twitter.com/1/statuses/update.json',
       array(
-        'status' => $message
+        'status' => $message,
+        'trim_user' => 1
       )
     );
 
@@ -302,11 +317,16 @@ class TwitterSharePressClient implements SharePressClient {
     if (is_wp_error($result = wp_remote_post('https://api.twitter.com/1/statuses/update.json', $params))) {
       return $result;
     } else {
+      $response = json_decode($result['body']);
       if ($result['response']['code'] !== 200) {
-        $response = json_decode($result['body']);
         return new WP_Error(strtolower($result['response']['message']), $response->error);
       } else {
-        return json_decode($result['body']);
+        $id = $response->id;
+        unset($response->id);
+        return (object) array(
+          'service_update_id' => $id,
+          'data' => $response
+        );
       }
     }  
   }

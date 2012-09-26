@@ -129,7 +129,42 @@ class SharePressProfile {
   private $_times = array();
   private $_idx = 0;
 
-  function reset() {
+  function __wakeup() {
+    $this->_time = 0;
+  }
+
+  /**
+   * This function transforms this Profile object into a clock. Every
+   * time this function is called, the next scheduled slot in this Profile's
+   * buffer will be returned as a UTC timestamp. This function can be
+   * called as many times as needed - for as many slots as need a timestamp
+   * assigned to them.
+   */
+  function next() {
+    if ($this->_time === 0) {
+      $this->reset();
+    }
+
+    if (!isset($this->_days[$this->_idx])) {
+      $this->_idx = 0;
+    }
+
+    $day = strtolower(gmdate('D', $this->_time));
+    $adjust = $day === $this->_days[$this->_idx] ? $this->_times[$this->_idx] : "{$this->_days[$this->_idx]} {$this->_times[$this->_idx]}";
+
+    $date = @gmdate('U', $time = strtotime($adjust, $this->_time));    
+    $this->_time = $time;
+
+    $this->_idx++;
+    
+    if ($time < time()) {
+      return $this->next();
+    }
+
+    return $date;
+  }
+
+  function reset($start = null) {
     $days = array();
 
     $dayv = array('sun','mon','tue','wed','thu','fri','sat');
@@ -155,8 +190,12 @@ class SharePressProfile {
       }
     }
 
+    if (is_null($start)) {
+      $start = time();
+    }
+
     // find the next calendar day
-    $next = time()-86400;
+    $next = $start-86400;
     do {
       $next += 86400;
       $day = strtolower(gmdate('D', $next));
@@ -165,31 +204,7 @@ class SharePressProfile {
 
     $this->_idx = $idx;
 
-    $this->_time = time();
-  }
-
-  function next() {
-    if ($this->_time === 0) {
-      $this->reset();
-    }
-
-    if (!isset($this->_days[$this->_idx])) {
-      $this->_idx = 0;
-    }
-
-    $day = strtolower(gmdate('D', $this->_time));
-    $adjust = $day === $this->_days[$this->_idx] ? $this->_times[$this->_idx] : "{$this->_days[$this->_idx]} {$this->_times[$this->_idx]}";
-
-    $date = @gmdate('U', $time = strtotime($adjust, $this->_time));    
-    $this->_time = $time;
-
-    $this->_idx++;
-    
-    if ($time < time()) {
-      return $this->next();
-    }
-
-    return $date;
+    $this->_time = $start;
   }
 
   function toJSON() {
@@ -252,9 +267,37 @@ class SharePressUpdate {
     $this->profile_service = $profile !== false ? $profile->service : false;
   }
 
+  function __get($name) {
+    if ($name === 'text_formatted') {
+      $this->text_formatted = $this->text();
+      return $this->text_formatted;
+    } else {
+      return null;
+    }
+  }
+
+  function text() {
+    return $this->text;
+  }
+
   function toJSON() {
     $data = get_object_vars($this);
+    unset($data['shorten']);
+    unset($data['sent_data']);
+    $data['text_formatted'] = $this->text_formatted;
     return $data;
+  }
+
+}
+
+class SharePressUpdateSorter {
+
+  function __construct($orderv) {
+    $this->orderv = $orderv;
+  }
+
+  function sort($a, $b) {
+    return @$this->orderv[$a->ID] > @$this->orderv[$b->ID];
   }
 
 }
@@ -463,7 +506,11 @@ function buf_update_profile($profile) {
     }
   }
 
-  return buf_get_profile($post_id);
+  $profile = buf_get_profile($post_id);
+
+  buf_update_buffer($profile);
+
+  return $profile;
 }
 
 function buf_delete_profile($profile) {
@@ -485,30 +532,33 @@ function buf_update_update($update) {
 
   $post = array();
   $meta = array();
-  $profile = false;
+  $profiles = array();
+  $create = false;
 
   if (!is_user_logged_in()) {
     return new WP_Error('auth', 'You must be logged in');
   }
 
   if ($post_id === false) {
+    $create = true;
+
     $meta['created_at'] = time();
 
-    if (!$update['profile_id']) {
-      return new WP_Error('profile', 'Missing profile_id arg');
+    if (empty($update['profile_ids'])) {
+      return new WP_Error('profile', 'Missing profile_ids arg');
     }
 
-    if (!$profile = buf_get_profile($update['profile_id'])) {
-      return new WP_Error('profile', "Profile does not exist [{$update['profile_id']}]");
-    }
-
-    if ($profile->user_id !== get_current_user_id()) {
-      if (!buf_current_user_is_admin()) {
-        return new WP_Error('finish-this', 'Need to support team_members concept');
+    foreach($update['profile_ids'] as $profile_id) {
+      if (!$profile = buf_get_profile($profile_id)) {
+        return new WP_Error('profile', "Profile does not exist [{$profile_id}]");
       }
+      if ($profile->user_id !== get_current_user_id()) {
+        if (!buf_current_user_is_admin()) {
+          return new WP_Error('finish-this', 'Need to support team_members concept');
+        }
+      }
+      $profiles[$profile->id] = $profile;
     }
-
-    $meta['profile_id'] = $update['profile_id'];
 
     $post['post_status'] = 'buffer';
 
@@ -519,6 +569,10 @@ function buf_update_update($update) {
     $post['post_type'] = 'sp_update';
 
     $post['comment_status'] = $post['ping_status'] = 'closed';
+
+    if (!empty($update['shorten'])) {
+      $meta['shorten'] = true;
+    }
 
     if (!$text = trim($update['text'])) {
       return new WP_Error('text', 'Cannot create empty Update');
@@ -535,33 +589,81 @@ function buf_update_update($update) {
 
     $post = (array) $existing;
 
-    $profile = buf_get_profile(get_post_meta($post_id, 'profile_id', true));
+    if (!$profile = buf_get_profile($profile_id = get_post_meta($post_id, 'profile_id', true))) {
+      return new WP_Error("Profile no longer exists [{$profile_id}]");
+    }
+
+    $profiles = array($profile);
   }
 
   if (array_key_exists('text', $update)) {
     $post['post_content'] = trim($update['text']);
   }
 
-  if (is_wp_error($post_id = wp_insert_post($post))) {
-    return $post_id;
+  $post_ids = array();
+
+  if (!empty($update['now'])) {
+    // send!
+
+  } else {
+    foreach($profiles as $profile) {
+      $meta['profile_id'] = $profile->id;
+
+      if (is_wp_error($post_id = wp_insert_post($post))) {
+        return $post_id;
+      }
+
+      foreach($meta as $key => $value) {
+        update_post_meta($post_id, $key, $value);
+      }
+
+      $post_ids[] = $post_id;    
+    }
+  }  
+
+  foreach($profiles as $profile) {
+    buf_update_buffer($profile);
   }
 
-  foreach($meta as $key => $value) {
-    update_post_meta($post_id, $key, $value);
+  foreach($post_ids as $post_id) {
+    $updates[] = (object) buf_get_update($post_id)->toJSON();
   }
 
-  buf_update_buffer($profile);
+  $result = array(
+    'success' => true,
+    'buffer_count' => null,
+    'buffer_percentage' => null
+  );
 
-  return buf_get_update($post_id);
+  if ($create) {
+    $result['updates'] = $updates;
+  } else {
+    $result['update'] = array_shift($updates);
+  }
+
+  return (object) $result;
 }
 
 function buf_current_user_is_admin() {
   return current_user_can('list_users');
 }
 
-function buf_update_buffer($profile) {
+function buf_update_buffer($profile, $order = null, $offset = null) {
   if (!$profile = buf_get_profile($profile_ref = $profile)) {
     return false;
+  }
+
+  if ($order) {
+    if (!is_null($offset)) {
+      if ($offset < 1 || $offset > 100) {
+        return new WP_Error("When updating order of buffer, offset must be between 1 and 100");
+      } else {
+        // zero index
+        $offset--;
+      }
+    } else {
+      $offset = 0;
+    }
   }
 
   $updates = get_posts(array(
@@ -569,8 +671,25 @@ function buf_update_buffer($profile) {
     'post_status' => 'buffer',
     'orderby' => 'menu_order',
     'order' => 'DESC',
-    'numberposts' => -1
+    'numberposts' => 100
   ));
+
+  if ($order) {
+    $orderv = array();
+    foreach($order as $i => $o) {
+      $orderv[$o] = $i;
+    }
+    $sorter = array(new SharePressUpdateSorter($orderv), 'sort');
+    if ($offset) {
+      $before = array_slice($updates, 0, $offset);
+      $to_order = array_slice($updates, $offset, count($order));
+      $after = array_slice($updates, $offset + count($order));
+      usort($to_order, $sorter);
+      $updates = array_merge($before, $to_order, $after);
+    } else {
+      usort($updates, $sorter);
+    }
+  }
 
   $menu_order = count($updates);
 
@@ -610,10 +729,17 @@ function buf_get_updates($args = '') {
   if (!empty($args['status'])) {
     $args['post_status'] = $args['status'];
     unset($args['status']);
+  } else {
+    $args['post_status'] = 'buffer';
   }
 
   $args['numberposts'] = ($limit = (int) $args['count']) ? $limit : 100;
   $args['offset'] = ((($offset = (int) $args['page']) ? $offset : 1) - 1) * $args['numberposts'];
+  
+  if ($args['offset'] + $args['numberposts'] > 100) {
+    $args['numberposts'] = 100 - $args['offset'];
+  }
+
   $args['orderby'] = 'post_date_gmt';
   $args['order'] = 'ASC';
 
