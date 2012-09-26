@@ -63,12 +63,15 @@ div.modal-section.border-top {
   border-top: 1px solid #eeeeee;
 }
 
-#share .modal-body { clear: both; }
-
+#share .modal-body { clear: both; position: relative; }
+#share .length-limit { display: none; position: absolute; top: 10px; right: 17px; color: #333; }
+#share.is_tweet .length-limit { display: block; }
+#share .length-limit.over { color: red; }
 #share .fb-preview .title { font-weight: bold; font-size: 16px; line-height: 20px; }
 #share .fb-preview .url { color: #aaa; margin-bottom: 5px; overflow: hidden; height: 16px; }
 #share .fb-preview p { line-height: 16px; margin-bottom: 0; }
-#share-media { padding: 0; background-color: black; }
+#share-media { min-height: 45px; position: relative; overflow: hidden; padding: 0; background-color: black; }
+#share-media .buttons { position: absolute; top: 0; left: 0; width: 100%; height: 45px; background: black; background-color: rgba(0, 0, 0, 0.25); }
 #share-media img { display: block; margin: 0 auto; max-width: 550px; }
 #share-media .close { margin-right: 15px; margin-top: 9px; color: white; opacity: 0.8; }
 
@@ -77,6 +80,8 @@ div.modal-section.border-top {
 #upload { width: 650px; margin-left: -325px; }
 #upload .modal-body { max-height: 500px; }
 #upload iframe { width: 100%; height: 500px; border: none; }
+
+.error { display: none; padding: 15px; background-color: #F2DEDE; color: #B94A48; }
 
 /* @group Media containers -- floated images and text with a hard margin */
 .media, .bd {overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1;}
@@ -89,3 +94,5 @@ div.modal-section.border-top {
 .img.img_30 {width: 30px; height: 30px; overflow: hidden;}
 .img.img_30 img {max-width: 30px;}
 /* @end */
+
+#wait { display: none; position: fixed; width: 100%; height: 100%; color: white; opacity: 0.50; background: black; top: 0; left: 0; }

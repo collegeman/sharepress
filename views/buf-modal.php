@@ -11,52 +11,49 @@
         <ul class="thumbnails">
           <?php foreach(buf_get_profiles() as $profile) { ?>
             <li class="profile">
-              <a href="#" class="thumbnail" data-profile-id="<?php echo $profile->id ?>" title="<?php echo esc_attr($profile->formatted_username) ?>">
+              <a href="#" class="thumbnail" data-profile-service="<?php echo $profile->service ?>" data-profile-id="<?php echo $profile->id ?>" title="<?php echo esc_attr($profile->formatted_username) ?>">
                 <img src="<?php echo $profile->avatar ?>">
                 <span class="<?php echo $profile->service ?>"></span>
               </a>
             </li>
           <?php } ?>
-          <li class="profile btn-group">
-            <a href="#" class="thumbnail" data-toggle="dropdown" title="Add new Account">
+          <li class="profile btn-group add-profile">
+            <a href="#" class="thumbnail" data-toggle="dropdown" title="Add new Profile">
               <img src="<?php echo plugins_url('img/add-new-account.png', SHAREPRESS) ?>" alt="">
             </a>
             <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
               <?php do_action('sp_add_new_account_menu') ?>
               <?php if (!buf_has_keys('linkedin')) { ?>
                 <li class="divider"></li>
-                <li><a tabindex="-1" href="#">Get More</a></li>
+                <?php if (!buf_has_keys('linkedin')) { ?>
+                  <li><a tabindex="-1" href="#">Get LinkedIn Support</a></li>
+                <?php } ?>
               <?php } ?>
             </ul>
           </li>
         </ul>
       </div>
       <div id="share-media" class="hide modal-section border-bottom">
-        <button type="button" class="close" rel="tooltip" title="Remove this media" data-action="remove-media">&times;</button>
-        <button type="button" class="close" rel="tooltip" title="Hide" data-action="remove-media">&minus;</button>
+        <div class="buttons">
+          <button type="button" class="close" data-action="remove-media">&times;</button>
+          <button type="button" class="close" data-toggle-media="hide">&minus;</button>
+        </div>
         <img src="">
       </div>
       <div class="modal-body">
-        <textarea tabindex="1">&quot;Any man who can drive safely while kissing a pretty girl is simply not giving the kiss the attention it deserves.&quot; - Albert Einstein http://bit.ly/P7PCgQ</textarea>
+        <textarea id="text" tabindex="1" placeholder="Write a post here, then Share Now or SharePress it later..."><?php echo trim(esc_html($text)) ?></textarea>
+        <span class="length-limit">140</span>
       </div>
-      <div class="fb-preview modal-section border-top">
-        <div class="media">
-          <div class="img">
-            <img src="http://i1.squidoocdn.com/resize/squidoo_images/250/draft_lens2738682_8d8d832fd6f39d53ad74feab6567e81a.jpg" width="100">
-          </div>
-          <div class="bd">
-            <div class="title">Aaron Collegeman</div>
-            <div class="url">http://www.squidoo.com/aaroncollegeman</div>
-            <p>I'm Aaron and I'm the Lead Developer here at Squidoo. (That's right: you're using Squidoo to read this Lens. ) I'm putting this Lens together for a couple of reasons, among them, to introduce myself to the rest of the team here at Squidoo, and to introduce...</p>
-          </div>
-        </div>
+      <div class="error">
+        <span></span>
+        <button type="button" class="close" data-dismiss="error">&times;</button>
       </div>
       <div class="modal-footer">
         <div class="pull-left">
           <a href="#" tabindex="3" class="btn" data-action="upload"><i class="icon-picture"></i></a>
         </div>
-        <a href="#" tabindex="4" class="btn" data-dismiss="host">Post Now</a>
-        <a href="#" tabindex="2" class="btn btn-primary" data-dismiss="host"><i class="icon-time icon-white"></i> SharePress</a>
+        <button type="button" href="#" tabindex="4" class="btn" data-action="post-now">Share Now</button>
+        <button type="button" href="#" tabindex="2" class="btn btn-primary" data-action="sharepress"><i class="icon-time icon-white"></i> SharePress</button>
       </div>
     </div>
 
@@ -73,13 +70,16 @@
     </div>
 
     <script>
-      _sp = { 
-        api: '<?php echo site_url('/sp/1/') ?>',
-        host: '<?php echo filter_var($_REQUEST['host'], FILTER_VALIDATE_URL) ?>' 
-      };
+      _sp = <?php 
+        echo json_encode(array(
+          'api' => site_url('/sp/1/'),
+          'host' => filter_var($_REQUEST['host'], FILTER_VALIDATE_URL)
+        ));
+      ?>;
     </script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script src="<?php echo plugins_url('js/bootstrap.min.js', SHAREPRESS); ?>"></script>
     <script src="<?php echo plugins_url('js/modal.js', SHAREPRESS); ?>"></script>
+    <div id="wait"></div>
   </body>
 </html>

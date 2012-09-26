@@ -142,5 +142,5 @@ function add_new_account_menu_facebook() {
     $href = admin_url('options-general.php?page=sharepress');
     $target = '_blank';
   }
-  echo sprintf('<li><a tabindex="-1" href="%s" target="%s">Facebook Profile</a></li>', $href, $target);
+  echo sprintf('<li><a tabindex="-1" href="%s" target="%s">Add Facebook Profile</a></li>', $href, $target);
 }

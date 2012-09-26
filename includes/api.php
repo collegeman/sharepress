@@ -3,9 +3,45 @@
 class SpApi_v1 extends AbstractSpApi {
 
   function modal() {
-    $this->_assertLoggedIn();
+    $this->_assertLoggedIn(); 
+    $text = '';
+
+    if (!empty($_REQUEST['url'])) {
+      $crawled = sp_crawl($url = trim($_REQUEST['url']), array_key_exists('flush', $_REQUEST));
+      if (is_wp_error($crawled)) {
+        @error_log($crawled->get_error_code().': '.$crawled->get_error_message());
+        if ($crawled->get_error_code() == 'shorten') {
+          $text = 'Oops! I failed to shorten your URL. '.$url;
+        } else {
+          $text = $crawled->get_error_message().' '.$url;
+        }
+      } else {
+        $text = implode(' ', array_filter(array($crawled->title, $crawled->short)));
+      }
+    } else if (!empty($_REQUEST['p'])) {
+      if (!$post = get_post($_REQUEST['p'])) {
+        $text = "Oops! I couldn't find that post.";
+      } else {
+        if (is_wp_error($short = sp_shorten($url = site_url('?p='.$post->ID)))) {
+          $text = 'Oops! I failed to shorten your URL. '.$url;
+        } else {
+          $text = get_the_title($post->ID).' '.$short;
+        }
+      }
+    }
+
     include(SP_DIR.'/views/buf-modal.php');
     exit;
+  }
+
+  function shorten() {
+    $this->_assertLoggedIn();
+    return sp_shorten($_REQUEST['url'], array_key_exists('flush', $_REQUEST));
+  }
+
+  function crawl() {
+    $this->_assertLoggedIn();
+    return sp_crawl($_REQUEST['url'], array_key_exists('flush', $_REQUEST));
   }
 
   function media($id) {

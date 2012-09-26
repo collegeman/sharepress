@@ -212,7 +212,7 @@ class SharePressProfile {
 
     $this->_idx = $idx;
 
-    $this->_time = $start;
+    $this->_time = $next;
   }
 
   function toJSON() {
@@ -222,10 +222,8 @@ class SharePressProfile {
         unset($data[$key]);
       }
     }
-    // if (!current_user_can('list_users')) {
-      unset($data['user_token']);
-      unset($data['user_secret']);
-    // }
+    unset($data['user_token']);
+    unset($data['user_secret']);
     return $data;
   }
 
@@ -281,15 +279,15 @@ class SharePressUpdate {
 
   function __get($name) {
     if ($name === 'text_formatted') {
-      $this->text_formatted = $this->text();
+      $this->text_formatted = self::format($this->text);
       return $this->text_formatted;
     } else {
       return null;
     }
   }
 
-  function text() {
-    return $this->text;
+  static function format($text) {
+    return $text;
   }
 
   function toJSON() {
@@ -508,10 +506,11 @@ function buf_update_profile($profile) {
   }
 
   if (!$post_id && !array_key_exists('schedules', $profile)) {
+    $offset = get_option('gmt_offset');
     $profile['schedules'] = array(
       array(
-        'days' => explode(',','mon,tue,wed,thu,fri'),
-        'times' => explode(',','12:00,17:00')
+        'days' => explode(',', 'mon,tue,wed,thu,fri'),
+        'times' => explode(',', sprintf('%d:00,%d:00', 12 - $offset, 17 - $offset))
       )
     );
   }
@@ -746,11 +745,13 @@ function buf_post_update($update) {
   wp_insert_post($post);
   update_post_meta($update->id, 'sent_at', time());
   update_post_meta($update->id, 'service_update_id', $result->service_update_id);
-  update_post_meta($update->id, 'sent_data', $result->service_update_id);
+  update_post_meta($update->id, 'sent_data', $result->data);
   return (object) buf_get_update($update->id)->toJSON();
 }
 
 function buf_update_buffer($profile, $order = null, $offset = null) {
+  global $wpdb;
+
   if (!$profile = buf_get_profile($profile_ref = $profile)) {
     return false;
   }
@@ -768,13 +769,14 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
     }
   }
 
-  $updates = get_posts(array(
-    'post_type' => 'sp_update',
-    'post_status' => 'buffer',
-    'orderby' => 'menu_order',
-    'order' => 'DESC',
-    'numberposts' => 100
-  ));
+  $updates = $wpdb->get_results("
+    SELECT * FROM {$wpdb->posts}
+    WHERE
+      post_type = 'sp_update'
+      AND post_status = 'buffer'
+    ORDER BY menu_order DESC
+    LIMIT 100
+  ");
 
   if ($order) {
     $orderv = array();
@@ -801,7 +803,7 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
     $update->menu_order = $menu_order;
     $menu_order--;
     $update->post_date_gmt = gmdate('Y-m-d H:i:s', $next);
-    $update->post_date = gmdate('Y-m-d H:i:s', $next + ( $offset = get_option('gmt_offset') ? $offset : 0 ));
+    $update->post_date = gmdate('Y-m-d H:i:s', $next + get_option('gmt_offset'));
     wp_insert_post($update); 
     update_post_meta($update->ID, 'due_at', $next);
     update_post_meta($update->ID, 'due_time', gmdate('H:i a', $next));

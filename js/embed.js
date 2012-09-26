@@ -10,10 +10,17 @@
 
 !function($) {
 
-  var iframe, src = _sp.api + 'modal?host=' + _sp.host;
+  var iframe, base = _sp.api + 'modal?host=' + encodeURIComponent(_sp.host);
 
-  window.sharepress = function() {
+  window.sharepress = function(url, post_id) {
     if (!iframe) {
+      var src = base;
+      if (url) {
+        src += '&url=' + encodeURIComponent(url);
+      }
+      if (post_id) {
+        src += '&p=' + encodeURIComponent(post_id);
+      }
       $('body').append( iframe = $('<iframe style="width:100%; height:100%; position:fixed; top: 0; left: 0; z-index:1000001" allowTransparency="true" src="' + src + '"></iframe>') );
     }
   }
@@ -26,10 +33,15 @@
   });
 
   $(function() {
-    $('#wp-admin-bar-sp-buf-schedule a').click(function() {
+    $('#wp-admin-bar-sp-buf-schedule a').html('SharePress This').click(function() {
       sharepress();
       return false;
     });
+
+    $('[data-action="sharepress"]').click(function() {
+      sharepress();
+      return false;
+    })
   });
 
 }(jQuery);

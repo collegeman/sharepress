@@ -22,6 +22,96 @@ function sp_activate() {
   do_action('sp_activated');
 }
 
+/**
+ * Shorten the given URL.
+ * @param string $url
+ * @param boolean $flush (optional) When true, flush cached results
+ */
+function sp_shorten($url, $flush = false) {
+  $shortened = false;
+  $shortened_cache_key = 'sp_shortened_'.md5($url);
+  
+  if (!$flush) {
+    $shortened = get_transient($shortened_cache_key);
+  }
+
+  if (!$shortened) {
+    // allow for override by plugins
+    if ($url === ($shortened = apply_filters('sp_shorten', $url, $flush))) {
+      // use goo.gl
+      $result = wp_remote_post('https://www.googleapis.com/urlshortener/v1/url', array(
+        'body' => json_encode(array('longUrl' => $url)),
+        'headers' => array(
+          'Content-Type' => 'application/json'
+        )
+      ));
+
+      if (is_wp_error($result)) {
+        return $result;
+      }
+
+      $response = json_decode($result['body']);
+      if ($result['response']['code'] !== 200) {
+        return new WP_Error('shorten', $response->error->errors[0]->message);
+      }  
+
+      $shortened = $response->id;
+    }
+
+    if (is_wp_error($shortened)) {
+      return $shortened; 
+    }
+    
+    set_transient($shortened_cache_key, $shortened, 60 * 60);
+  }
+
+  return $shortened;
+}
+
+/**
+ * Crawl the given URL and return the title of the document, and
+ * a shortened version of the URL.
+ * @param string $url
+ * @param boolean $flush (optional) When true, flush cached results
+ */
+function sp_crawl($url, $flush = false) {
+  $shortened = sp_shorten($url, $flush);
+
+  $title_cache_key = 'sp_title_'.md5($url);
+  $title = get_transient($title_cache_key);
+
+  if (!$title) {
+    $title = '';
+
+    $result = wp_remote_get($url, array(
+      'timeout' => 5,
+      'sslverify' => false
+    ));
+
+    if (is_wp_error($result)) {
+      return $result;
+    }
+
+    if (strpos($result['response']['code'], '2') !== 0) {
+      return new WP_Error('crawl', 'Hmm... I got a '.$result['response']['code'].'. Maybe try again later?');
+    }
+    
+    if (strpos($result['headers']['content-type'], 'text/html') !== false) {
+      if (preg_match('#<title.*?>(.*?)</title>#mi', $result['body'], $matches)) {
+        $title = trim($matches[1]);
+      }
+    }
+
+    set_transient($title_cache_key, $title, 60 * 5);
+  }
+  
+  return (object) array(
+    'url' => $url,
+    'short' => $shortened,
+    'title' => $title
+  );
+}
+
 interface SharePressClient {
 
   /**
