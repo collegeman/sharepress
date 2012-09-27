@@ -430,7 +430,7 @@ function buf_get_profiles($args = '') {
   $args = wp_parse_args($args);
 
   $args['post_type'] = 'sp_profile';
-  $args['numberposts'] = min( (!empty($args['limit']) ? $args['limit'] : 5), 5 );
+  $args['numberposts'] = !empty($args['limit']) ? $args['limit'] : 0;
 
   if (!empty($args['user_id'])) {
     $args['author'] = $args['user_id'];
@@ -465,13 +465,14 @@ function buf_get_profiles($args = '') {
     $params[] = $args['author'];
     $params[] = $args['author'];
   }
-  $sql .= "LIMIT %d OFFSET 0";
-  $params[] = $args['numberposts'];
+
+  if (!empty($args['numberposts'])) {
+    $sql .= "LIMIT %d OFFSET 0";
+    $params[] = $args['numberposts'];
+  }
 
   $posts = $wpdb->get_results($sql = $wpdb->prepare($sql, $params));
-  echo $sql;
-  exit;
-  
+
   $profiles = array();
   foreach($posts as $post) {
     $profiles[] = (object) buf_get_profile($post)->toJSON();
