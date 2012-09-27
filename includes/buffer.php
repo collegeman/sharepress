@@ -100,14 +100,15 @@ class SharePressProfile {
 
   private function __construct($data) {
     foreach(get_post_custom($data['id']) as $meta_key => $values) {
-      $value = array_pop($values);
+      $value = $values[count($values)-1];
       if ($meta_key == 'service_tag') {
         list($service, $service_id) = explode(':', $value);
         $data['service'] = $service;
         $data['service_id'] = $service_id;
       } else if ($meta_key == 'schedules') {
-        $values[] = $value;
         $data['schedules'] = array_map('maybe_unserialize', $values);
+      } else if ($meta_key == 'team_members') {
+        $data['team_members'] = array_map('maybe_unserialize', $values);
       } else {
         $data[$meta_key] = maybe_unserialize($value);
       }
@@ -386,26 +387,34 @@ function buf_add_team_member($profile, $user_id) {
   if (!$profile = buf_get_profile($profile_ref = $profile)) {
     return new WP_Error('profile', "Profile does not exist [{$profile_ref}]");
   }
-  $team_members = get_post_meta($profile->id, 'team_members', true);
+  $team_members = get_post_meta($profile->id, 'team_members');
   if (!is_array($team_members)) {
     $team_members = array($user_id);
   } else if (!in_array($user_id, $team_members)) {
     $team_members[] = $user_id;
   }
-  return update_post_meta($profile->id, 'team_members', $team_members);
+  delete_post_meta($profile->id, 'team_members');
+  foreach(array_filter($team_members) as $team_member) {
+    add_post_meta($profile->id, 'team_members', $team_member);
+  }
+  return true;
 }
 
 function buf_remove_team_member($profile, $user_id) {
   if (!$profile = buf_get_profile($profile_ref = $profile)) {
     return new WP_Error('profile', "Profile does not exist [{$profile_ref}]");
   }
-  $team_members = get_post_meta($profile->id, 'team_members', true);
+  $team_members = get_post_meta($profile->id, 'team_members');
   if (!is_array($team_members)) {
     return true;
   } else if (($idx = array_search($user_id, $team_members)) !== false) {
     unset($team_members[$idx]);
   }
-  return update_post_meta($profile->id, 'team_members', $team_members);
+  delete_post_meta($profile->id, 'team_members');
+  foreach(array_filter($team_members) as $team_member) {
+    add_post_meta($profile->id, 'team_members', $team_member);
+  }
+  return true;
 }
 
 function buf_get_profile($profile) {
@@ -416,20 +425,55 @@ function buf_get_profile($profile) {
 }
 
 function buf_get_profiles($args = '') {
+  global $wpdb;
+
   $args = wp_parse_args($args);
 
   $args['post_type'] = 'sp_profile';
-  $args['numberposts'] = !empty($args['limit']) ? $args['limit'] : -1;
+  $args['numberposts'] = min( (!empty($args['limit']) ? $args['limit'] : 5), 5 );
 
   if (!empty($args['user_id'])) {
     $args['author'] = $args['user_id'];
     unset($args['user_id']);
   }
 
-  $args['post_status'] = 'any';
+  $params = array();
 
+  $sql = "SELECT * FROM {$wpdb->posts}";
+  if (!empty($args['author'])) {
+    $sql .= "
+      LEFT OUTER JOIN {$wpdb->postmeta} ON (
+        post_ID = ID 
+        AND meta_key = 'team_members' 
+        AND meta_value = %d
+      )
+    ";
+    $params[] = $args['author'];
+  }
+  $sql .= "
+    WHERE
+      post_type = 'sp_profile'
+      AND post_status = 'enabled'
+  ";
+  if (!empty($args['author'])) {
+    $sql .= "
+      AND (
+        post_author = %d
+        OR meta_value = %d
+      )
+    ";
+    $params[] = $args['author'];
+    $params[] = $args['author'];
+  }
+  $sql .= "LIMIT %d OFFSET 0";
+  $params[] = $args['numberposts'];
+
+  $posts = $wpdb->get_results($sql = $wpdb->prepare($sql, $params));
+  echo $sql;
+  exit;
+  
   $profiles = array();
-  foreach(get_posts($args) as $post) {
+  foreach($posts as $post) {
     $profiles[] = (object) buf_get_profile($post)->toJSON();
   }
   return $profiles;

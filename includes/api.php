@@ -189,16 +189,18 @@ class SpApi_v1 extends AbstractSpApi {
       }
 
       if ($action === 'team_members') {
-        if ($update === 'add') {
-          foreach($_REQUEST['user_ids'] as $user_id) {
-            buf_add_team_member($profile, $user_id);
-          }
-        } else if ($update === 'remove') {
-          foreach($_REQUEST['user_ids'] as $user_id) {
-            buf_remove_team_member($profile, $user_id);
+        if (!empty($_REQUEST['user_ids'])) {
+          if ($update === 'add') {
+            foreach($_REQUEST['user_ids'] as $user_id) {
+              buf_add_team_member($profile, $user_id);
+            }
+          } else if ($update === 'remove') {
+            foreach($_REQUEST['user_ids'] as $user_id) {
+              buf_remove_team_member($profile, $user_id);
+            }
           }
         }
-        return buf_get_profile($profile->id)->toJSON();
+        return buf_get_profile($profile->id)->team_members;
       }
 
       // lookup subprofiles for this profile
