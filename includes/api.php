@@ -5,6 +5,7 @@ class SpApi_v1 extends AbstractSpApi {
   function modal() {
     $this->_assertLoggedIn(); 
     $text = '';
+    $post = false;
 
     if (!empty($_REQUEST['url'])) {
       $crawled = sp_crawl($url = trim($_REQUEST['url']), array_key_exists('flush', $_REQUEST));
@@ -18,8 +19,8 @@ class SpApi_v1 extends AbstractSpApi {
       } else {
         $text = implode(' ', array_filter(array($crawled->title, $crawled->short)));
       }
-    } else if (!empty($_REQUEST['p'])) {
-      if (!$post = get_post($_REQUEST['p'])) {
+    } else if (!empty($_REQUEST['post_id'])) {
+      if (!$post = get_post($_REQUEST['post_id'])) {
         $text = "Oops! I couldn't find that post.";
       } else {
         if (is_wp_error($short = sp_shorten($url = site_url('?p='.$post->ID)))) {
@@ -32,6 +33,37 @@ class SpApi_v1 extends AbstractSpApi {
 
     include(SP_DIR.'/views/buf-modal.php');
     exit;
+  }
+
+  function cron() {
+    ignore_user_abort(true);
+
+    $local_time = microtime( true );
+
+    $doing_cron_transient = get_transient( 'sp_doing_cron');
+
+    // Use global $doing_wp_cron lock otherwise use the GET lock. If no lock, trying grabbing a new lock.
+    if ( empty( $doing_wp_cron ) ) {
+      if ( empty( $_GET[ 'sp_doing_cron' ] ) ) {
+        // Called from external script/job. Try setting a lock.
+        if ( $doing_cron_transient && ( $doing_cron_transient + WP_CRON_LOCK_TIMEOUT > $local_time ) )
+          return;
+        $doing_cron_transient = $doing_wp_cron = sprintf( '%.22F', microtime( true ) );
+        set_transient( 'sp_doing_cron', $doing_wp_cron );
+      } else {
+        $doing_wp_cron = $_GET[ 'sp_doing_cron' ];
+      }
+    }
+
+    // Check lock
+    if ( $doing_cron_transient != $doing_wp_cron )
+      return;
+
+    buf_post_pending();
+
+    if ( get_transient('sp_doing_cron') == $doing_wp_cron ) {
+      delete_transient( 'sp_doing_cron' );
+    }
   }
 
   function shorten() {
@@ -92,7 +124,7 @@ class SpApi_v1 extends AbstractSpApi {
     return $preview;
   }
 
-  function oauth($service) {
+  function auth($service) {
     if (!$service = trim($service)) {
       return false;
     }
@@ -359,7 +391,7 @@ abstract class AbstractSpApi {
 
   function _assertLoggedIn() {
     if (!is_user_logged_in()) {
-      wp_redirect(wp_login_url($_SERVER['RESTfulQUEST_URI']));
+      wp_redirect(wp_login_url($_SERVER['REQUEST_URI']));
       exit;
     }
   }

@@ -56,10 +56,8 @@
         <button type="button" href="#" tabindex="2" class="btn btn-primary" data-action="sharepress"><i class="icon-time icon-white"></i> SharePress</button>
       </div>
     </div>
-
     <div class="modal hide" id="connect">
     </div>
-
     <div class="modal hide" id="upload">
       <div class="modal-body">
         <iframe src="#" data-target="http://dev.wp.fatpandadev.com/wp-admin/media-upload.php?post_id="></iframe>
@@ -68,16 +66,17 @@
         <a href="#" class="btn" data-action="share">Cancel</a>
       </div>
     </div>
-
     <script>
       _sp = <?php 
         echo json_encode(array(
           'api' => site_url('/sp/1/'),
-          'host' => filter_var($_REQUEST['host'], FILTER_VALIDATE_URL)
+          'host' => filter_var($_REQUEST['host'], FILTER_VALIDATE_URL),
+          'post_id' => $post ? $post->ID : false
         ));
       ?>;
     </script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
     <script src="<?php echo plugins_url('js/bootstrap.min.js', SHAREPRESS); ?>"></script>
     <script src="<?php echo plugins_url('js/modal.js', SHAREPRESS); ?>"></script>
     <div id="wait"></div>

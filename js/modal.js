@@ -126,7 +126,8 @@
       $.post(_sp.api + 'updates/create', {
         'text': $text.val(),
         'profile_ids': profile_ids,
-        'now': now
+        'now': now,
+        'post_id': _sp.post_id
       }, function() {
         app.close();
       });
@@ -259,6 +260,11 @@
     $share.modal({
       keyboard: false,
       backdrop: 'static'
+    });
+
+    $share.draggable({
+      'axis': 'y',
+      'containment': 'document'
     });
 
     $('[rel="tooltip"]').tooltip();

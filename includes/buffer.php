@@ -2,6 +2,8 @@
 # Emulate the awesome Buffer, bufferapp.com
 add_action('init', 'buf_init');
 add_action('admin_bar_menu', 'buf_admin_bar_menu', 1000);
+add_action('wp_enqueue_scripts', 'buf_wp_enqueue_scripts');
+add_action('admin_enqueue_scripts', 'buf_wp_enqueue_scripts');
 
 function buf_init() {
   register_post_type('sp_update', array(
@@ -30,7 +32,11 @@ function buf_init() {
     'menu_position' => null
   ));
 
+}
+
+function buf_wp_enqueue_scripts() {
   if (is_user_logged_in()) {
+    global $post;
 
     wp_enqueue_script(
       'buffer-embed', 
@@ -40,6 +46,12 @@ function buf_init() {
       ), 
       array('jquery')
     );
+
+    if (empty($post)) {
+      if (!empty($_GET['post'])) {
+        $post = get_post($_GET['post']);
+      }
+    }
     
     wp_localize_script(
       'buffer-embed', 
@@ -48,7 +60,8 @@ function buf_init() {
         // the root URL of the API
         'api' => site_url('/sp/1/'),
         // the URL of the current request, for cross-domain communication
-        'host' => is_admin() ? admin_url($_SERVER['REQUEST_URI']) : site_url($_SERVER['REQUEST_URI'])
+        'host' => is_admin() ? admin_url($_SERVER['REQUEST_URI']) : site_url($_SERVER['REQUEST_URI']),
+        'post_id' => ($post ? $post->ID : false)
       )
     );
 
@@ -313,6 +326,37 @@ class SharePressUpdateSorter {
 
 }
 
+function buf_post_pending() {
+  error_log('buf_post_pending');
+
+  global $wpdb;
+
+  // cron job is on a 2-min interval, so we always
+  // look one minute into the future
+  $one_minute_from_now = time() + 60;
+
+  do_action('pre_buf_post_pending');
+
+  $posts = $wpdb->get_results("
+    SELECT ID FROM {$wpdb->posts}
+    JOIN {$wpdb->postmeta} ON (post_ID = ID)
+    WHERE
+      post_type = 'sp_update'
+      AND post_status = 'buffer'
+      AND meta_key = 'due_at' 
+      AND meta_value <= {$one_minute_from_now}
+  ");
+
+  foreach($posts as $post) {
+    if ($update = buf_get_update($post->ID)) {
+
+      buf_post_update($post->ID);  
+    }
+  }
+
+  do_action('post_buf_post_pending');
+}
+
 function buf_admin_bar_menu() {
   global $wp_admin_bar;
   if (!is_admin_bar_showing()) {
@@ -550,12 +594,13 @@ function buf_update_profile($profile) {
     $post['ID'] = $post_id;
   }
 
+  $offset = get_option('gmt_offset');
+  
   if (!$post_id && !array_key_exists('schedules', $profile)) {
-    $offset = get_option('gmt_offset');
     $profile['schedules'] = array(
       array(
         'days' => explode(',', 'mon,tue,wed,thu,fri'),
-        'times' => explode(',', sprintf('%d:00,%d:00', 12 - $offset, 17 - $offset))
+        'times' => explode(',', '12:00,17:00')
       )
     );
   }
@@ -579,6 +624,25 @@ function buf_update_profile($profile) {
       if ($schedule == 0) {
         unset($schedules[(int) $idx]);
       } else {
+        if (empty($schedule['times'])) {
+          $schedule['times'] = array('12:00', '17:00');
+        }
+        if (empty($schedule['days'])) {
+          $schedule['days'] = array('mon', 'tue', 'wed', 'thu', 'fri');
+        }
+
+        // offset
+        $times = array();
+        foreach(array_map('trim', $schedule['times']) as $time) {
+          list($hour, $min) = explode(':', $time);
+          $hour -= $offset;
+          if ($hour > 24) {
+            $hour -= 24;
+          }
+          $times[] = "{$hour}:{$min}";
+        }
+        $schedule['times'] = $times;
+
         $schedules[(int) $idx] = $schedule;
       }
     }
@@ -680,6 +744,10 @@ function buf_update_update($update) {
 
   if (array_key_exists('text', $update)) {
     $post['post_content'] = trim($update['text']);
+  }
+
+  if (array_key_exists('post_id', $update)) {
+    $meta['post_id'] = $update['post_id'];
   }
 
   $post_ids = array();
@@ -848,7 +916,7 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
     $update->menu_order = $menu_order;
     $menu_order--;
     $update->post_date_gmt = gmdate('Y-m-d H:i:s', $next);
-    $update->post_date = gmdate('Y-m-d H:i:s', $next + get_option('gmt_offset'));
+    $update->post_date = gmdate('Y-m-d H:i:s', $next + ( get_option('gmt_offset') * 3600 ) );
     wp_insert_post($update); 
     update_post_meta($update->ID, 'due_at', $next);
     update_post_meta($update->ID, 'due_time', gmdate('H:i a', $next));

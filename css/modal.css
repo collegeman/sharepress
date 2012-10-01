@@ -31,6 +31,7 @@ body { background: transparent; margin-bottom: 100px; }
   bottom: 0; right: 0;
   width: 16px; height: 16px; 
 }
+#share .modal-header, #share .modal-footer { cursor: move; }
 #share .thumbnails a.thumbnail span.facebook { background-image: url(../img/fb-icon.png); }
 #share .thumbnails a.thumbnail span.twitter { background-image: url(../img/twitter-icon.png); }
 #share .modal-body, #upload .modal-body { padding: 0; }
