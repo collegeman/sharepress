@@ -1,4 +1,7 @@
 # dev
+*  
+*
+*
 * SharePress meta box can't be used until Post saved as draft
 * In bf_update_update, make sure user owns profile
 * Validate days and times in schedules/update

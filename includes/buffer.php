@@ -157,10 +157,11 @@ class SharePressProfile {
 
   /**
    * This function transforms this Profile object into a clock. Every
-   * time this function is called, the next scheduled slot in this Profile's
+   * time this function is called, the next future slot in this Profile's
    * buffer will be returned as a UTC timestamp. This function can be
-   * called as many times as needed - for as many slots as need a timestamp
-   * assigned to them.
+   * called as many times as needed - for as many slots as are needed
+   * to reschedule a buffer's updates.
+   * @return timestamp
    */
   function next() {
     if ($this->_time === 0) {
@@ -179,7 +180,7 @@ class SharePressProfile {
 
     $this->_idx++;
     
-    if ($time < time()) {
+    if ($time < time() + ( $this->offset() * 3600 )) {
       return $this->next();
     }
 
@@ -216,8 +217,14 @@ class SharePressProfile {
       $start = time();
     }
 
-    // find the next calendar day
-    $next = $start-86400;
+    // identify the next start time that coincides
+    // with the next weekday specified by this profile's
+    // schedules; we use this profile's offset here
+    // and then use it again in next() to ensure that
+    // the clock is returning times for the user's 
+    // timezone, not the system's timezone.
+
+    $next = $start - 86400 + ( $this->offset() * 3600 );
     do {
       $next += 86400;
       $day = strtolower(gmdate('D', $next));
@@ -227,6 +234,15 @@ class SharePressProfile {
     $this->_idx = $idx;
 
     $this->_time = $next;
+  }
+
+  function offset() {
+    $timezone_object = timezone_open( $this->timezone );
+    $datetime_object = date_create();
+    if ( false === $timezone_object || false === $datetime_object ) {
+      return false;
+    }
+    return round( timezone_offset_get( $timezone_object, $datetime_object ) / 3600, 2 );
   }
 
   function toJSON() {
@@ -590,11 +606,25 @@ function buf_update_profile($profile) {
       $post['post_author'] = $user->ID;
     }
 
+    if (empty($meta['timezone'])) {
+      $current_offset = get_option('gmt_offset');
+      $meta['timezone'] = get_option('timezone_string');
+      if ( empty($meta['timezone']) ) { // Create a UTC+- zone if no timezone string exists
+        if ( 0 == $current_offset ) {
+          $meta['timezone'] = 'UTC+0';
+        } elseif ($current_offset < 0) {
+          $meta['timezone'] = 'UTC' . $current_offset;
+        } else {
+          $meta['timezone'] = 'UTC+' . $current_offset;
+        }
+      }
+    }
+
   } else {
     $post['ID'] = $post_id;
   }
 
-  $offset = get_option('gmt_offset');
+  // $offset = get_option('gmt_offset');
   
   if (!$post_id && !array_key_exists('schedules', $profile)) {
     $profile['schedules'] = array(
@@ -630,19 +660,6 @@ function buf_update_profile($profile) {
         if (empty($schedule['days'])) {
           $schedule['days'] = array('mon', 'tue', 'wed', 'thu', 'fri');
         }
-
-        // offset
-        $times = array();
-        foreach(array_map('trim', $schedule['times']) as $time) {
-          list($hour, $min) = explode(':', $time);
-          $hour -= $offset;
-          if ($hour > 24) {
-            $hour -= 24;
-          }
-          $times[] = "{$hour}:{$min}";
-        }
-        $schedule['times'] = $times;
-
         $schedules[(int) $idx] = $schedule;
       }
     }
@@ -733,7 +750,7 @@ function buf_update_update($update) {
       return new WP_Error("Not an update [{$post_id}]");
     }
 
-    $post = (array) $existing;
+    $post = (array) $emptyxisting;
 
     if (!$profile = buf_get_profile($profile_id = get_post_meta($post_id, 'profile_id', true))) {
       return new WP_Error("Profile no longer exists [{$profile_id}]");
