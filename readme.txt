@@ -3,8 +3,8 @@ Contributors: aaroncollegeman
 Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
-Tested up to: 3.5
-Stable tag: 2.2.9
+Tested up to: 3.5.1
+Stable tag: 2.2.10
 
 Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
 
@@ -81,6 +81,12 @@ Documentation for SharePress is available [here](http://aaroncollegeman.com/shar
 E-mail based tech support is available to PRO customers. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.10 =
+* Change: Compatible with WordPress 3.5.1
+* Change: No longer using intercom.io for support or usage tracking - too expensive
+* Change: Implemented Google Analytics for anonymous usage tracking, on by default but can be disabled from the settings screen
+* Change: For usability, gray-out Application pages from Target lists
 
 = 2.2.9 =
 * Change: Compatible with WordPress 3.5

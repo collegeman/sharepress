@@ -340,7 +340,10 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
                   <th scope="row" class="check-column">
                     <input type="checkbox" name="sharepress_publishing_targets[<?php echo $page['id'] ?>]" value="1" <?php if (self::targets($page['id'])) echo 'checked="checked"' ?>>
                   </th>
-                  <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo $page['id'] ?>"><?php echo $page['name'] ?></a></td>
+                  <td>
+                    <a <?php if ($page['category'] == 'Application') echo 'style="color:#bbbbbb;"' ?> target="_blank" href="http://facebook.com/profile.php?id=<?php echo $page['id'] ?>"><?php echo $page['name'] ?></a>
+                    <span <?php if ($page['category'] == 'Application') echo 'style="color:#bbbbbb;"' ?>>(<?php echo $page['category'] ?>)</span>
+                  </td>
                 </tr>
               <?php } ?>
             </tbody>
@@ -781,27 +784,30 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
         </table>
 
         <br />
-        <h3 class="title">Get Help</h3>       
-
-        <b>New!</b> Now you can get SharePress help directly from the developers at Fat Panda.
+        <h3 class="title">Get Help</h3>
+        Having trouble using SharePress? Contact our support team.
         <?php if (!self::setting('license_key')) { ?>
           Note that as an unlicensed user, your help will be limited to getting the free version up and running.
         <?php } ?>
         The <a href="http://aaroncollegeman.com/sharepress/help" target="_blank">documentation</a> is also awesome, and is available to everyone.
 
+        <br /><br />
+        <h3 class="title">Anonymous Usage Tracking</h3>       
+        Help support SharePress development - send us anonymous usage statistics. Don't want to do this? Just turn it off.
+        <br><br>
+        These are the stats we collect:
+        <ul>
+          <li>&mdash; Number of installations worldwide</li>
+          <li>&mdash; Whether or not you have purchased a license key</li>
+        </ul>
+        
         <table class="form-table">
           <tr>
             <td>
               <div style="margin-bottom:5px;">
                 <label>
                   <input type="radio" name="<?php echo self::OPTION_SETTINGS ?>[intercom_enabled]" value="1" <?php if (self::setting('intercom_enabled', '1')) echo 'checked="checked"' ?> />
-                  Enabled &mdash; display <b>SharePress Support</b> tab on
-                  <select name="<?php echo self::OPTION_SETTINGS ?>[intercom_show_on]">
-                    <option value="all" <?php if (self::setting('intercom_show_on', 'all') == 'all') echo 'selected="selected"' ?>>all screens</option>
-                    <option value="sharepress" <?php if (self::setting('intercom_show_on', 'all') == 'sharepress') echo 'selected="selected"' ?>>only SharePress-related screens</option>
-                    <option value="none" <?php if (self::setting('intercom_show_on', 'all') == 'none') echo 'selected="selected"' ?>>no screens</option>
-                  </select>
-                  in the admin.
+                  Yes, send anonymous usage statistics
                 </label>
               </div>
               <div style="margin-bottom:5px;">
@@ -819,10 +825,6 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
       <br />
       <p class="submit">
         <input id="btnSaveSettings" class="button-primary" value="Save Settings" type="submit" />
-      </p>
-
-      <p class="floating submit">
-        <input id="btnFloatingSaveSettings" class="button-primary" value="Save Settings" type="submit" />
       </p>
       
     <?php } ?>

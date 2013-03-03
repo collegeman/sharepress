@@ -107,7 +107,7 @@
                  <p>
                   <label for="sharepress_target_<?php echo $page['id'] ?>" title="<?php echo $page['name'] ?>">
                     <input class="sharepress_target" type="checkbox" id="sharepress_target_<?php echo $page['id'] ?>" name="sharepress_meta[targets][]" value="<?php echo $page['id'] ?>" <?php if (@in_array($page['id'], $meta['targets'])) echo 'checked="checked"' ?> />
-                    <?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?>
+                    <span <?php if ($page['category'] == 'Application') echo 'style="color:#bbbbbb;" title="This is an Application page"' ?>><?php $name = trim(substr($page['name'], 0, 30)); $name .= ($name != $page['name']) ? '...' : ''; echo $name ?></span>
                   </label>
                 </p>
               <?php

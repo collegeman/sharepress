@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.9
+Version: 2.2.10
 License: GPL2
 */
 
@@ -41,7 +41,7 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 
 class Sharepress {
 
-  const VERSION = '2.2.5';
+  const VERSION = '2.2.10';
   
   const MISSED_SCHEDULE_DELAY = 5;
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
@@ -86,6 +86,78 @@ class Sharepress {
   private function __construct() {
     add_action('init', array($this, 'init'), 11, 1);
   }
+
+  function gat($category, $action, $opt_label = null, $opt_value = null) {
+    if (!is_null($opt_value) && !is_numeric($opt_value)) {
+      throw new Exception("Google Analytics cannot track non-integer event values: {$opt_value}");
+    } 
+    
+    if (!$category && $action) {
+      throw new Exception("Google Analytics requires Category and Action be specified.");
+    }
+    
+    static $host;
+    
+    if (!$host) {
+      $host = array();
+      $script = file_get_contents('http://www.google-analytics.com/u/ga_debug.js');
+      preg_match('/qa="([\d\.\w]+)"/', $script, $matches);
+      $host['version'] = $matches[1];
+    }
+    
+    $params = array(
+      // GA client version
+      'utmwv' => '4.3',
+      // cache-busting random integer
+      'utmn' => round(lcg_value()*2147483647),
+      // host name
+      'utmhn' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME'],
+      // event token
+      'utmt' => 'event',
+      // encoding, e.g., UTF-8
+      'utmcs' => '-',
+      // screen resolution, e.g., 1440x900
+      // 'utmsr' => null,
+      // screen color-depth, e.g., 24-bit
+      // 'utmsc' => null,
+      // language, e.g., en-us
+      'utmul' => isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? strtolower(array_shift(explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']))) : 'en-us',
+      // whether or not java is enabled
+      // 'utmje' => null,
+      // what version of flash is enabled
+      // 'utmfl' => null,
+      // hit ID
+      'utmhid' => round(lcg_value()*2147483647),
+      // referring URL
+      'utmr' => '',
+      // page
+      'utmp' => isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : ( isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : null ),
+      // GA account
+      'utmac' => 'UA-5440532-5',
+      // session/campaign cookie
+      'utmcc' => '__utma=999.999.999.999.999.1:',
+      // visitor ID
+      'utmvid' => "0x" . substr(md5($_SERVER['HTTP_USER_AGENT'].uniqid(round(lcg_value()*2147483647), true)), 0, 16),
+      // utmip
+      'utmip' => preg_match("/^([^.]+\.[^.]+\.[^.]+\.).*/", $_SERVER['REMOTE_ADDR'], $matches) ? $matches[1] . '0' : ''
+    );
+
+    $utme = array();
+    foreach(array_filter(array($category, $action, $opt_label)) as $val) {
+      $utme[] = str_replace("'", "'0", $val);
+    }
+    $params['utme'] = "5(".implode('*', $utme).")";
+    if (!is_null($opt_value)) {
+      $params['utme'] .= '('.$opt_value.')';
+    }
+    
+    $url = 'http://www.google-analytics.com/__utm.gif?'.http_build_query($params);
+
+    wp_remote_get($url, array(
+      'user-agent' => $_SERVER['HTTP_USER_AGENT']
+    ));
+  }
+
 
   function get_permalink($ref = null) {
     $permalink = get_permalink($ref);
@@ -211,45 +283,18 @@ class Sharepress {
     }
 
     if (self::setting('intercom_enabled', '1')) {
-      global $current_user;
-      add_option("sharepress_user_{$current_user->ID}", time());
-      $where = self::setting('intercom_show_on', 'all');
-      ?>  
-        <script id="IntercomSettingsScriptTag">
-          var intercomSettings = {
-            'app_id': 'p3uvsm9z',
-            'email': '<?php echo $current_user->user_email ?>', 
-            'created_at': <?php echo get_option("sharepress_user_{$current_user->ID}") ?>,
-            'custom_data': {
-              'sharepress_license': '<?php echo self::setting("license_key", "unlicensed") ?>',
-              'version': '<?php echo self::VERSION ?>'
-            }
-            /* , 'user_hash': '<?php echo sha1('foobar' . $current_user->user_email) ?>' */
-            <?php if (self::$on_settings_screen || $where == 'all' || ( $where == 'sharepress' && self::$ok_to_show_support_here )) { ?>
-              , 'widget': {
-                'activator': '#FatPandaIntercomWidget',
-                'label': 'SharePress Support'
-              }
-            <?php } ?>
-          };
-        </script>
-        <script>
-          (function() {
-            function async_load() {
-              var s = document.createElement('script');
-              s.type = 'text/javascript'; s.async = true;
-              s.src = 'https://api.intercom.io/api/js/library.js';
-              var x = document.getElementsByTagName('script')[0];
-              x.parentNode.insertBefore(s, x);
-            }
-            if (window.attachEvent) {
-              window.attachEvent('onload', async_load);
-            } else {
-              window.addEventListener('load', async_load, false);
-            }
-          })();
-        </script>
-      <?php
+      // Send installation flag once
+      if (!get_option('__sharepress_installed_sent')) {
+        SharePress::gat('SharePress Usage', 'New Install');
+        update_option('__sharepress_installed_sent', time());
+      }
+
+      // Send pings once per day
+      if (!get_transient('__sharepress_ping_sent')) {
+        SharePress::gat('SharePress Usage', 'Licensed', self::setting('license_key') ? 'Yes' : 'No');
+        SharePress::gat('SharePress Usage', 'Version', self::VERSION);
+        set_transient('__sharepress_ping_sent', 1, 60 * 60 * 24);
+      }
     }
   }
 
