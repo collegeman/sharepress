@@ -34,10 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 @define('SP_TEST_MESSAGE', "I'm testing SharePress: a plugin for WordPress that helps you curate and autopost to Facebook, Twitter, and LinkedIn!");
 @define('SP_TEST_URL', 'http://getsharepress.com');
 
-# bootstrap
-require(SP_DIR.'/includes/oauth.php');
 require(SP_DIR.'/includes/client.php');
-require(SP_DIR.'/includes/buffer.php');
-require(SP_DIR.'/includes/cron.php');
-require(SP_DIR.'/includes/api.php');
-require(SP_DIR.'/includes/ajax.php');
+register_activation_hook(__FILE__, 'sp_activate');
+// ease pro development:
+@include(SP_DIR.'/sharepress-pro/sharepress-pro.php');

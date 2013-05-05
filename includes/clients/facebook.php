@@ -124,8 +124,8 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
 
 }
 
-add_action('sp_add_new_account_menu', 'add_new_account_menu_facebook');
-function add_new_account_menu_facebook() {
+add_action('sp_add_new_account_menu', 'sp_add_new_account_menu_facebook');
+function sp_add_new_account_menu_facebook() {
   $target = '_self';
   if (!buf_has_keys('facebook')) {
     $href = admin_url('options-general.php?page=sharepress');

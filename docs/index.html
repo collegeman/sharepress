@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>SharePress: your content, your schedule. Curate awesome content from around the Web, and autopost to Facebook, Twitter, and LinkedIn.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SharePress: your content, your schedule. Curate awesome content from around the Web, and autopost to Facebook, Twitter, and LinkedIn.">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="../sharepress/css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="../sharepress/css/font-awesome.css" rel="stylesheet"> 
+    <link href="../sharepress/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="../sharepress/css/docs.css" rel="stylesheet">
+    <link href="../sharepress/css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body data-spy="scroll" data-target=".bs-docs-sidebar">
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">SharePress</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li><a href="http://github.com/collegeman/sharepress">Github Project</a></li>
+              <li><a href="http://fatpandadev.com">Fat Panda</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <header class="jumbotron subhead" id="overview">
+      <div class="container">
+        <h1>SharePress</h1>
+        <p class="lead">Your content, your schedule. Curate awesome content from around the Web and autopost it.</p>
+      </div>
+    </header>
+
+    <div class="container">
+
+      <div class="row">
+        <div class="span3 bs-docs-sidebar">
+          <ul class="nav nav-list bs-docs-sidenav" data-spy="affix" data-offset-top="200">
+            <li><a href="#about"><i class="icon-chevron-right"></i> Overview</a></li>
+            <li><a href="#files"><i class="icon-chevron-right"></i> Download</a></li>
+            <li><a href="#setup"><i class="icon-chevron-right"></i> Setup</a></li>
+            <li><a href="#extending"><i class="icon-chevron-right"></i> Extending</a></li>
+          </ul>
+        </div>
+
+        <div class="span9">
+
+          <section id="about">
+            <div class="page-header">
+              <h1>Your content, your schedule.</h1>
+            </div>
+            <p>Blah, blah, blah...</p>
+            
+            <section id="files">
+              <h2>Download</h2>
+              <p>Blah, blah, blah...</p>
+            </section>
+            <section id="setup">
+              <h2>Setup</h2>
+              <p>Blah, blah, blah...</p>
+            </section>
+          </section>
+
+          <section id="extending">
+            <div class="page-header">
+              <h1>Extending</h1>
+            </div>
+            <p>We built SharePress to eliminate the complexity of configuring a tool
+              that shares content across many different networks and services. We believe 
+              in keeping software simple, and so SharePress ships with very few configurable
+              options.</p>
+            <p>Instead, you can make SharePress do <em>more</em> by writing your own plugins, <a href="http://codex.wordpress.org/Plugin_API" target="_blank">hooking</a>
+              into one or more <em>actions</em> and <em>filters</em>, and extending interoperability 
+              by writing your own <a href="#clients">clients</a>.</p>
+            <section id="actions">
+              <h2>Actions</h2>
+              <p>Build new SharePress features on top of these actions.</p>
+              <h3>sp_activated</h3>
+              <p>Triggered at the end of <code>sp_activate()</code> when SharePress is activated in <b>includes/client.php</b></p>
+              <h3>pre_buf_post_pending</h3>
+              <p>Triggered by <code>buf_post_pending()</code> before publishing queued updates in <b>includes/buffer.php</b></p>
+              <h3>post_buf_post_pending</h3>
+              <p>Triggered by <code>buf_post_pending()</code> after publishing queued updates in <b>includes/buffer.php</b></p>
+              <h3>pre_buf_get_client</h3>
+              <p>Triggered by <code>buf_get_client()</code> before client scripts are loaded in <b>includes/buffer.php</b></p>
+              <h3>init_buf_get_client_{$service}</h3>
+              <p>Triggered by <code>buf_get_client()</code> after built-in core and pro client scripts have been loaded in <b>includes/buffer.php</b></p>
+            </section>
+            <section id="filters">
+              <h2>Filters</h2>
+              <p>Modify SharePress data by hooking these filters.</p>
+              <h3>buf_has_installed($service, $keys)</h3>
+              <p>Filter the keys for a specific service, identified by its unique name <code>$service</code></p>
+              <p>The return value should be an <code>array</code> with the following structure
+              <pre class="prettyprint">return array(
+  'key' => '', // the public key for the service
+  'secret' => '' // the secret key for the service
+);</pre>
+            </section>
+            <section id="clients">
+              <h2>Clients</h2>
+              <p>SharePress clients provide a standard API for connecting to third-party
+                networks, authenticating, setting up local profiles, and posting messages.
+                There must be one implementation of <code>SharePressClient</code> for each service
+                that SharePress can interoperate with. There is also a built-in pattern for
+                creating "pro" clients that inherit from and override their core counterparts.</p>
+              <p>This section explains how to create your own clients. For examples refer to the 
+                built-in clients in <b>includes/clients</b>.</p>
+              <h3>1. Choose a unique service name.</h3>
+              <p>Each client must have a unique service name, e.g., <code>facebook</code>. This name is used for finding
+                and loading the PHP script that defines the service's <code>SharePressClient</code>
+                implementation, as well as for determining the name of that PHP class.</p>
+              <p>For the remainder of this tutorial, we will assume you have chosen the name <code>myspclient</code>,
+                which, by the way, is a terrible name.</p>
+              <h3>2. Setup your project.</h3>
+              <p>Structure the files in your plugin like this:</p>
+              <table class="table">
+                <tr>
+                  <th>./includes/clients/myspclient.php</th>
+                  <td>The PHP script that defines your implementation of <code>SharePressClient</code>.
+                    This file should have the same name as the unique name you have chosen for your service.</td>
+                </tr>
+                <tr>
+                  <th>./includes/views/config&#8209;myspclient.php</th>
+                  <td><b>Optional.</b> The PHP script that defines the config screen for your client.</td>
+                </tr>
+                <tr>
+                  <th>./plugin.php</th>
+                  <td>This file should define your WordPress plugin using <a href="http://codex.wordpress.org/Writing_a_Plugin" target="_blank">standard metadata</a></td>
+                </tr>
+              </table>
+              <h3>3. Bootstrap your client.</h3>
+              <p>Minimally, your <b>./plugin.php</b> file should contain the following</p>
+              <pre class="prettyprint">&lt;?php
+/*
+Plugin Name: [your-plugin-name-goes-here]
+Plugin Author: [your-name-goes-here]
+Version: [plugin-version]
+*/
+// hook to SharePress' init action
+add_action('sp_init', 'myspclient_init');
+function myspclient_init() {
+  // tell SharePress where to find your client
+  sp_register_client(__FILE__, 'myspclient');
+}
+
+// other stuff your plugin does goes here...
+</pre>
+              <h3>4. Implement your client.</h3>
+              <p>Your client must implement the PHP interface <code>SharePressClient</code>, either
+                by implementing it directly, or by sublcassing <code>AbstractSharePressClient</code>. 
+                The basic structure of your class is outlined below. See the definition 
+              <p>Your implementation should be stored in <b>./includes/client/myspclient.php</b>.</p>.
+              <pre class="prettyprint">&lt;?php
+class MySpClient extends AbstractSharePressClient {
+  /**
+   * You need only override __construct if in initializing instances of
+   * your client, you need to do something else with the arguments other 
+   * than store them in protected properties by the same name.
+   */
+  function __construct($key, $secret, $profile = false) {
+    parent::__construct($key, $secret, $profile);
+  }
+  /**
+   * @return stdClass or <b>false</b>
+   */
+  function profile() {
+    // Use $_REQUEST, $_GET, and/or $_POST to build out a stdClass
+    // that defines a connection profile for your service.
+    // Return <b>false</b> to signal that the user should be redirected
+    // to authenticate a session.
+  }
+  /**
+   * @return String URL
+   */
+  function getLoginUrl() {
+    // This function is called when a call to MySpClient::profile
+    // returns false, signalling the need to autheniticate.
+  }
+  /**
+   * @return array(stdClass)
+   */
+  function profiles() {
+    // This function should be used to build a list of stdClass objects
+    // that define child profiles of <b>$this->profile</b>, which 
+    // at the time this function is executed, should contain the
+    // details of a valid profile created by connecting to your service
+    // via MySpClient::profile.
+  }
+  /**
+   * Send a message to the remote system on behalf of the current session.
+   * @return Response data from third-party API, or WP_Error. If response
+   * from third-party API, must be formatted as follows:
+   *
+   * return (object) array(
+   *   'service_update_id' => '', // primary key of response
+   *   'data' => ... // complete response packet
+   * );
+   */
+  function post($message, $config = '');
+  /**
+   * Test the client as configured by posting to the service
+   * using MySpClient::post(SP_TEST_MESSAGE, array('url' => SP_TEST_URL)),
+   * or $message and/or $url, when supplied.
+   * @param string $message (optional) will use SP_TEST_MESSAGE instead
+   * @param string $url (optional) will use SP_TEST_URL instead
+   */
+  function test($message = false, $url = false);
+}
+</pre>
+            </section>
+
+          </section>
+
+        </div><!-- /.span9 -->
+      </div>
+    </div> <!-- /container -->
+
+    <footer class="footer">
+      <div class="container">
+        <p>The talents and gifts of many, combined by <a href="http://fatpandadev.com" target="_blank">@fatpandadev</a>.</p>
+        <p>Code licensed under <a href="http://opensource.org/licenses/MIT" target="_blank">GPLv2</a>, documentation under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</p>
+        <p>Font Awesome is just <a href="http://fortawesome.github.io/Font-Awesome/" target="_blank">awesome</a>.</p>
+        <ul class="footer-links">
+          <li><a href="http://fatpandadev.com">Fat Panda</a></li>
+          <li class="muted">·</li>
+          <li><a href="https://github.com/collegeman/sharepress/issues?state=open">Issues</a></li>
+          <li class="muted">·</li>
+          <li><a href="https://github.com/collegeman/sharepress/blob/master/CHANGELOG.md">Changelog</a></li>
+        </ul>
+      </div>
+    </footer>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>!window.jQuery && document.write(unescape('%3Cscript src="../sharepress/js/jquery.js"%3E%3C/script%3E'))</script>
+    <script src="../sharepress/js/bootstrap.js"></script>
+    <script src="../sharepress/js/prettify.js"></script>
+    <script src="../sharepress/js/docs.js"></script>
+  </body>
+</html>

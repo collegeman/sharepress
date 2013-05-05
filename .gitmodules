@@ -1,0 +1,3 @@
+[submodule "sharepress-pro"]
+	path = sharepress-pro
+	url = git@github.com:collegeman/sharepress-pro.git

@@ -1,22 +1,17 @@
 <?php
-add_action('activate_sharepress/sharepress.php', 'sp_activate');
 add_action('init', 'sp_init', 1, 12);
 
+function sp_activate() {
+  do_action('sp_activated');
+}
+
 function sp_init() {
-  $dir = opendir(SP_DIR.'/includes/clients');
-  while($client = readdir($dir)) {
-    if ($client !== '.' && $client !== '..') {
-      require(SP_DIR.'/includes/clients/'.$client);
-    }
-  }
-  closedir($dir);
-  $dir = opendir(SP_DIR.'/pro/includes/clients');
-  while($client = readdir($dir)) {
-    if ($client !== '.' && $client !== '..') {
-      require(SP_DIR.'/pro/includes/clients/'.$client);
-    }
-  }
-  closedir($dir);
+  // load remaining dependencies...
+  require(SP_DIR.'/includes/buffer.php');
+  require(SP_DIR.'/includes/cron.php');
+  require(SP_DIR.'/includes/api.php');
+  require(SP_DIR.'/includes/ajax.php');
+  do_action('sp_init');
 }
 
 function sp_get_opt($option, $default = false) {
@@ -25,10 +20,6 @@ function sp_get_opt($option, $default = false) {
 
 function sp_set_opt($option, $value) {
   return update_option('sp_'.$option, apply_filters("sp_set_opt_{$option}", $value));
-}
-
-function sp_activate() {
-  do_action('sp_activated');
 }
 
 /**
@@ -119,6 +110,48 @@ function sp_crawl($url, $flush = false) {
     'short' => $shortened,
     'title' => $title
   );
+}
+
+class SharePressClientLoader {
+
+  private $file;
+  private $service;
+
+  function __construct($file, $service) {
+    $this->file = $file;
+    $this->service = $service;
+    add_action("init_buf_get_client_{$this->service}", array($this, 'init'));
+  }
+
+  function init() {
+    // because some people can't follow directions:
+    if (file_exists($file = dirname($this->file).'/includes/clients/myspclient.php')) {
+      require_once($file);
+    }
+    // and for everyone else:
+    if (file_exists($file = dirname($this->file).'/includes/clients/'.$this->service.'.php')) {
+      require_once($file);
+    }
+  }
+
+}
+
+function sp_register_client($file, $service) {
+  new SharePressClientLoader($file, $service);
+}
+
+abstract class AbstractSharePressClient implements SharePressClient {
+
+  protected $key;
+  protected $secret;
+  protected $profile;
+
+  function __construct($key, $secret, $profile = false) {
+    $this->key = $key;
+    $this->secret = $secret;
+    $this->profile = $profile;
+  }
+
 }
 
 interface SharePressClient {

@@ -485,6 +485,17 @@ function buf_get_client($service, $profile = false) {
     $service = $profile->service;
   }
 
+  $service = strtolower($service);
+
+  do_action('pre_buf_get_client', $service);
+
+  if (!isset($buf_clients[$service])) {
+    if (file_exists($core = SP_DIR.'/includes/clients/'.$service.'.php')) {
+      require_once($core);
+    }
+    do_action("init_buf_get_client_{$service}", $service);
+  }
+
   $class = sprintf('%sSharePressClientPro', ucwords($service));
   if (!class_exists($class)) {
     $class = sprintf('%sSharePressClient', ucwords($service));

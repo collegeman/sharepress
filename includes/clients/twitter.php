@@ -2,10 +2,11 @@
 class TwitterSharePressClient implements SharePressClient {
 
   function __construct($key, $secret, $profile = false) {
+    require_once(SP_DIR.'/includes/oauth.php');
     $this->consumer = new oAuthConsumer($key, $secret);
     if ($profile) {
       $this->profile = $profile;
-      $this->user = new oAuthToken($profile->user_token, $profile->user_secret);
+      $this->user = new SpOAuthToken($profile->user_token, $profile->user_secret);
     }
   }
 
@@ -19,7 +20,7 @@ class TwitterSharePressClient implements SharePressClient {
         return new WP_Error('nonce', 'Invalid nonce.');
       }
 
-      $oauth = oAuthRequest::from_consumer_and_token(
+      $oauth = SpOAuthRequest::from_consumer_and_token(
         $this->consumer,
         null,
         'POST',
@@ -33,7 +34,7 @@ class TwitterSharePressClient implements SharePressClient {
 
       // sign using HMAC-SHA1
       $oauth->sign_request(
-        new oAuthSignatureMethod_HMAC_SHA1(),
+        new SpOAuthSignatureMethod_HMAC_SHA1(),
         $this->consumer,
         $_SESSION['twitter-request-token']
       );
@@ -68,7 +69,7 @@ class TwitterSharePressClient implements SharePressClient {
   }
 
   function loginUrl() {
-    $oauth = oAuthRequest::from_consumer_and_token(
+    $oauth = SpOAuthRequest::from_consumer_and_token(
       $this->consumer,
       null,
       'POST',
@@ -82,7 +83,7 @@ class TwitterSharePressClient implements SharePressClient {
 
     // sign using HMAC-SHA1
     $oauth->sign_request(
-      new oAuthSignatureMethod_HMAC_SHA1(),
+      new SpOAuthSignatureMethod_HMAC_SHA1(),
       $this->consumer,
       null
     );
@@ -106,7 +107,7 @@ class TwitterSharePressClient implements SharePressClient {
       $message .= ' '.$config['url'];
     }
 
-    $oauth = oAuthRequest::from_consumer_and_token(
+    $oauth = SpOAuthRequest::from_consumer_and_token(
       $this->consumer,
       $this->user,
       'POST',
@@ -118,7 +119,7 @@ class TwitterSharePressClient implements SharePressClient {
     );
 
     $oauth->sign_request(
-      new oAuthSignatureMethod_HMAC_SHA1(),
+      new SpOAuthSignatureMethod_HMAC_SHA1(),
       $this->consumer,
       $this->user
     );
@@ -163,7 +164,7 @@ class TwitterSharePressClient implements SharePressClient {
 
 }
 
-add_action('sp_add_new_account_menu', 'add_new_account_menu_twitter');
-function add_new_account_menu_twitter() {
+add_action('sp_add_new_account_menu', 'sp_add_new_account_menu_twitter');
+function sp_add_new_account_menu_twitter() {
   echo '<li><a tabindex="-1" href="#">Add Twitter Profile</a></li>';
 }

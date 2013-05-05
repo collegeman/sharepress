@@ -130,13 +130,25 @@ class SpApi_v1 extends AbstractSpApi {
     return $preview;
   }
 
-  function auth($service) {
+  function auth($service, $config = false) {
     if (!$service = trim($service)) {
       return false;
     }
 
     if (!$client = buf_get_client($service)) {
       return false;
+    }
+
+    if ($config) {
+      // display the config screen
+
+      exit;
+    }
+
+    // update plugin configuration?
+    if (isset($_POST['config'][$service])) {
+      // TODO: validate nonce and referrer
+      
     }
 
     if (is_wp_error($profile = $client->profile())) {
