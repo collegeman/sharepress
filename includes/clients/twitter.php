@@ -10,6 +10,10 @@ class TwitterSharePressClient implements SharePressClient {
     }
   }
 
+  function getName() {
+    return "Twitter";
+  }
+
   function profile() {
 
     if (!isset($_REQUEST['oauth_verifier'])) {

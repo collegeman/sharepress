@@ -152,6 +152,10 @@ abstract class AbstractSharePressClient implements SharePressClient {
     $this->profile = $profile;
   }
 
+  function getName() {
+    return ucwords(str_ireplace('SharePressClient', '', get_class($this)));
+  }
+
 }
 
 interface SharePressClient {
@@ -165,6 +169,11 @@ interface SharePressClient {
    */ 
   function __construct($key, $secret, $profile = false);
 
+  /**
+   * @return String A name to use as a label for this service.
+   */
+  function getName();
+  
   /**
    * Implement authentication workflow for this client, connection sessions,
    * and retrieve structured profile. If false is returned instead, 

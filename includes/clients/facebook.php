@@ -18,6 +18,10 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
     }
   }
 
+  function getName() {
+    return "Facebook";
+  }
+
   function profile() {
     if ($this->getUser()) {
       try {

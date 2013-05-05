@@ -62,6 +62,7 @@
             <li><a href="#files"><i class="icon-chevron-right"></i> Download</a></li>
             <li><a href="#setup"><i class="icon-chevron-right"></i> Setup</a></li>
             <li><a href="#extending"><i class="icon-chevron-right"></i> Extending</a></li>
+            <li><a href="#multisite"><i class="icon-chevron-right"></i> Multisite</a></li>
           </ul>
         </div>
 
@@ -128,12 +129,14 @@
                 creating "pro" clients that inherit from and override their core counterparts.</p>
               <p>This section explains how to create your own clients. For examples refer to the 
                 built-in clients in <b>includes/clients</b>.</p>
+              <hr>
               <h3>1. Choose a unique service name.</h3>
               <p>Each client must have a unique service name, e.g., <code>facebook</code>. This name is used for finding
                 and loading the PHP script that defines the service's <code>SharePressClient</code>
                 implementation, as well as for determining the name of that PHP class.</p>
               <p>For the remainder of this tutorial, we will assume you have chosen the name <code>myspclient</code>,
                 which, by the way, is a terrible name.</p>
+              <hr>
               <h3>2. Setup your project.</h3>
               <p>Structure the files in your plugin like this:</p>
               <table class="table">
@@ -151,6 +154,7 @@
                   <td>This file should define your WordPress plugin using <a href="http://codex.wordpress.org/Writing_a_Plugin" target="_blank">standard metadata</a></td>
                 </tr>
               </table>
+              <hr>
               <h3>3. Bootstrap your client.</h3>
               <p>Minimally, your <b>./plugin.php</b> file should contain the following</p>
               <pre class="prettyprint">&lt;?php
@@ -168,11 +172,13 @@ function myspclient_init() {
 
 // other stuff your plugin does goes here...
 </pre>
+              <hr>
               <h3>4. Implement your client.</h3>
               <p>Your client must implement the PHP interface <code>SharePressClient</code>, either
                 by implementing it directly, or by sublcassing <code>AbstractSharePressClient</code>. 
-                The basic structure of your class is outlined below. See the definition 
-              <p>Your implementation should be stored in <b>./includes/client/myspclient.php</b>.</p>.
+                The basic structure of your class is outlined below. Click function names below
+                for more information.</p>
+              <p>Your implementation should be stored in <b>./includes/client/myspclient.php</b>.</p>
               <pre class="prettyprint">&lt;?php
 class MySpClient extends AbstractSharePressClient {
   /**
@@ -180,13 +186,21 @@ class MySpClient extends AbstractSharePressClient {
    * your client, you need to do something else with the arguments other 
    * than store them in protected properties by the same name.
    */
-  function __construct($key, $secret, $profile = false) {
+  function <a href="#client___construct">__construct</a>($key, $secret, $profile = false) {
     parent::__construct($key, $secret, $profile);
+  }
+  /**
+   * @return String A name to use as a label for this service.
+   */
+  function <a href="#client_getName">getName</a>() {
+    // AbstractSharePressClient has a default that will work in most 
+    // cases, using the class name to generate a label.
+    parent::__getName();
   }
   /**
    * @return stdClass or <b>false</b>
    */
-  function profile() {
+  function <a href="#client_profile">profile</a>() {
     // Use $_REQUEST, $_GET, and/or $_POST to build out a stdClass
     // that defines a connection profile for your service.
     // Return <b>false</b> to signal that the user should be redirected
@@ -195,14 +209,14 @@ class MySpClient extends AbstractSharePressClient {
   /**
    * @return String URL
    */
-  function getLoginUrl() {
+  function <a href="#client_getLoginUrl">getLoginUrl</a>() {
     // This function is called when a call to MySpClient::profile
     // returns false, signalling the need to autheniticate.
   }
   /**
    * @return array(stdClass)
    */
-  function profiles() {
+  function <a href="#client_profiles">profiles</a>() {
     // This function should be used to build a list of stdClass objects
     // that define child profiles of <b>$this->profile</b>, which 
     // at the time this function is executed, should contain the
@@ -219,7 +233,7 @@ class MySpClient extends AbstractSharePressClient {
    *   'data' => ... // complete response packet
    * );
    */
-  function post($message, $config = '');
+  function <a href="#client_post">post</a>($message, $config = '');
   /**
    * Test the client as configured by posting to the service
    * using MySpClient::post(SP_TEST_MESSAGE, array('url' => SP_TEST_URL)),
@@ -227,7 +241,108 @@ class MySpClient extends AbstractSharePressClient {
    * @param string $message (optional) will use SP_TEST_MESSAGE instead
    * @param string $url (optional) will use SP_TEST_URL instead
    */
-  function test($message = false, $url = false);
+  function <a href="#client_test">test</a>($message = false, $url = false);
+}
+</pre>
+              <hr>
+              <h4 id="client___construct">__construct()</h4>
+              <hr>
+              <h4 id="client_getName">getName()</h4>
+              <hr>
+              <h4 id="client_profile">profile()</h4>
+              <hr>
+              <h4 id="client_getLoginUrl">getLoginUrl()</h4>
+              <hr>
+              <h4 id="client_profiles">profiles()</h4>
+              <hr>
+              <h4 id="client_post">post()</h4>
+              <hr>
+              <h4 id="client_test">test()</h4> 
+              <hr>
+              
+              <h3>5. Optionally, create your client's config screen.</h3> 
+              <div class="alert alert-error">Not yet implemented. Store client keys in <b>wp-config.php</b>. See <a href="#multisite">Multsite</a></div>
+
+              <hr>
+              <h3>6. Test your client.</h3> 
+              <p>You can do all your testing via the RESTful API.</p>
+              <hr>
+              <h4>GET /sp/1/auth/myspclient/config</h4>
+              <div class="alert alert-error">Not yet implemented.</div>
+              <hr>
+              <h4>GET /sp/1/auth/myspclient</h4>
+              <hr>
+              <h4>GET /sp/1/profiles</h4>
+              <p>Locate the new Profile you created by authorizing your service, and open a browser to the <b>test</b> action.</p>
+
+            </section>
+
+            <section id="api">
+              <div class="page-header">
+                <h1>API</h1>
+                <p>SharePress provides a RESTful API for all major functionality.</p>
+              </div>
+              <h3>Services</h3>
+              <h4>GET /sp/1/api/{$service_name}/auth</h4>
+              <p>Begin authentication for <code>$service_name</code> to create or reauthenticate a Profile.</p>
+              <h4>GET /sp/1/api/{$service_name}/auth/config</h4>
+              <p>View the configuration screen for this service.</p>
+              <hr>
+              <h3>Profiles</h3>
+              <h4>GET /sp/1/api/profiles</h4>
+              <p>View a list of all of the profiles for this site to which the current user can publish Updates.</p>
+              <h4>GET /sp/1/api/profiles</h4>
+              <p>View a list of all of the profiles for this site to which the current user can publish Updates.</p>
+              <h4>GET /sp/1/api/profiles/{$profile_id}</h4>
+              <p>View the details of a specific Profile.</p>
+              <h4>POST /sp/1/api/profiles/{$profile_id}/test</h4>
+              <p>Send a test post to a specific Profile.</p>
+              <h4>GET /sp/1/api/profiles/{$profile_id}/profiles</h4>
+              <p>View a list of all the child profiles attached to a specific Profile.</p>
+
+            </section>
+
+            <section id="multisite">
+              <div class="page-header">
+                <h1>Multisite</h1>
+                <p>You can use SharePress with WordPress Multisite. Depending upon your application,
+                  here are some useful customizations.</p>
+              </div>
+              <h2>Hiding config screens</h2>
+              <p>You may wish to hide from your users their ability to configure clients. It may,
+                for example, be part of your service to setup the API keys on behalf of your users,
+                such that the configuration step is no longer necessary.</p>
+              <p>To disable those screens, implement the following filter:</p>
+              <pre class="prettyprint">add_filter('sp_show_config_screens', '__return_false');</pre>
+              <p>Note that some services like Facebook bind authentication to domains, so if your Multisite
+              installation uses custom domains, storing one set of application keys probably won't work.
+              In these cases, you'll want to use a more granular approach
+              <pre class="prettyprint">add_filter('sp_show_config_screens', 'my_sp_show_config_screens', 10, 2);
+
+function my_sp_show_config_screens($bool, $service) {
+  if ($service === 'facebook') {
+    return true;
+  } else {
+    return false; // or whatever...
+  }
+}</pre>
+              <p>To make sure that each service has a valid set of keys, do one of the following:</p>
+              <h3>Store keys in constants</h3>
+              <p>You can store service keys in constants. Make sure to use all uppercase for <code>$SERVICE_NAME</code>.</p>
+              <pre class="prettyprint">@define("SP_{$SERVICE_NAME}_KEY", 'service public key'); 
+@define("SP_{$SERVICE_NAME}_SECRET", 'service private key');</pre>
+              <h3>Override key options</h3>
+              <p>Using filters to override the return value of <code>sp_get_opt()</code>, you can
+                control the values returned for service keys. Make sure to use all lowercase for <code>$service_name</code>.</p>
+              <pre class="prettyprint">add_filter("sp_get_opt_{$service_name}_key", "my_sp_get_opt_{$service_name}_key");
+add_filter("sp_get_opt_{$service_name}_secret", "my_sp_get_opt_{$service_name}_secret");
+
+function my_sp_get_opt_servicename_key() {
+  return 'service public key';
+}
+
+function my_sp_get_opt_servicename_secret() {
+  return 'service secret key';
 }
 </pre>
             </section>

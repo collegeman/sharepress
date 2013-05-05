@@ -140,15 +140,22 @@ class SpApi_v1 extends AbstractSpApi {
     }
 
     if ($config) {
-      // display the config screen
-
+      if (apply_filters('sp_show_config_screens', true, $service)) {
+        // display the config screen
+      } else {
+        // TODO: redirect or display error?
+      }
       exit;
     }
 
     // update plugin configuration?
     if (isset($_POST['config'][$service])) {
-      // TODO: validate nonce and referrer
-      
+      if (apply_filters('sp_show_config_screens', true)) {
+        // TODO: validate nonce and referrer
+      } else {
+        // TODO: display error
+      }
+      exit;
     }
 
     if (is_wp_error($profile = $client->profile())) {
