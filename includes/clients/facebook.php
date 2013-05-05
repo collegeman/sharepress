@@ -1,4 +1,8 @@
 <?php
+if (!class_exists('Facebook')) {
+  require(SP_DIR.'/lib/facebook-sdk/facebook.php');
+}
+
 class FacebookSharePressClient extends Facebook implements SharePressClient {
 
   function __construct($key, $secret, $profile = false) {
@@ -59,28 +63,7 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
   }
 
   function profiles() {
-    if (empty($this->profile->config['is_page'])) {
-      try {
-        $profiles = array();
-        $response = $this->api($this->profile->service_id.'/accounts');
-        foreach($response['data'] as $page) {
-          if ($page['category'] != 'Application' && in_array('CREATE_CONTENT', $page['perms'])) {
-            $profiles[] = (object) array(
-              'service' => 'facebook',
-              'service_id' => $page['id'],
-              'user_token' => $page['access_token'],
-              'formatted_username' => $page['name'],
-              'service_username' => $page['id'],
-              'avatar' => 'https://graph.facebook.com/'.$page['id'].'/picture',
-              'config' => array('is_page' => true)
-            );
-          }
-        }
-        return $profiles;
-      } catch (Exception $e) {
-        return new WP_Error('error', $e->getMessage());
-      }
-    }
+    return false;
   }
 
   function post($message, $config = '') {
@@ -99,7 +82,13 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
         'data' => (object) $response
       );
     } catch (Exception $e) {
-      return new WP_Error(($code = $e->getCode()) ? $code : 'error', $e->getMessage());
+      $result = $e->getResult();
+      if ($result['error']['code'] === 190) {
+        $code = SharePressClient::ERROR_AUTHENTICATION;
+      } else {
+        $code = $result['error']['code'];
+      }
+      return new WP_Error($code, $e->getMessage());
     }
   }
 

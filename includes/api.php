@@ -322,7 +322,7 @@ class SpApi_v1 extends AbstractSpApi {
       if ($action === 'test' && $this->_isPost()) {
         $this->_assertIsAdmin();
         $client = buf_get_client($profile);
-        return $client->test($_REQUEST['message'], $_REQUEST['url']);
+        return $client->test(SP_TEST_MESSAGE, SP_TEST_URL);
       }
     }
   }

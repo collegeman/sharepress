@@ -136,7 +136,11 @@ class TwitterSharePressClient implements SharePressClient {
     } else {
       $response = json_decode($result['body']);
       if ($result['response']['code'] !== 200) {
-        return new WP_Error(strtolower($result['response']['message']), $response->error);
+        $code = $result['response']['code'];
+        if ($code === 401) {
+          $code = SharePressClient::ERROR_AUTHENTICATION;
+        }
+        return new WP_Error($code, strtolower($result['response']['message']).': '.$response->error);
       } else {
         $id = $response->id;
         unset($response->id);

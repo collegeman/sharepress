@@ -3,11 +3,20 @@ add_action('activate_sharepress/sharepress.php', 'sp_activate');
 add_action('init', 'sp_init', 1, 12);
 
 function sp_init() {
-  if (!class_exists('Facebook')) {
-    require(SP_DIR.'/lib/facebook-sdk/facebook.php');
+  $dir = opendir(SP_DIR.'/includes/clients');
+  while($client = readdir($dir)) {
+    if ($client !== '.' && $client !== '..') {
+      require(SP_DIR.'/includes/clients/'.$client);
+    }
   }
-  require(SP_DIR.'/includes/clients/facebook.php');
-  require(SP_DIR.'/includes/clients/twitter.php');
+  closedir($dir);
+  $dir = opendir(SP_DIR.'/pro/includes/clients');
+  while($client = readdir($dir)) {
+    if ($client !== '.' && $client !== '..') {
+      require(SP_DIR.'/pro/includes/clients/'.$client);
+    }
+  }
+  closedir($dir);
 }
 
 function sp_get_opt($option, $default = false) {
@@ -113,6 +122,8 @@ function sp_crawl($url, $flush = false) {
 }
 
 interface SharePressClient {
+
+  const ERROR_AUTHENTICATION = 401;
 
   /**
    * @param string Consumer Key
