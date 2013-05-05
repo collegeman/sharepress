@@ -1,10 +1,15 @@
 <?php
-# Emulate the awesome Buffer, bufferapp.com
 add_action('init', 'buf_init');
 add_action('admin_bar_menu', 'buf_admin_bar_menu', 1000);
 add_action('wp_enqueue_scripts', 'buf_wp_enqueue_scripts');
 add_action('admin_enqueue_scripts', 'buf_wp_enqueue_scripts');
 
+/**
+ * Initialize custom post types that are used to keep
+ * track of updates (things to be posted via clients),
+ * and profiles (abstract representations of users'
+ * accounts on third-party networks, bridged by clients).
+ */
 function buf_init() {
   register_post_type('sp_update', array(
     'public' => false,
@@ -31,9 +36,12 @@ function buf_init() {
     'hierarchical' => false,
     'menu_position' => null
   ));
-
 }
 
+/**
+ * Enqueues the scripts that are used to render the
+ * Bufferapp-like UI for queueing updates.
+ */
 function buf_wp_enqueue_scripts() {
   if (is_user_logged_in()) {
     global $post;
@@ -68,8 +76,36 @@ function buf_wp_enqueue_scripts() {
   }
 }
 
+/**
+ * Add a button to the admin bar for opening the buffer modal.
+ */
+function buf_admin_bar_menu() {
+  global $wp_admin_bar;
+  if (!is_admin_bar_showing()) {
+    return;
+  }
+
+  $wp_admin_bar->add_menu(array(
+    'id' => 'sp-buf-schedule',
+    'title' => sprintf('<img src="%s">', plugins_url('img/admin-bar-wait.gif', SHAREPRESS)),
+    'href' => '#',
+  ));
+}
+
+/**
+ * This class models a user's account on a third-party
+ * social network. It also models the automatic posting
+ * schedule that this profile has, if any.
+ */
 class SharePressProfile {
 
+  /**
+   * Given WordPress post data, create and initialize an
+   * instance of SharePressProfile
+   * @param mixed $post a Post object or an ID
+   * @return SharePressProfile, or if the post is invalid
+   * or does not exist, false.
+   */
   static function forPost($post) {
     if (is_numeric($post)) {
       if (!$post = get_post($post_id = $post)) {
@@ -160,7 +196,7 @@ class SharePressProfile {
    * time this function is called, the next future slot in this Profile's
    * buffer will be returned as a UTC timestamp. This function can be
    * called as many times as needed - for as many slots as are needed
-   * to reschedule a buffer's updates.
+   * to reschedule a buffer's flexibly scheduled updates.
    * @return timestamp
    */
   function next() {
@@ -259,8 +295,19 @@ class SharePressProfile {
 
 }
 
+/**
+ * This class models content that is to be shared through
+ * an active profile.
+ */
 class SharePressUpdate {
 
+  /**
+   * Given WordPress post data, create and initialize an
+   * instance of SharePressUpdate
+   * @param mixed $post a Post object or an ID
+   * @return SharePressUpdate, or if the post is invalid
+   * or does not exist, false.
+   */
   static function forPost($post) {
     if (is_numeric($post)) {
       if (!$post = get_post($post_id = $post)) {
@@ -278,7 +325,10 @@ class SharePressUpdate {
       'id' => $post->ID,
       'user_id' => $post->post_author,
       'status' => $post->post_status,
-      'text' => $post->post_content
+      'text' => $post->post_content,
+      'due_at' => get_post_meta($update->ID, 'due_at', true),
+      'due_time' => get_post_meta($update->ID, 'due_time', true),
+      'bound_to' => get_post_meta($update->ID, 'bound_to')
     );
 
     return new SharePressUpdate($data);
@@ -342,14 +392,25 @@ class SharePressUpdateSorter {
 
 }
 
-function buf_post_pending() {
+/**
+ * Trigger the publishing of all scheduled updates up until
+ * some given timestamp. 
+ * @param int $until All updates whose publishing due date is
+ * older than this time will be published. If null, a timestamp
+ * 60 seconds in the future is used.
+ * @action pre_buf_post_pending
+ * @action post_buf_post_pending
+ */
+function buf_post_pending($until = null) {
   error_log('buf_post_pending');
 
   global $wpdb;
 
-  // cron job is on a 2-min interval, so we always
-  // look one minute into the future
-  $one_minute_from_now = time() + 60;
+  if (is_null($until)) {
+    // default cron job is on a 2-min interval, so we always
+    // look one minute into the future
+    $until = time() + 60;
+  }
 
   do_action('pre_buf_post_pending');
 
@@ -360,12 +421,11 @@ function buf_post_pending() {
       post_type = 'sp_update'
       AND post_status = 'buffer'
       AND meta_key = 'due_at' 
-      AND meta_value <= {$one_minute_from_now}
+      AND meta_value <= {$until}
   ");
 
   foreach($posts as $post) {
     if ($update = buf_get_update($post->ID)) {
-
       buf_post_update($post->ID);  
     }
   }
@@ -373,19 +433,17 @@ function buf_post_pending() {
   do_action('post_buf_post_pending');
 }
 
-function buf_admin_bar_menu() {
-  global $wp_admin_bar;
-  if (!is_admin_bar_showing()) {
-    return;
-  }
-
-  $wp_admin_bar->add_menu(array(
-    'id' => 'sp-buf-schedule',
-    'title' => sprintf('<img src="%s">', plugins_url('img/admin-bar-wait.gif', SHAREPRESS)),
-    'href' => '#',
-  ));
-}
-
+/**
+ * Seek out the public and private keys for the given service. Default sources
+ * of keys are WP options (via sp_get_opt) and constants, with WP optiosn taking
+ * precedence.
+ * @param String $service The unique name for the service, e.g., 'facebook'
+ * @return mixed If available, an array of the keys with entries "key" and "secret",
+ * otherwise false.
+ * @see sp_get_opt($name, $default)
+ * @filter buf_has_installed($service, $keys) Allows for other plugins to override
+ * the keys used for a given service.
+ */
 function buf_has_keys($service) {
   $lower = strtolower($service);
   $upper = strtoupper($service);
@@ -409,6 +467,16 @@ function buf_has_keys($service) {
   return $keys;
 }
 
+/**
+ * Get a SharePressClient instance, optionally configured for accessing
+ * the underlying network on behalf of the given SharePressProfile.
+ * @param mixed $service Either a string uniquely naming a service, e.g., 'facebook',
+ * or a SharePressProfile object from which the service name will be derived
+ * (SharePressProfile::$service). 
+ * @param SharePressProfile $profile Optionally, configure the client
+ * for posting to this profile
+ * @return SharePressClient or, in the case of misconfiguration, a WP_Error object.
+ */
 function buf_get_client($service, $profile = false) {
   global $buf_clients;
 
@@ -443,6 +511,12 @@ function buf_get_client($service, $profile = false) {
   return $client;
 }
 
+/**
+ * Allow for the given WordPress user account to post updates via
+ * the given SharePressProfile.
+ * @param SharePressProfile $profile
+ * @param int $user_id
+ */
 function buf_add_team_member($profile, $user_id) {
   if (!$profile = buf_get_profile($profile_ref = $profile)) {
     return new WP_Error('profile', "Profile does not exist [{$profile_ref}]");
@@ -460,6 +534,12 @@ function buf_add_team_member($profile, $user_id) {
   return true;
 }
 
+/**
+ * Remove the given user from the list of WordPress users allowed
+ * to post to the given SharePressProfile.
+ * @param SharePressProfile $profile
+ * @param int $user_id
+ */
 function buf_remove_team_member($profile, $user_id) {
   if (!$profile = buf_get_profile($profile_ref = $profile)) {
     return new WP_Error('profile', "Profile does not exist [{$profile_ref}]");
@@ -477,6 +557,10 @@ function buf_remove_team_member($profile, $user_id) {
   return true;
 }
 
+/**
+ * @param mixed $profile Either an integer or a SharePressProfile instance.
+ * @return SharePressProfile or false if none exists
+ */
 function buf_get_profile($profile) {
   if ($profile instanceof SharePressProfile) {
     return $profile;
@@ -484,6 +568,11 @@ function buf_get_profile($profile) {
   return SharePressProfile::forPost($profile);
 }
 
+/**
+ * Query the profiles available in this site.
+ * @param mixed Filtering args:
+ * @return array(stdClass), ready for sending down the wire
+ */
 function buf_get_profiles($args = '') {
   global $wpdb;
 
@@ -540,6 +629,10 @@ function buf_get_profiles($args = '') {
   return $profiles;
 }
 
+/** 
+ * Create or update a profile record
+ * @param mixed Either an array or a stdClass of data to store
+ */
 function buf_update_profile($profile) {
   global $wpdb;
 
@@ -676,6 +769,10 @@ function buf_update_profile($profile) {
   return $profile;
 }
 
+/**
+ * Delete a profile record
+ * @param mixed Either an integer or a SharePressProfile object
+ */
 function buf_delete_profile($profile) {
   if (!is_object($profile)) {
     $profile = buf_get_profile($profile_id = $profile);
@@ -686,6 +783,10 @@ function buf_delete_profile($profile) {
   return false !== wp_delete_post($profile->id, true);
 }
 
+/**
+ * Create or update the record of content to be published (a.k.a., an "update")
+ * @param mixed An array or a stdClass of data to store
+ */
 function buf_update_update($update) {
   global $wpdb;
 
@@ -829,10 +930,25 @@ function buf_update_update($update) {
   }  
 }
 
+/**
+ * An alias for identifying whether or not the current user is considered to
+ * have administrative privileges over the buffering features of this application.
+ * Currently this implies that the current user must have the "list_users" privilege,
+ * which is currently given to WordPress Super Admins and Administrators.
+ * @return bool
+ */
 function buf_current_user_is_admin() {
   return current_user_can('list_users');
 }
 
+/**
+ * Update the given SharePressUpdate record's status to "error," and
+ * record the given error data for future reference.
+ * @param mixed $update Either a SharePressUpdate instance or an integer
+ * @param mixed $error The error data to be recorded
+ * @return If the SharePressUpdate does not exist, returns WP_Error object,
+ * otherwise true.
+ */
 function buf_set_error_status($update, $error) {
   if (!$update = buf_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
@@ -841,8 +957,15 @@ function buf_set_error_status($update, $error) {
   $post->post_status = 'error';
   wp_insert_post($post);
   update_post_meta($update->id, 'error', $error);
+  return true;
 }
 
+/**
+ * Publishes the given update.
+ * @param mixed $update SharePressUpdate instance of an integer
+ * @return On error, a WP_Error object, otherwise a stdClass of data
+ * representing the update and details of the transmission.
+ */
 function buf_post_update($update) {
   if (!$update = buf_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
@@ -879,7 +1002,15 @@ function buf_post_update($update) {
   return (object) buf_get_update($update->id)->toJSON();
 }
 
-function buf_update_buffer($profile, $order = null, $offset = null) {
+/** 
+ * Given a SharePressProfile, identify up to $limit of the updates scheduled to be posted
+ * to that profile and reschedule them such that they are aligned to the profile's
+ * underlying schedule. This should be used to refresh this "buffer" when
+ * updates are created/removed and/or when the profile's schedule is modified.
+ * @param mixed $profile a SharePressProfile or an integer
+ * @param int $order
+ */
+function buf_update_buffer($profile, $order = null, $offset = null, $limit = 100) {
   global $wpdb;
 
   if (!$profile = buf_get_profile($profile_ref = $profile)) {
@@ -888,8 +1019,8 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
 
   if ($order) {
     if (!is_null($offset)) {
-      if ($offset < 1 || $offset > 100) {
-        return new WP_Error("When updating order of buffer, offset must be between 1 and 100");
+      if ($offset < 1 || $offset > $limit) {
+        return new WP_Error("When updating order of buffer, offset must be between 1 and {$limit}");
       } else {
         // zero index
         $offset--;
@@ -905,7 +1036,7 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
       post_type = 'sp_update'
       AND post_status = 'buffer'
     ORDER BY menu_order DESC
-    LIMIT 100
+    LIMIT {$limit}
   ");
 
   if ($order) {
@@ -929,9 +1060,20 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
 
   while($updates) {
     $update = array_shift($updates);
+    
+    // allow for updates whose publishing date/time is fixed
+    if (get_post_meta($update->ID, 'bound_to') || get_post_meta($update->ID, 'fixed_delivery')) {
+      $update->menu_order = -1;
+      wp_insert_post($update); 
+      continue;
+    }
+
+    // cycle the clock
     $next = $profile->next();
+
     $update->menu_order = $menu_order;
     $menu_order--;
+    
     $update->post_date_gmt = gmdate('Y-m-d H:i:s', $next);
     $update->post_date = gmdate('Y-m-d H:i:s', $next + ( get_option('gmt_offset') * 3600 ) );
     wp_insert_post($update); 
@@ -940,6 +1082,10 @@ function buf_update_buffer($profile, $order = null, $offset = null) {
   }
 }
 
+/**
+ * @param mixed $update Either an integer or a SharePressUpdate instance.
+ * @return SharePressUpdate or false if none exists
+ */
 function buf_get_update($update) {
   if ($update instanceof SharePressUpdate) {
     return $update;
@@ -947,6 +1093,11 @@ function buf_get_update($update) {
   return SharePressUpdate::forPost($update);
 }
 
+/**
+ * Query the updates available in this site.
+ * @param mixed Filtering args:
+ * @return array(stdClass), ready for sending down the wire
+ */
 function buf_get_updates($args = '') {
   global $wpdb;
 
@@ -1029,6 +1180,11 @@ function buf_get_updates($args = '') {
   );
 }
 
+/**
+ * Delete an update record, and update the buffer for the attached
+ * SharePressProfile.
+ * @param mixed Either an integer or a SharePressUpdate object
+ */
 function buf_delete_update($update) {
   $profile = false;
   if (!is_object($update)) {

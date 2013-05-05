@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # bootstrap
 require(SP_DIR.'/includes/oauth.php');
-require(SP_DIR.'/includes/core.php');
+require(SP_DIR.'/includes/client.php');
 require(SP_DIR.'/includes/buffer.php');
 require(SP_DIR.'/includes/cron.php');
 require(SP_DIR.'/includes/api.php');

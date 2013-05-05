@@ -1,5 +1,11 @@
 <?php
-# RESTful API - not to be confused with AJAX stuff
+// e.g., sp/1/profiles/:id
+@define('SP_API_REWRITE_RULE', '(sp)/(\d)/([a-z]+)(/.*?)?(.json)?$');
+add_filter('rewrite_rules_array', 'sp_rewrite_rules_array');
+add_filter('query_vars', 'sp_query_vars');
+add_action(constant('WP_DEBUG') || constant('SP_DEBUG') ? 'wp_loaded' : 'sp_activated', 'sp_flush_rewrite_rules');
+add_action('parse_request', 'sp_parse_request');
+
 class SpApi_v1 extends AbstractSpApi {
 
   function modal() {
@@ -424,14 +430,6 @@ abstract class AbstractSpApi {
   }
 }
 
-add_filter('rewrite_rules_array', 'sp_rewrite_rules_array');
-add_filter('query_vars', 'sp_query_vars');
-add_action(constant('WP_DEBUG') || constant('SP_DEBUG') ? 'wp_loaded' : 'sp_activated', 'sp_flush_rewrite_rules');
-add_action('parse_request', 'sp_parse_request');
-
-// e.g., sp/1/profiles/:id
-define('SP_API_REWRITE_RULE', '(sp)/(\d)/([a-z]+)(/.*?)?(.json)?$');
-
 function sp_rewrite_rules_array($rules) {
   return array(
     SP_API_REWRITE_RULE => 'index.php?_sp=$matches[3]&_v=$matches[2]&_args=$matches[4]'
@@ -462,6 +460,11 @@ function sp_parse_request($wp) {
     $api = new $class();
     $fx = array($api, $wp->query_vars['_sp']);
     if (is_callable($fx)) {
+      if ($in = json_decode(file_get_contents('php://input'))) {
+        foreach($in as $key => $value) {
+          $_REQUEST[$key] = $value;
+        }
+      }
       $result = call_user_func_array($fx, array_filter(explode('/', $wp->query_vars['_args'])));
       header('Content-Type: application/json');
       echo json_encode($result);
