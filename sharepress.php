@@ -27,10 +27,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-@define('SHAREPRESS', __FILE__);
-@define('SP_DIR', dirname(__FILE__));
+//@define('SHAREPRESS', __FILE__);
+@define('SHAREPRESS', str_replace('Users/joeyblake/repos/', '', __FILE__));
+@define('SP_DIR', dirname(__FILE__) );
 @define('SP_URL', plugins_url('', __FILE__));
-@define('SP_DEBUG', false);
+@define('SP_DEBUG', true);
 @define('SP_TEST_MESSAGE', "I'm testing SharePress: a plugin for WordPress that helps you curate and autopost to Facebook, Twitter, and LinkedIn!");
 @define('SP_TEST_URL', 'http://getsharepress.com');
 

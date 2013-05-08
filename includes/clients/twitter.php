@@ -3,7 +3,7 @@ class TwitterSharePressClient implements SharePressClient {
 
   function __construct($key, $secret, $profile = false) {
     require_once(SP_DIR.'/includes/oauth.php');
-    $this->consumer = new oAuthConsumer($key, $secret);
+    $this->consumer = new SpOAuthConsumer($key, $secret);
     if ($profile) {
       $this->profile = $profile;
       $this->user = new SpOAuthToken($profile->user_token, $profile->user_secret);
@@ -17,6 +17,7 @@ class TwitterSharePressClient implements SharePressClient {
   function profile() {
 
     if (!isset($_REQUEST['oauth_verifier'])) {
+      
       return false;
 
     } else {
@@ -95,6 +96,7 @@ class TwitterSharePressClient implements SharePressClient {
     if (is_wp_error($result = wp_remote_post($oauth->to_url()))) {
       return $result;
     }
+
     if ($result['response']['code'] !== 200) {
       return new WP_Error("oauth-request-fail", "Unsuccessful authentication"); 
     }
