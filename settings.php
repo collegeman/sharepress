@@ -63,7 +63,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
         <h3 class="title">Connect to Facebook</h3>
       
-        <p>Click the button below, authorize the Facebook application, and you're in.</p>
+        <p>Click the button below, authorize the Facebook application, and you're in!</p>
 
         <table class="form-table">
           <tr>
@@ -80,7 +80,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
         <h3 class="title">SharePress is not setup properly.</h3>
 
-        <p>This copy of SharePress is running in MU mode, but the Facebook App Id and App Secret have not been configured.</p>
+        <p>This copy of SharePress is running in Multisite mode, but the Facebook App Id and App Secret have not been configured.</p>
 
         <p>Please contact your network admin.</p>
         
@@ -131,7 +131,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
       
       <?php settings_fields('fb-settings') ?>
 
-      <?php if (!self::is_mu()) { ?>
+      <?php if (!self::is_mu() && ( !defined('SHAREPRESS_MU_LICENSE_KEY') || !SHAREPRESS_MU_LICENSE_KEY )) { ?>
 
         <h3 class="title">Your License Key</h3>
 
@@ -153,7 +153,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           <tr>
             <th><label for="sharepress_license_key">License Key:</label></th>
             <td>
-              <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::setting('license_key')) ?>" />
+              <input style="width:25em;" type="text" id="sharepress_license_key" name="<?php echo self::OPTION_SETTINGS ?>[license_key]" value="<?php echo htmlentities(self::license_key()) ?>" />
             </td>
           </tr>
         </table>

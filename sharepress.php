@@ -5,7 +5,7 @@ Plugin URI: http://aaroncollegeman.com/sharepress
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.10
+Version: 2.2.11
 License: GPL2
 */
 
@@ -1598,11 +1598,12 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   }
 
   static function unlocked() {
-    $license_key = self::load()->setting('license_key');
-    if (self::is_mu()) {
-      $license_key = defined('SHAREPRESS_MU_LICENSE_KEY') ? SHAREPRESS_MU_LICENSE_KEY : null;
-    }
+    $license_key = self::license_key();
     return apply_filters('sharepress_enabled', true) && strlen($license_key) == 32;
+  }
+
+  static function license_key() {
+    return ( defined('SHAREPRESS_MU_LICENSE_KEY') && SHAREPRESS_MU_LICENSE_KEY ) ? SHAREPRESS_MU_LICENSE_KEY : self::load()->setting('license_key');
   }
 
   function admin_notices() {
