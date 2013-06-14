@@ -1,0 +1,16 @@
+#sp_metabox .media, .bd { overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1; }
+#sp_metabox .media .img { float: left; margin-right: 8px; display: block; }
+#sp_metabox .media .img img, .post .img img { display: block; padding: 0; margin: 0; }
+#sp_metabox .media .img_right { float: right; margin-left: 10px; margin-right: 0; }
+#sp_metabox .media_small .img { width: 50px; height: 50px; overflow: hidden; text-align: center; }
+#sp_metabox .inside { padding: 0; }
+#sp_metabox .thumb { width: 25px; height: 25px; }
+#sp_metabox .buttons { padding: 10px 10px 0px; }
+#sp_metabox .editor textarea { width: 99%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; min-height: 80px; }
+#sp_metabox .delete { display: inline-block; padding: 2px; color: red; }
+#sp_metabox .delete:hover { background-color: red; color: white; border: none; text-decoration: none; }
+#sp_metabox .editor .date { padding: 2px 0 5px 0; }
+#sp_metabox  b { color: #777; }
+#sp_metabox .pull-right { float: right; }
+#sp_metabox .profiles { padding: 0; margin: 0; list-style-type: none; }
+#sp_metabox .profiles .profile { padding: 0; margin: 0; display: inline-block; margin: 0 8px 8px 0; }

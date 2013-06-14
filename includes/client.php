@@ -11,6 +11,7 @@ function sp_init() {
   require(SP_DIR.'/includes/cron.php');
   require(SP_DIR.'/includes/api.php');
   require(SP_DIR.'/includes/ajax.php');
+  require(SP_DIR.'/includes/meta.php');
   do_action('sp_init');
 }
 

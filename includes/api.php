@@ -37,7 +37,7 @@ class SpApi_v1 extends AbstractSpApi {
       }
     }
 
-    include(SP_DIR.'/views/buf-modal.php');
+    include(SP_DIR.'/views/modal.php');
     exit;
   }
 
