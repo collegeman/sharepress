@@ -4,3 +4,10 @@
 #wpcontent, #wpcontent.auto-fold, #wpfooter, #wpfooter.auto-fold { margin-left: 20px !important; }
 .update-nag { display: none; }
 html { padding-top: 12px !important; }
+.sp_profiles { margin-bottom: 10px; }
+.sp_profiles .media, .sp_profiles .bd { overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1; }
+.sp_profiles .media .img { float: left; margin-right: 8px; display: block; }
+.sp_profiles .media .img img, .sp_profiles .post .img img { display: block; padding: 0; margin: 0; }
+.sp_profiles .media .img_right { float: right; margin-left: 10px; margin-right: 0; }
+.sp_profiles .media_small .img { width: 50px; height: 50px; overflow: hidden; text-align: center; }
+.sp_profiles .profile .formatted_username { margin: 0 0 5px; }

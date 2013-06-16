@@ -3,7 +3,7 @@ class TwitterSharePressClient implements SharePressClient {
 
   function __construct($key, $secret, $profile = false) {
     require_once(SP_DIR.'/includes/oauth.php');
-    $this->consumer = new oAuthConsumer($key, $secret);
+    $this->consumer = new SpOAuthConsumer($key, $secret);
     if ($profile) {
       $this->profile = $profile;
       $this->user = new SpOAuthToken($profile->user_token, $profile->user_secret);
@@ -62,7 +62,7 @@ class TwitterSharePressClient implements SharePressClient {
         'user_secret' => $response['oauth_token_secret'],
         'formatted_username' => '@'.$response['screen_name'],
         'service_username' => $response['screen_name'],
-        'avatar' => 'https://api.twitter.com/1/users/profile_image?screen_name='.$response['screen_name']
+        'avatar' => 'https://api.twitter.com/1.1/users/profile_image?screen_name='.$response['screen_name']
       );      
 
     } 
@@ -72,7 +72,7 @@ class TwitterSharePressClient implements SharePressClient {
     return array();
   }
 
-  function loginUrl() {
+  function loginUrl($redirect_uri = false) {
     $oauth = SpOAuthRequest::from_consumer_and_token(
       $this->consumer,
       null,
@@ -80,7 +80,7 @@ class TwitterSharePressClient implements SharePressClient {
       'https://api.twitter.com/oauth/request_token',
       array(
         'oauth_consumer_key' => $this->consumer->key,
-        'oauth_callback' => site_url($_SERVER['REQUEST_URI']).'?state='.wp_create_nonce('twitter-state'),
+        'oauth_callback' => ( $redirect_uri ? $redirect_uri : site_url($_SERVER['REQUEST_URI']) ) . '?state='.wp_create_nonce('twitter-state'),
         'x_auth_access_type' => 'write'
       )
     );
@@ -115,7 +115,7 @@ class TwitterSharePressClient implements SharePressClient {
       $this->consumer,
       $this->user,
       'POST',
-      'https://api.twitter.com/1/statuses/update.json',
+      'https://api.twitter.com/1.1/statuses/update.json',
       array(
         'status' => $message,
         'trim_user' => 1
@@ -136,7 +136,7 @@ class TwitterSharePressClient implements SharePressClient {
       )
     );
 
-    if (is_wp_error($result = wp_remote_post('https://api.twitter.com/1/statuses/update.json', $params))) {
+    if (is_wp_error($result = wp_remote_post('https://api.twitter.com/1.1/statuses/update.json', $params))) {
       return $result;
     } else {
       $response = json_decode($result['body']);
@@ -166,8 +166,20 @@ class TwitterSharePressClient implements SharePressClient {
     );
   }
 
-  function settings() {
-    
+  function settings_keys_section() {
+    ?>
+      <p>Drop in your Twitter App public key and secret below. Don't know what this means? <a href="#">Read this tutorial</a></p>
+    <?php
+  }
+
+  function settings($page, $option_group, $service) {
+    add_settings_section($option_group.'-keys', 'App Keys', array($this, 'settings_keys_section'), $page);
+    register_setting($option_group, "sp_{$service}_key");
+    add_settings_field($option_group.'-key', 'Public Key', 'sp_settings_field_text', $page, $option_group.'-keys', 
+      array('label_for' => "sp_{$service}_key"));
+    register_setting($option_group, "sp_{$service}_secret");
+    add_settings_field($option_group.'-secret', 'Secret Key', 'sp_settings_field_text', $page, $option_group.'-keys',
+      array('label_for' => "sp_{$service}_secret"));
   }
 
 }

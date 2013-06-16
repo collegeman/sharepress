@@ -32,6 +32,9 @@ window.sp = window.sp || {};
   });
 
   sp.Profiles = Backbone.Collection.extend({
+    url: function() {
+      return sp.api + '/profiles';
+    },
     model: sp.Profile
   });
 

@@ -60,10 +60,14 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
     );
   }
     
-  function loginUrl() {
-    return $this->getLoginUrl(array(
+  function loginUrl($redirect_uri = false) {
+    $config = array(
       'scope' => 'email,read_stream,publish_stream,manage_pages,share_item'
-    ));
+    );
+    if ($redirect_uri) {
+      $config['redirect_uri'] = $redirect_uri;
+    }
+    return $this->getLoginUrl($config);
   }
 
   function profiles() {
@@ -129,7 +133,6 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
   function settings_keys_section() {
     ?>
       <p>Drop in your Facebook App Id and Secret below. Don't know what this means? <a href="#">Read this tutorial</a></p>
-
     <?php
   }
 

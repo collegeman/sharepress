@@ -8,7 +8,6 @@ function sp_add_meta_boxes() {
 }
 
 function sp_meta_admin_enqueue_scripts($hook) {
-  wp_enqueue_script('sp_sharepress_script', SP_URL.'/js/sharepress.js', array('backbone'));
   if ($hook === 'post.php' || $hook === 'post-new.php') {
     wp_enqueue_style('sp_metabox_style', SP_URL.'/css/metabox.css');
     wp_enqueue_script('sp_metabox_script', SP_URL.'/js/metabox.js', array('sp_sharepress_script'));
@@ -36,7 +35,7 @@ function sp_admin_notices() {
     <script>
       !function($) {
         $('#spdismisstrynowprompt').click(function() {
-          $.post('<?php echo get_site_url(null, '/sp/1/dismiss'); ?>');
+          $.post('<?php echo site_url('/sp/1/dismiss'); ?>');
           $('#message').hide();
           return false;
         });

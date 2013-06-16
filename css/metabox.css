@@ -1,6 +1,6 @@
-#sp_metabox .media, .bd { overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1; }
+#sp_metabox .media, #sp_metabox.bd { overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1; }
 #sp_metabox .media .img { float: left; margin-right: 8px; display: block; }
-#sp_metabox .media .img img, .post .img img { display: block; padding: 0; margin: 0; }
+#sp_metabox .media .img img, #sp_metabox .post .img img { display: block; padding: 0; margin: 0; }
 #sp_metabox .media .img_right { float: right; margin-left: 10px; margin-right: 0; }
 #sp_metabox .media_small .img { width: 50px; height: 50px; overflow: hidden; text-align: center; }
 #sp_metabox .inside { padding: 0; }

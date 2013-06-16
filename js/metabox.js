@@ -61,6 +61,7 @@ window.sp = window.sp || {};
         var check = setInterval(function() {
           if (popup.closed) {
             clearInterval(check);
+            that.ui.profiles.html('<li>Loading...</li>');
             that.profiles.fetch();
           }
         }, 100);
@@ -70,6 +71,28 @@ window.sp = window.sp || {};
     },
     initialize: function() {
       this.profiles = new sp.Profiles();
+      this.profiles.on('add', $.proxy(this.add, this));
+      this.profiles.on('remove', $.proxy(this.remove, this));
+      this.profiles.on('reset', $.proxy(this.reset, this));
+      this.profiles.fetch();
+
+      this.ui = {};
+      this.ui.profiles = this.$('ul.profiles');
+    },
+    add: function(profile) {
+      var $ui = $('<li class="profile"><a href="#" title="' + profile.get('service') + ': ' + profile.get('formatted_username') + '"><img class="thumb" src="' + profile.get('avatar') + '"></a></li>');
+      this.ui.profiles.append($ui);
+      profile.$ui = $ui;
+    },
+    remove: function(profile) {
+      profile.$ui && profile.$ui.remove();
+    },
+    reset: function(profiles, result) {
+      this.ui.profiles.html('');
+      var that = this;
+      profiles.each(function(profile) {
+        that.add(profile);
+      });
     }
   });
 

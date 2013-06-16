@@ -35,27 +35,12 @@
 </div>
 -->
 <div class="buttons">
-  <!--
-  <ul class="profiles">
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-    <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
-  </ul>
-  -->
+  <ul class="profiles"></ul>
   <div class="combo-button">
-    <a href="#" class="button" data-target="dropdown">Add Profile</a>
+    <a href="#" class="button" data-target="dropdown">Connect...</a>
     <ul class="dropdown">
-      <li class="item"><a href="<?php echo get_site_url(null, '/sp/1/auth/facebook') ?>" data-open-in="modal">Facebook</a></li>
-      <li class="item"><a href="<?php echo get_site_url(null, '/sp/1/auth/twitter') ?>" data-open-in="modal">Twitter</a></li>
+      <li class="item"><a href="<?php echo site_url('/sp/1/auth/facebook/profiles') ?>" data-open-in="modal">Facebook</a></li>
+      <li class="item"><a href="<?php echo site_url('/sp/1/auth/twitter/profiles') ?>" data-open-in="modal">Twitter</a></li>
     </ul>
   </div>
   <button href="#" class="button pull-right" disabled>History</button>
