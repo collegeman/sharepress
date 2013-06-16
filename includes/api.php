@@ -139,9 +139,17 @@ class SpApi_v1 extends AbstractSpApi {
       return false;
     }
 
+    if (is_wp_error($client)) {
+      if ($client->get_error_code() === 'keys') {
+        $config = true;
+      } else {
+        return $client;
+      }
+    }
+
     if ($config) {
-      if (apply_filters('sp_show_config_screens', true, $service)) {
-        // display the config screen
+      if (apply_filters('sp_show_settings_screens', true, $service)) {
+        return wp_redirect(admin_url('options-general.php?page=sp-settings&sp_service='.$service));
       } else {
         // TODO: redirect or display error?
       }

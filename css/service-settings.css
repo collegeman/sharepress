@@ -1,0 +1,6 @@
+#adminmenuback { display: none; }
+#adminmenuwrap { display: none; }
+#wpadminbar { display: none; }
+#wpcontent, #wpcontent.auto-fold, #wpfooter, #wpfooter.auto-fold { margin-left: 20px !important; }
+.update-nag { display: none; }
+html { padding-top: 12px !important; }

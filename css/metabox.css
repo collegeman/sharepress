@@ -14,3 +14,8 @@
 #sp_metabox .pull-right { float: right; }
 #sp_metabox .profiles { padding: 0; margin: 0; list-style-type: none; }
 #sp_metabox .profiles .profile { padding: 0; margin: 0; display: inline-block; margin: 0 8px 8px 0; }
+#sp_metabox .combo-button { position: relative; display: inline-block; }
+#sp_metabox .dropdown { display: none; z-index: 1000000; position: absolute; top: 26px; width: 150px; background-color: white; border: 1px solid #ccc; border-radius: 2px; list-style-type: none; padding: 0; margin: 0; }
+#sp_metabox .dropdown .item { list-style-type: none; padding: 0; margin: 0; }
+#sp_metabox .dropdown .item > a { text-decoration: none; padding: 3px 8px; display: block; }
+#sp_metabox .dropdown .item > a:hover { background-color: #eee; }

@@ -1,3 +1,7 @@
+<div class="misc-pub-section" data-ui="never-published">
+  This post has never been publicized.
+</div>
+<!--
 <div class="misc-pub-section media update">
   <div class="img">
     <a href="#" title="Facebook Profile"><img class="thumb" src="http://placehold.it/50x50"></a>
@@ -29,7 +33,9 @@
     &nbsp;<a class="delete" href="#">Delete</a>
   </div>
 </div>
+-->
 <div class="buttons">
+  <!--
   <ul class="profiles">
     <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
     <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
@@ -44,6 +50,18 @@
     <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
     <li class="profile"><a href="#"><img class="thumb" src="http://placehold.it/50x50"></a></li>
   </ul>
-  <button class="button">Add Profile...</button>
-  <a href="#" class="button pull-right">History</a>
+  -->
+  <div class="combo-button">
+    <a href="#" class="button" data-target="dropdown">Add Profile</a>
+    <ul class="dropdown">
+      <li class="item"><a href="<?php echo get_site_url(null, '/sp/1/auth/facebook') ?>" data-open-in="modal">Facebook</a></li>
+      <li class="item"><a href="<?php echo get_site_url(null, '/sp/1/auth/twitter') ?>" data-open-in="modal">Twitter</a></li>
+    </ul>
+  </div>
+  <button href="#" class="button pull-right" disabled>History</button>
 </div>
+<script>
+  jQuery(function($) {
+    new sp.Metabox({ el: $('#sp_metabox') });
+  });
+</script>

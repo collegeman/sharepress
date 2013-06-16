@@ -500,12 +500,20 @@ function buf_get_client($service, $profile = false) {
   if (!class_exists($class)) {
     $class = sprintf('%sSharePressClient', ucwords($service));
     if (!class_exists($class)) {
-      return new WP_Error('client', "SharePress Error: No client exists for service [$service]");
+      return new WP_Error('client', "No client exists for service [$service]");
     }
   }
 
   if (!$keys = buf_has_keys($service)) {
-    return new WP_Error('keys', "SharePress Error: No keys configured for service [$service]");
+    @session_start();
+    $client = new $class(false, false);
+    return new WP_Error(
+      'keys', 
+      "No keys configured for service [$service]",
+      array(
+        'client' => $client
+      )
+    );
   }
 
   @session_start();

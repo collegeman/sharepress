@@ -166,6 +166,10 @@ class TwitterSharePressClient implements SharePressClient {
     );
   }
 
+  function settings() {
+    
+  }
+
 }
 
 add_action('sp_add_new_account_menu', 'sp_add_new_account_menu_twitter');
