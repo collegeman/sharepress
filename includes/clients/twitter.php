@@ -56,7 +56,7 @@ class TwitterSharePressClient implements SharePressClient {
       parse_str($result['body'], $response);
       $request_token = new SpOAuthToken($response['oauth_token'], $response['oauth_token_secret']);
       
-      $profile_data = $this->profile_data($request_token, $response['screen_name']);
+      $profile_data = $this->getProfileData($request_token, $response['screen_name']);
 
       return (object) array(
         'service' => 'twitter',
@@ -75,7 +75,7 @@ class TwitterSharePressClient implements SharePressClient {
     return array();
   }
 
-  function profile_data($request_token, $screen_name) {
+  function getProfileData($request_token, $screen_name) {
     $oauth = SpOAuthRequest::from_consumer_and_token(
       $this->consumer,
       $request_token,
