@@ -11,6 +11,16 @@ function sp_init() {
   require(SP_DIR.'/includes/cron.php');
   require(SP_DIR.'/includes/api.php');
   require(SP_DIR.'/includes/ajax.php');
+  require(SP_DIR.'/includes/metabox.php');
+  require(SP_DIR.'/includes/settings.php');
+
+  wp_register_script('sp_sharepress_script', SP_URL.'/js/sharepress.js', array('backbone'));
+  wp_localize_script('sp_sharepress_script', 'sp', array(
+    'url' => get_site_url(null), 
+    'plugin' => SP_URL,
+    'api' => site_url('/sp/1')
+  ));
+
   do_action('sp_init');
 }
 
@@ -205,8 +215,20 @@ interface SharePressClient {
 
   /**
    * @return The URL to which a user should be redirected for authentication.
+   * @param String The URL to which the user should be redirected after logging in;
+   *   set to false for no redirection
    */
-  function loginUrl();
+  function loginUrl($redirect_uri = false);
+
+  /**
+   * Register the settings sections and fields for this client's config screen.
+   * @param String The Id of the settings page that will display the
+   *   fields; needed for 
+   * @param String The option group name to use for creating sections and
+   *   registering settings
+   * @param String The service name used to load the client for configuration
+   */
+  function settings($page, $option_group, $service);
 
   /**
    * Send a message to the remote system on behalf of the current session.

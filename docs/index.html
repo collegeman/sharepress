@@ -313,13 +313,13 @@ class MySpClient extends AbstractSharePressClient {
                 for example, be part of your service to setup the API keys on behalf of your users,
                 such that the configuration step is no longer necessary.</p>
               <p>To disable those screens, implement the following filter:</p>
-              <pre class="prettyprint">add_filter('sp_show_config_screens', '__return_false');</pre>
+              <pre class="prettyprint">add_filter('sp_show_settings_screens', '__return_false');</pre>
               <p>Note that some services like Facebook bind authentication to domains, so if your Multisite
               installation uses custom domains, storing one set of application keys probably won't work.
               In these cases, you'll want to use a more granular approach
-              <pre class="prettyprint">add_filter('sp_show_config_screens', 'my_sp_show_config_screens', 10, 2);
+              <pre class="prettyprint">add_filter('sp_show_settings_screens', 'my_sp_show_settings_screens', 10, 2);
 
-function my_sp_show_config_screens($bool, $service) {
+function my_sp_show_settings_screens($bool, $service) {
   if ($service === 'facebook') {
     return true;
   } else {

@@ -60,10 +60,14 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
     );
   }
     
-  function loginUrl() {
-    return $this->getLoginUrl(array(
+  function loginUrl($redirect_uri = false) {
+    $config = array(
       'scope' => 'email,read_stream,publish_stream,manage_pages,share_item'
-    ));
+    );
+    if ($redirect_uri) {
+      $config['redirect_uri'] = $redirect_uri;
+    }
+    return $this->getLoginUrl($config);
   }
 
   function profiles() {
@@ -124,6 +128,22 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
         'url' => $url ? $url : constant('SP_TEST_URL')
       ) 
     );
+  }
+
+  function settings_keys_section() {
+    ?>
+      <p>Drop in your Facebook App Id and Secret below. Don't know what this means? <a href="#">Read this tutorial</a></p>
+    <?php
+  }
+
+  function settings($page, $option_group, $service) {
+    add_settings_section($option_group.'-keys', 'App Keys', array($this, 'settings_keys_section'), $page);
+    register_setting($option_group, "sp_{$service}_key");
+    add_settings_field($option_group.'-key', 'App Id', 'sp_settings_field_text', $page, $option_group.'-keys', 
+      array('label_for' => "sp_{$service}_key"));
+    register_setting($option_group, "sp_{$service}_secret");
+    add_settings_field($option_group.'-secret', 'App Secret', 'sp_settings_field_text', $page, $option_group.'-keys',
+      array('label_for' => "sp_{$service}_secret"));
   }
 
 }

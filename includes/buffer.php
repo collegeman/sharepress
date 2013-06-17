@@ -500,12 +500,20 @@ function buf_get_client($service, $profile = false) {
   if (!class_exists($class)) {
     $class = sprintf('%sSharePressClient', ucwords($service));
     if (!class_exists($class)) {
-      return new WP_Error('client', "SharePress Error: No client exists for service [$service]");
+      return new WP_Error('client', "No client exists for service [$service]");
     }
   }
 
   if (!$keys = buf_has_keys($service)) {
-    return new WP_Error('keys', "SharePress Error: No keys configured for service [$service]");
+    @session_start();
+    $client = new $class(false, false);
+    return new WP_Error(
+      'keys', 
+      "No keys configured for service [$service]",
+      array(
+        'client' => $client
+      )
+    );
   }
 
   @session_start();
@@ -635,7 +643,10 @@ function buf_get_profiles($args = '') {
 
   $profiles = array();
   foreach($posts as $post) {
-    $profiles[] = (object) buf_get_profile($post)->toJSON();
+    $profile = buf_get_profile($post);
+    if (empty($args['service']) || $profile->service === $args['service']) {
+      $profiles[] = (object) $profile->toJSON();
+    }
   }
   return $profiles;
 }
@@ -650,7 +661,17 @@ function buf_update_profile($profile) {
   $profile = (array) $profile;
 
   $service_tag = false;
-  if (!empty($profile['service']) && !empty($profile['service_id'])) {
+  if (!empty($profile['parent'])) {
+    $parent = buf_get_profile($profile['parent']);
+    $client = buf_get_client($parent);
+    foreach($client->profiles() as $child) {
+      if ($child->service_id === $profile['service_id']) {
+        $profile = (array) $child;
+        break;
+      }
+    }
+    $service_tag = trim("{$profile['service']}:{$profile['service_id']}");
+  } else if (!empty($profile['service']) && !empty($profile['service_id'])) {
     $service_tag = trim("{$profile['service']}:{$profile['service_id']}");
   }
 
@@ -695,6 +716,8 @@ function buf_update_profile($profile) {
   if (!empty($profile['timezone'])) {
     $meta['timezone'] = $profile['timezone'];
   }
+
+  $meta['service'] = $profile['service'];
 
   $meta['service_tag'] = $service_tag;
 

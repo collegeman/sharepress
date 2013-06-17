@@ -37,7 +37,7 @@ class SpApi_v1 extends AbstractSpApi {
       }
     }
 
-    include(SP_DIR.'/views/buf-modal.php');
+    include(SP_DIR.'/views/modal.php');
     exit;
   }
 
@@ -130,7 +130,7 @@ class SpApi_v1 extends AbstractSpApi {
     return $preview;
   }
 
-  function auth($service, $config = false) {
+  function auth($service, $action = false) {
     if (!$service = trim($service)) {
       return false;
     }
@@ -139,21 +139,22 @@ class SpApi_v1 extends AbstractSpApi {
       return false;
     }
 
-    if ($config) {
-      if (apply_filters('sp_show_config_screens', true, $service)) {
-        // display the config screen
+    $config = $action === 'config';
+    $profiles = $action === 'profiles';
+
+    if (is_wp_error($client)) {
+      if ($client->get_error_code() === 'keys') {
+        $config = true;
       } else {
-        // TODO: redirect or display error?
+        return $client;
       }
-      exit;
     }
 
-    // update plugin configuration?
-    if (isset($_POST['config'][$service])) {
-      if (apply_filters('sp_show_config_screens', true)) {
-        // TODO: validate nonce and referrer
+    if ($config || isset($_POST['config'][$service])) {
+      if (apply_filters('sp_show_settings_screens', true, $service)) {
+        return wp_redirect(admin_url('options-general.php?page=sp-settings&sp_service='.$service));
       } else {
-        // TODO: display error
+        // TODO: redirect or display error?
       }
       exit;
     }
@@ -162,11 +163,26 @@ class SpApi_v1 extends AbstractSpApi {
       return $profile;
     }
 
+    $redirect_uri = site_url('/sp/1/auth/'.$service.($action ? '/'.$action : ''));
+    if (!empty($_REQUEST['redirect_uri'])) {
+      $redirect_uri .= '?' . http_build_query(array('redirect_uri' => $_REQUEST['redirect_uri']));
+    }
+
     if ($profile === false) {
-      return wp_redirect( $client->loginUrl() );
+      return wp_redirect( $client->loginUrl($redirect_uri) );
     } else if (is_wp_error($profile = buf_update_profile($profile))) {
-      return $profile;
+      // did use request profiles screen? if so, display error message
+      if ($profiles) {
+      
+      // otherwise return error object through API
+      } else {
+        return $profile;
+      }
     } 
+
+    if ($profiles) {
+      return wp_redirect(admin_url('options-general.php?page=sp-settings&sp_service='.$service.'&sp_profiles=true'));
+    }
 
     if (empty($_REQUEST['redirect_uri'])) {
       return $profile->toJSON();
@@ -265,21 +281,24 @@ class SpApi_v1 extends AbstractSpApi {
         $client = buf_get_client($profile);
         $profiles = array();
 
-        if ($source = $client->profiles()) {
-          foreach($source as $profile) {
+        if ($children = $client->profiles()) {
+          foreach($children as $child) {
             // does the profile already exist?
-            if ($exists = buf_get_profile($profile)) {
-              $profile = $exists->toJSON();
+            if ($exists = buf_get_profile($child)) {
+              $child = $exists->toJSON();
 
             // otherwise, if admin, add create URL for debugging
             } else if ($this->_isAdmin()) {
-              $args = (array) $profile;
-              $args['_method'] = 'post';
-              $profile->actions = array(
+              $args = array(
+                'parent' => $profile->id,
+                'service_id' => $child->service_id,
+                '_method' => 'post'
+              );
+              $child->actions = array(
                 'create' => site_url('/sp/1/profiles?').http_build_query($args)
               );
             }
-            $profiles[] = $profile;
+            $profiles[] = $child;
           }     
         }
 
