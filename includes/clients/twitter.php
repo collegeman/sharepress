@@ -15,7 +15,6 @@ class TwitterSharePressClient implements SharePressClient {
   }
 
   function profile() {
-
     if (!isset($_REQUEST['oauth_verifier'])) {
       
       return false;
@@ -50,11 +49,14 @@ class TwitterSharePressClient implements SharePressClient {
       if (is_wp_error($result = wp_remote_post($oauth->to_url()))) {
         return $result;
       }
-      if ($result['response']['code'] !== 200) {
+      if ($result['response']['info']['http_code'] !== 200) {
         return new WP_Error("oauth-access-fail", "Unsuccessful authentication");
       }
 
       parse_str($result['body'], $response);
+      $request_token = new SpOAuthToken($response['oauth_token'], $response['oauth_token_secret']);
+      
+      $profile_data = $this->profile_data($request_token, $response['screen_name']);
 
       return (object) array(
         'service' => 'twitter',
@@ -63,7 +65,7 @@ class TwitterSharePressClient implements SharePressClient {
         'user_secret' => $response['oauth_token_secret'],
         'formatted_username' => '@'.$response['screen_name'],
         'service_username' => $response['screen_name'],
-        'avatar' => 'https://api.twitter.com/1.1/users/profile_image?screen_name='.$response['screen_name']
+        'avatar' => $profile_data->profile_image_url_https
       );      
 
     } 
@@ -71,6 +73,31 @@ class TwitterSharePressClient implements SharePressClient {
 
   function profiles() {
     return array();
+  }
+
+  function profile_data($request_token, $screen_name) {
+    $oauth = SpOAuthRequest::from_consumer_and_token(
+      $this->consumer,
+      $request_token,
+      'GET',
+      'https://api.twitter.com/1.1/users/show.json',
+      array(
+        'screen_name' => $screen_name
+      )
+    );
+    
+    // sign using HMAC-SHA1
+    $oauth->sign_request(
+      new SpOAuthSignatureMethod_HMAC_SHA1(),
+      $this->consumer,
+      $request_token
+    );    
+
+    if (is_wp_error( $profile = wp_remote_get( $oauth->to_url() ) )){
+      return new WP_Error("profile-lookup-fail", "Authenication happened but profile lookup failed");
+    }
+
+    return json_decode( $profile['body'] );
   }
 
   function loginUrl($redirect_uri = false) {
@@ -97,7 +124,7 @@ class TwitterSharePressClient implements SharePressClient {
       return $result;
     }
 
-    if ($result['response']['code'] !== 200) {
+    if ($result['response']['info']['http_code'] !== 200) {
       return new WP_Error("oauth-request-fail", "Unsuccessful authentication"); 
     }
 
@@ -137,17 +164,17 @@ class TwitterSharePressClient implements SharePressClient {
         'Expect:'
       )
     );
-
+  
     if (is_wp_error($result = wp_remote_post('https://api.twitter.com/1.1/statuses/update.json', $params))) {
       return $result;
     } else {
       $response = json_decode($result['body']);
-      if ($result['response']['code'] !== 200) {
-        $code = $result['response']['code'];
+      if (property_exists($response, 'errors') && $response->errors[0]->code !== 200) {
+        $code = $response->errors[0]->code;
         if ($code === 401) {
           $code = SharePressClient::ERROR_AUTHENTICATION;
         }
-        return new WP_Error($code, strtolower($result['response']['message']).': '.$response->error);
+        return new WP_Error($code, strtolower($response->errors[0]->message).': '.$response->errors);
       } else {
         $id = $response->id;
         unset($response->id);
