@@ -200,6 +200,7 @@ interface SharePressClient {
    *   'formatted_username' => '', // user's username formatted to remote spec, e.g., @collegeman on Twitter
    *   'service_username' => '', // alphanumeric-only username, e.g., collegeman
    *   'avatar' => '', // URL for remote profile picture
+   *   'link' => '', // URL for remote profile page
    *   'user_token' => '', // current, authenticated user token, if available
    *   'user_secret' => '', // current, authenticated user secret, if available,
    *   'config' => '' // optionally, extra configuration data

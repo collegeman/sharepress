@@ -56,6 +56,7 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
       'formatted_username' => $user['username'],
       'service_username' => $user['username'],
       'avatar' => 'https://graph.facebook.com/'.$user['id'].'/picture',
+      'link' => isset($user['link']) ? $user['link'] : 'http://www.facebook.com/'.$user['username'],
       'user_token' => $result['access_token']
     );
   }

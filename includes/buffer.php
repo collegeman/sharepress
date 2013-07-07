@@ -709,6 +709,10 @@ function buf_update_profile($profile) {
     $meta['service_username'] = $profile['service_username'];
   }
 
+  if (!empty($profile['link'])) {
+    $meta['link'] = $profile['link'];
+  }
+
   if (!empty($profile['avatar'])) {
     $meta['avatar'] = $profile['avatar'];
   }
