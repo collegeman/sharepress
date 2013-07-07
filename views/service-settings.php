@@ -1,6 +1,11 @@
 <div class="wrap">
   <?php screen_icon(); ?>
-  <h2><?php echo $client->getName() ?> Settings</h2>     
+  <h2><?php echo $client->getName() ?> Settings</h2>   
+  <?php if ($error = sp_flash('error')) { ?>
+    <div id="message" class="error fade">
+      <p><?php echo $error->get_error_message() ?> (<?php echo $error->get_error_code() ?>)</p>
+    </div>
+  <?php } ?>
   <form method="post" action="<?php echo admin_url('options.php') ?>">
     <input type="hidden" name="sp_service" value="<?php echo $service ?>">
     <?php 

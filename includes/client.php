@@ -33,6 +33,20 @@ function sp_set_opt($option, $value) {
 }
 
 /**
+ * Store some arbitrary amount of data until the next time it is read
+ */
+function sp_flash($name, $value = null) {
+  $key = 'sp_flash_'.$name;
+  if (!is_null($value)) {
+    set_transient($key, $value);
+  } else {
+    $value = get_transient($key);
+    delete_transient($key);
+    return $value;
+  }
+}
+
+/**
  * Shorten the given URL.
  * @param string $url
  * @param boolean $flush (optional) When true, flush cached results

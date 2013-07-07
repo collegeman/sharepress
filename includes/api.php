@@ -169,11 +169,19 @@ class SpApi_v1 extends AbstractSpApi {
     }
 
     if ($profile === false) {
-      return wp_redirect( $client->loginUrl($redirect_uri) );
+      if (is_wp_error($login_url = $client->loginUrl($redirect_uri))) {
+        if ($profiles) {
+          sp_flash('error', $login_url);
+        } else {
+          return $login_url;
+        }
+      } else {
+        return wp_redirect( $login_url );
+      }
     } else if (is_wp_error($profile = buf_update_profile($profile))) {
       // did use request profiles screen? if so, display error message
       if ($profiles) {
-      
+        sp_flash('error', $profile);
       // otherwise return error object through API
       } else {
         return $profile;
