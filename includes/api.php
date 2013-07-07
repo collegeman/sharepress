@@ -158,7 +158,7 @@ class SpApi_v1 extends AbstractSpApi {
       }
       exit;
     }
-
+    
     if (is_wp_error($profile = $client->profile())) {
       return $profile;
     }
