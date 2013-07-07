@@ -41,6 +41,8 @@
     <ul class="dropdown">
       <li class="item"><a href="<?php echo site_url('/sp/1/auth/facebook/profiles') ?>" data-open-in="modal">Facebook</a></li>
       <li class="item"><a href="<?php echo site_url('/sp/1/auth/twitter/profiles') ?>" data-open-in="modal">Twitter</a></li>
+      <li class="item"><a href="<?php echo site_url('/sp/1/auth/googleplus/profiles') ?>" data-open-in="modal">Google+</a></li>
+      <li class="item"><a href="<?php echo site_url('/sp/1/auth/linkedin/profiles') ?>" data-open-in="modal">LinkedIn</a></li>
     </ul>
   </div>
   <button href="#" class="button pull-right" disabled>History</button>
