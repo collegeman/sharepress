@@ -12,7 +12,7 @@
           $subprofiles[$profile->id] = $children;
         }
         ?>
-          <li class="profile media">
+        <li class="profile media">
             <div class="img">
               <img src="<?php echo $profile->avatar ?>">
             </div>
@@ -32,7 +32,6 @@
       } 
     ?>
   </ul>
-
   <?php if ($subprofiles) { ?>
 
     <h3>Available Profiles</h3>

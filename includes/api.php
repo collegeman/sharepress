@@ -217,6 +217,7 @@ class SpApi_v1 extends AbstractSpApi {
   }
 
   function _addProfileActions(&$profile) {
+    $profile = (object) $profile;
     $profile->actions = (object) array(
       'test' => site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post'),
       'profiles' => site_url('/sp/1/profiles/'.$profile->id.'/profiles'),
@@ -229,6 +230,7 @@ class SpApi_v1 extends AbstractSpApi {
         'errors' => site_url('/sp/1/profiles/'.$profile->id.'/updates/errors')
       )
     );
+    return $profile;
   }
 
   function profiles($id = null, $action = false, $update = false) {
@@ -245,8 +247,9 @@ class SpApi_v1 extends AbstractSpApi {
           $_GET['user_id'] = get_current_user_id();
         }
         $profiles = array_map(array($this, '_sanitizeProfile'), buf_get_profiles($_GET));
+    
         if ($this->_isAdmin()) {
-          array_map(array($this, '_addProfileActions'), $profiles);
+          $profiles = array_map(array($this, '_addProfileActions'), $profiles);
         }
         return $profiles;
       }
