@@ -645,7 +645,7 @@ function buf_get_profiles($args = '') {
   foreach($posts as $post) {
     $profile = buf_get_profile($post);
     if (empty($args['service']) || $profile->service === $args['service']) {
-      $profiles[] = (object) $profile->toJSON();
+      $profiles[] = $profile;
     }
   }
   return $profiles;

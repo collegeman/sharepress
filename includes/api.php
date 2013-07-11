@@ -212,6 +212,10 @@ class SpApi_v1 extends AbstractSpApi {
     }
   }
 
+  function _sanitizeProfile($profile) {
+    return $profile->toJSON();
+  }
+
   function _addProfileActions(&$profile) {
     $profile->actions = (object) array(
       'test' => site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post'),
@@ -240,7 +244,7 @@ class SpApi_v1 extends AbstractSpApi {
         if (!$this->_isAdmin()) {
           $_GET['user_id'] = get_current_user_id();
         }
-        $profiles = buf_get_profiles($_GET);
+        $profiles = array_map(array($this, '_sanitizeProfile'), buf_get_profiles($_GET));
         if ($this->_isAdmin()) {
           array_map(array($this, '_addProfileActions'), $profiles);
         }
