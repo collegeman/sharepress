@@ -217,6 +217,7 @@ class SpApi_v1 extends AbstractSpApi {
   }
 
   function _addProfileActions(&$profile) {
+    $profile = (object) $profile;
     $profile->actions = (object) array(
       'test' => site_url('/sp/1/profiles/'.$profile->id.'/test?_method=post'),
       'profiles' => site_url('/sp/1/profiles/'.$profile->id.'/profiles'),
