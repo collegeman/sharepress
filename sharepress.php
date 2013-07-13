@@ -246,11 +246,35 @@ class Sharepress {
     if (self::setting('fix_missed_schedule', 0)) {
       $this->fix_missed_schedule();
     }
+
+    add_action('show_user_profile', array($this, 'user_profile_fb_author_edit_action' ));
+    add_action('edit_user_profile', array($this, 'user_profile_fb_author_edit_action' ));
+    add_action('personal_options_update', array($this,'sharepress_user_profile_update_action' ));
+    add_action('edit_user_profile_update', array($this,'sharepress_user_profile_update_action' ));
   } 
 
   private static $ok_to_show_support_here = false;
   private static $on_settings_screen = false;
   private static $ok_to_show_error = false;
+
+  function user_profile_fb_author_edit_action($user) {
+    $fb_profile_url = get_user_meta($user->id, 'fb_author_url', true);
+  ?>
+    <h3>Facebook article:author Link</h3>
+    <table class="form-table">
+      <tbody><tr>
+        <th><label for="fb_author_link">Facebook article:author link</label></th>
+        <td><input name="fb_author_url" type="text" id="fb_author_link" value="<?= $fb_profile_url ?>" class="regular-text"><br>
+        <span class="description">If you have enabled "Follow" on your facebook profile. You can add your facebook profile link, and readers will be able to subscribe to you as an author on Facebook. See <a href="https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/">this article for details.</a></span></td>
+      </tr>
+      </tbody>
+    </table>
+  <?php 
+  }
+
+  function sharepress_user_profile_update_action($user_id) {
+    update_user_meta($user_id, 'fb_author_url', $_POST['fb_author_url']);
+  }
 
   function admin_enqueue_scripts($hook) {
     if ($hook == 'plugins.php' || $hook == 'post-new.php' || $hook == 'post-edit.php' || $hook == 'index.php') {
@@ -363,6 +387,14 @@ class Sharepress {
       }
       
       $og = array_merge($defaults, $overrides);
+      
+      if ( $fb_publisher = $this->setting('fb_publisher_url') ) {
+        $og['article:publisher'] = $fb_publisher;
+      }
+
+      if ( $fb_author = get_the_author_meta( 'fb_author_url', $post->post_author ) ) {
+        $og['article:author'] = $fb_author;
+      }
       
       #
       # poke out the ones that aren't allowed

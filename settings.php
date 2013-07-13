@@ -222,6 +222,17 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
       <table class="form-table">
         <tr>
           <td>
+            <b>Facebook "article:publisher" url</b><br>
+            <input type="text" class="regular-text" name="<?php echo self::OPTION_SETTINGS ?>[fb_publisher_url]" id="fb_publisher_url" value="<?= $this->setting('fb_publisher_url') ?>">
+            <p>
+              <span class="description">
+                You may add a url to a publisher page here. It will allow readers to like your publisher page from their news feed, <a href="https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/">read this article for details.</a>
+              </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td>
             <?php
               // backward-compat with old page_og_tags setting
               if (($page_og_tags = $this->setting('page_og_tags')) && ($page_og_tags == 'imageonly' || $page_og_tags == 'off')) {
