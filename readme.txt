@@ -3,7 +3,7 @@ Contributors: aaroncollegeman
 Donate link: http://aaroncollegeman.com/sharepress
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
-Tested up to: 3.5.1
+Tested up to: 3.5.2
 Stable tag: 2.2.12
 
 Automatic posting and reposting to Facebook and Twitter.
