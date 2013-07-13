@@ -4,7 +4,7 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.5.2
-Stable tag: 2.2.12
+Stable tag: 2.2.13
 
 Automatic posting and reposting to Facebook and Twitter.
 
@@ -31,22 +31,17 @@ Upgrade to the Pro version for e-mail based support directly from the developers
 SharePress is compatible with WordPress Multisite (MU) and WordPress Multi-Network.
 
 = Why use SharePress instead of those other guys? =
+Three great reasons:
 
-1. Focus
-
-Integrating with social networks is hard, so we focus on the big providers - Facebook and Twitter, and soon
+**Focus** Integrating with social networks is hard, so we focus on the big providers - Facebook and Twitter, and soon
 Google+ and LinkedIn, too - so that SharePress can continue to be the most reliable solution for automatic
 posting and reposting. You write good content, and we'll keep the oauth out of your hair.
 
-2. Ease of use
-
-Simple is hard, but we're committed to keeping SharePress easy to use. Like WordPress' core features, we'll 
+**Ease of use** Simple is hard, but we're committed to keeping SharePress easy to use. Like WordPress' core features, we'll 
 always try to keep our defaults sensible, and our options pages short. This ensures SharePress is easy to 
 use for you, your clients and customers, and also keeps SharePress healthy and easy to maintain.
 
-3. Support
-
-SharePress is [supported software](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+**Support** SharePress is [supported software](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 Having trouble setting up your Facebook or Twitter application? No problem, we've got your back.
 Something not working the way you expect? We're an e-mail away, and we often respond on the first day.
 
@@ -98,7 +93,7 @@ Need support? [Get the Pro version].(https://getsharepress.com/?utm_source=wordp
 
 You need the Pro version. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
-= Why do I need to pay for this essential feature (posting to my Facebook page)? =
+= Why do I need to pay for posting to my Facebook page? =
 
 SharePress' features are without parallel. Being able to post automatically to your Facebook page is only the beginning. The reposting feature is the one that has the potential to bring the most traffic growth to your site.
 
@@ -106,7 +101,7 @@ Plus, Facebook is a very difficult platform the work with - their motto is, "Mov
 
 = I'm posting to Facebook via Twitter. Isn't that the same thing? =
 
-No. SharePress PRO provides you with the ability to customize message (status update) and the photo that appears on Facebook. Posting via Twitter does not provide this feature.
+No. SharePress Pro provides you with the ability to customize message (status update) and the photo that appears on Facebook. Posting via Twitter does not provide this feature.
 
 = When will SharePress support LinkedIn? =
 
@@ -125,6 +120,9 @@ Documentation and support sfor SharePress are available [here](http://fatpanda.z
 E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.13 =
+* Change: Tweak documentation formatting.
 
 = 2.2.12 =
 * Change: SharePress Multi-Site and Multi-Network configuration made easier http://aaroncollegeman.com/sharepress/help/whats-the-best-way-to-use-sharepress-with-multisite-wordpress/
@@ -192,7 +190,7 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 * Fixed: When using the "Use the first image in the post" option, and when photos are set in the gallery, SharePress was selecting the last option, not the first
 * Fixed: Corrected the language "Use the first image in the post," (hopefully) made it less confusing
 * Added: Debugging (logging) can now be enabled via the settings screen in the admin
-* Change: Updated Plugin description to eliminate any confusion created by differences in FREE and PRO versions of SharePress
+* Change: Updated Plugin description to eliminate any confusion created by differences in FREE and Pro versions of SharePress
 * Change: Raised og:image size to 200x200 from 150x150
 
 = 2.1.22 =
