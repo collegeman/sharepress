@@ -55,6 +55,7 @@ function sp_settings_page() {
     
     $service = strtolower($_REQUEST['sp_service']);
     $client = sp_get_client_for_settings_page($service);
+
     $option_group = "sp-settings-{$service}";
     $profiles = buf_get_profiles(array('service' => $service));
     $subprofiles = array();
