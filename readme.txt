@@ -1,6 +1,6 @@
 === Plugin Name ===
 Contributors: aaroncollegeman
-Donate link: http://aaroncollegeman.com/sharepress
+Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.5.2
@@ -10,14 +10,14 @@ Automatic posting and reposting to Facebook and Twitter.
 
 == Description ==
 
-[SharePress](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=sharepress) is a WordPress plugin that automatically shares your content to Facebook and Twitter.
-Support for Google+ and LinkedIn are coming in [version 3.0](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=version-3.0). 
+[SharePress](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=sharepress) is a WordPress plugin that automatically shares your content to Facebook and Twitter.
+Support for Google+ and LinkedIn are coming in [version 3.0](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=version-3.0). 
 
 Features include:
 
 * Automatically publish your WordPress posts to your personal Facebook wall
 
-Upgrade to the Pro version for e-mail based support directly from the developer and access to these features:
+Upgrade to the Pro version for e-mail based support directly from the developers and access to these features:
 
 * Publish to all of the Facebook pages you manage
 * Publish to your Twitter followers
@@ -26,6 +26,7 @@ Upgrade to the Pro version for e-mail based support directly from the developer 
 * Customize Twitter status hashtag
 * Delay SharePress' sharing for minutes, hours, or days after a post goes live
 * Schedule reposts of your content: keep traffic flowing to your site day and night
+* Total control over all Facebook open graph meta data using filters and/or custom fields
 
 SharePress is compatible with WordPress Multisite (MU) and WordPress Multi-Network.
 
@@ -33,23 +34,23 @@ SharePress is compatible with WordPress Multisite (MU) and WordPress Multi-Netwo
 
 1. Focus
 
-Integrating with social networks is hard. We focus on the big providers - Facebook and Twitter, and soon
+Integrating with social networks is hard, so we focus on the big providers - Facebook and Twitter, and soon
 Google+ and LinkedIn, too - so that SharePress can continue to be the most reliable solution for automatic
-posting and reposting.
+posting and reposting. You write good content, and we'll keep the oauth out of your hair.
 
 2. Ease of use
 
-We're committed to keeping SharePress easy to use. Like WordPress' core features, we'll always try to
-keep our defaults sensible, and our options pages short. This ensures SharePress is easy to use for you,
-your clients and customers, and also keeps SharePress healthy and easy to maintain.
+Simple is hard, but we're committed to keeping SharePress easy to use. Like WordPress' core features, we'll 
+always try to keep our defaults sensible, and our options pages short. This ensures SharePress is easy to 
+use for you, your clients and customers, and also keeps SharePress healthy and easy to maintain.
 
 3. Support
 
-SharePress is [supported software](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+SharePress is [supported software](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 Having trouble setting up your Facebook or Twitter application? No problem, we've got your back.
 Something not working the way you expect? We're an e-mail away, and we often respond on the first day.
 
-But don't take our word for it. Read testimonials below.
+But don't take our word for it...
 
 = Who uses SharePress? =
 
@@ -89,13 +90,13 @@ Want to try SharePress for FREE?
 
 3. Go to Settings / SharePress, and run setup.
 
-Need support? [Get the Pro version].(https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+Need support? [Get the Pro version].(https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Frequently Asked Questions ==
 
 = How do I post to the wall of my Facebook page? =
 
-You need the Pro version. All you have to do is [buy a key](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
+You need the Pro version. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 = Why do I need to pay for this essential feature (posting to my Facebook page)? =
 
@@ -119,9 +120,9 @@ Other services and plugins support writing to Google+, but they do this by stori
 
 = I'm having trouble. Where can I get support? =
 
-Documentation for SharePress is available [here](http://aaroncollegeman.com/sharepress/help?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+Documentation and support sfor SharePress are available [here](http://fatpanda.zendesk.com).
 
-E-mail based tech support is available to PRO customers. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
 

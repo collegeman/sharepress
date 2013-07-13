@@ -1,7 +1,7 @@
 <?php 
 /*
 Plugin Name: SharePress
-Plugin URI: http://aaroncollegeman.com/sharepress
+Plugin URI: https://getsharepress.com
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
@@ -1532,7 +1532,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   function plugin_action_links($actions, $plugin_file, $plugin_data, $context) {
     $actions['settings'] = '<a href="options-general.php?page=sharepress">Settings</a>';
     if (!self::$pro && self::session()) {
-      $actions['go-pro'] = '<a href="http://aaroncollegeman.com/sharepress?utm_source=sharepress&utm_medium=in-app-promo&utm_campaign=unlock-pro-version">Unlock Pro Version</a>';
+      $actions['go-pro'] = '<a href="https://getsharepress.com/?utm_source=sharepress&utm_medium=in-app-promo&utm_campaign=unlock-pro-version">Unlock Pro Version</a>';
     }
     return $actions;
   }
@@ -1656,7 +1656,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
         } else {
           ?>
             <div class="updated">
-              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="http://aaroncollegeman.com/sharepress?utm_source=sharepress&utm_medium=in-app-promo&utm_campaign=learn-more">Learn more</a>.</p>
+              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="https://getsharepress.com/?utm_source=sharepress&amp;utm_medium=in-app-promo&amp;utm_campaign=learn-more">Learn more</a>.</p>
             </div>
           <?php
         }
