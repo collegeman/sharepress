@@ -6,35 +6,78 @@ Requires at least: 2.9
 Tested up to: 3.5.1
 Stable tag: 2.2.12
 
-Share the content you write in WordPress with your Facebook Fans and Twitter Followers, simply and reliably.
+Automatic posting and reposting to Facebook and Twitter.
 
 == Description ==
 
-SharePress is a WordPress plugin that helps you communicate with your [tribes](http://sethgodin.typepad.com/seths_blog/2008/01/tribal-manageme.html) on Facebook and Twitter by automatically publishing your WordPress posts the moment they become live on your site.
+[SharePress](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=sharepress) is a WordPress plugin that automatically shares your content to Facebook and Twitter.
+Support for Google+ and LinkedIn are coming in [version 3.0](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=version-3.0). 
 
-**With this FREE version of SharePress you'll be able to**
+Features include:
 
 * Automatically publish your WordPress posts to your personal Facebook wall
-* Publish while you sleep: your post is automatically published when it goes live
 
-**Upgrade to the [PRO version](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=pro-version) and you'll be able to**
+Upgrade to the Pro version for e-mail based support directly from the developer and access to these features:
 
-* Publish to any/all of the Facebook pages you manage
+* Publish to all of the Facebook pages you manage
 * Publish to your Twitter followers
 * Customize each Facebook status message
 * Control the image Facebook uses just by setting the post's featured image
 * Customize Twitter status hashtag
 * Delay SharePress' sharing for minutes, hours, or days after a post goes live
 * Schedule reposts of your content: keep traffic flowing to your site day and night
-* Get e-mail based support directly from the developer, often on the same day
 
-Single-site licensing, and unlimited Developer licensing are available. SharePress is compatible with WordPress MU and WordPress Multi-Network.
+SharePress is compatible with WordPress Multisite (MU) and WordPress Multi-Network.
 
-Want to read what our customers have said about SharePress? [Check this out](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=testimonials).
+= Why use SharePress instead of those other guys? =
 
-[youtube http://youtube.com/watch?v=X6dRD0pd1nM]
+1. Focus
 
-Awesome product promo video by [Keyframe Films](http://keyframefilms.com).
+Integrating with social networks is hard. We focus on the big providers - Facebook and Twitter, and soon
+Google+ and LinkedIn, too - so that SharePress can continue to be the most reliable solution for automatic
+posting and reposting.
+
+2. Ease of use
+
+We're committed to keeping SharePress easy to use. Like WordPress' core features, we'll always try to
+keep our defaults sensible, and our options pages short. This ensures SharePress is easy to use for you,
+your clients and customers, and also keeps SharePress healthy and easy to maintain.
+
+3. Support
+
+SharePress is [supported software](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+Having trouble setting up your Facebook or Twitter application? No problem, we've got your back.
+Something not working the way you expect? We're an e-mail away, and we often respond on the first day.
+
+But don't take our word for it. Read testimonials below.
+
+= Who uses SharePress? =
+
+Awesome people like these:
+
+Mike Schepker of <a href="http://letstalkabout.tv" target="_blank">letstalkabout.tv</a> says
+
+> SharePress is the easiest, most reliable plugin for getting your WordPress content onto your Facebook page. Setup was a breeze and I have not experienced any issues with the new plugin. SharePress is a much more elegant solution than other services like Networked Blogs. SharePress was the first premium plugin I've ever purchased for my site, and let me tell you, it was well worth the money. 
+
+Corey Brown of <a href="http://www.notreble.com">No Treble</a> and <a href="http://www.squidoo.com">Squidoo</a> says
+
+> I've been a lucky beta tester for SharePress for about 6 months now. Not only is it completely reliable, the feature set is second to none. I'd been trying to solve the WordPress-to-Facebook page issue for quite some time, and SharePress stands alone with its feature list. This is a game changing plugin (have you seen the repost feature!?). And if that wasn't enough, this one has the best support I've ever seen from a plugin developer.
+
+Tim Stephenson of [holistic-care.com](http://www.holistic-care.com) says
+
+> Firstly, thanks for creating SharePress - it's the first plugin for social "cross posting" I've come across that actually just works, and more importantly, works reliably every time you use it!
+
+David Delaney of [whiskeyboys.com](http://www.whiskeyboys.com) says
+
+> "I'm all set now. Thank you very much for your help and for this awesome plugin."
+
+Dan Winer of [danatdisney.com](http://danatdisney.com) says
+
+> I can't tell you how many Facebook plugins I have tried and none of them have been reliable enough, simple enough or flexible enough for simply posting new posts to a Facebook Page. Finally I have found SharePress - simple, reliable, flexible, (cheap) - Thank you so much Fat Panda! If only I had found you earlier.
+
+Jason Hess of <a href="http://www.RV7-Factory.com" target="_blank">RV7-Factory.com</a> says
+
+> SharePress is exactly what I needed to keep all my followers and fellow enthusiasts up-to-date with the greatest of ease. Why post twice when SharePress does all the work for you!? You can't beat the support either!
 
 == Installation ==
 
@@ -42,17 +85,17 @@ Want to try SharePress for FREE?
 
 1. Get the plugin. Activate the plugin.
 
-2. [Create a Facebook application](http://aaroncollegeman.com/sharepress/help/how-to-setup-sharepress/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support#creating-your-facebook-application).
+2. [Create a Facebook application](https://fatpanda.zendesk.com/entries/23637006-How-to-Install-and-Setup-SharePress).
 
 3. Go to Settings / SharePress, and run setup.
 
-Need support? [Go here](http://aaroncollegeman.com/sharepress/help?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+Need support? [Get the Pro version].(https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Frequently Asked Questions ==
 
 = How do I post to the wall of my Facebook page? =
 
-You need the PRO version. All you have to do is [buy a key](http://aaroncollegeman.com/sharepress?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
+You need the Pro version. All you have to do is [buy a key](https://getsharepress.com?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
 
 = Why do I need to pay for this essential feature (posting to my Facebook page)? =
 
@@ -82,9 +125,13 @@ E-mail based tech support is available to PRO customers. All you have to do is [
 
 == Changelog ==
 
-= 2.2.11 =
+= 2.2.12 =
 * Change: SharePress Multi-Site and Multi-Network configuration made easier http://aaroncollegeman.com/sharepress/help/whats-the-best-way-to-use-sharepress-with-multisite-wordpress/
 * Change: Make it possible to take advantage of centralized license key configuration without forcing the use of a single Facebook app across the multi-site or multi-network installation
+* Added: Support for Facebook's [new article Open Graph meta tags](https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/) article:publisher and article:author 
+
+= 2.2.11 =
+* Fix: Compatible with Twitter's API v1.1
 
 = 2.2.10 =
 * Change: Compatible with WordPress 3.5.1
@@ -378,6 +425,9 @@ E-mail based tech support is available to PRO customers. All you have to do is [
 * The first release!
 
 == Upgrade Notice ==
+
+= 2.2.11 =
+Twitter retired v1.0 of their API. This version of SharePress is compatible with Twitter's API v1.1, but you may need to regenerate your Twitter App keys.
 
 = 2.0.15 =
 Critical bug fix release. Please upgrade before October 1. Also note that when you upgrade, you will need to run SharePress setup again.
