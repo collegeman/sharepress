@@ -1,5 +1,5 @@
 === Plugin Name ===
-Contributors: aaroncollegeman
+Contributors: aaroncollegeman, joeyblake
 Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
@@ -115,7 +115,7 @@ Other services and plugins support writing to Google+, but they do this by stori
 
 = I'm having trouble. Where can I get support? =
 
-Documentation and support sfor SharePress are available [here](http://fatpanda.zendesk.com).
+Documentation and support for SharePress are available [here](http://fatpanda.zendesk.com).
 
 E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
