@@ -62,7 +62,11 @@ window.sp = window.sp || {};
           if (popup.closed) {
             clearInterval(check);
             that.ui.profiles.html('<li>Loading...</li>');
-            that.profiles.fetch();
+            that.profiles.fetch({
+              success: function(profiles) {
+                $(window).trigger('sp-profiles-loaded', [ profiles ]);
+              }
+            });
           }
         }, 100);
 
@@ -74,7 +78,11 @@ window.sp = window.sp || {};
       this.profiles.on('add', $.proxy(this.add, this));
       this.profiles.on('remove', $.proxy(this.remove, this));
       this.profiles.on('reset', $.proxy(this.reset, this));
-      this.profiles.fetch();
+      this.profiles.fetch({
+        success: function(profiles) {
+          $(window).trigger('sp-profiles-loaded', [ profiles ]);
+        }
+      });
 
       this.ui = {};
       this.ui.profiles = this.$('ul.profiles');

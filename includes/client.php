@@ -13,6 +13,7 @@ function sp_init() {
   require(SP_DIR.'/includes/ajax.php');
   require(SP_DIR.'/includes/metabox.php');
   require(SP_DIR.'/includes/settings.php');
+  require(SP_DIR.'/includes/pointers.php');
 
   wp_register_script('sp_sharepress_script', SP_URL.'/js/sharepress.js', array('backbone'));
   wp_localize_script('sp_sharepress_script', 'sp', array(

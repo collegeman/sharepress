@@ -49,7 +49,7 @@ class TwitterSharePressClient implements SharePressClient {
       if (is_wp_error($result = wp_remote_post($oauth->to_url()))) {
         return $result;
       }
-      if ($result['response']['info']['http_code'] !== 200) {
+      if ($result['response']['code'] != 200) {
         return new WP_Error("oauth-access-fail", "Unsuccessful authentication");
       }
 
@@ -125,7 +125,7 @@ class TwitterSharePressClient implements SharePressClient {
       return $result;
     }
 
-    if ($result['response']['info']['http_code'] !== 200) {
+    if ($result['response']['code'] != 200) {
       return new WP_Error("oauth-request-fail", "Unsuccessful authentication"); 
     }
 
@@ -170,7 +170,7 @@ class TwitterSharePressClient implements SharePressClient {
       return $result;
     } else {
       $response = json_decode($result['body']);
-      if (property_exists($response, 'errors') && $response->errors[0]->code !== 200) {
+      if (property_exists($response, 'errors') && $response->errors[0]->code != 200) {
         $code = $response->errors[0]->code;
         if ($code === 401) {
           $code = SharePressClient::ERROR_AUTHENTICATION;

@@ -23,6 +23,48 @@ window.sp = window.sp || {};
 
   'use strict';
 
+  sp.getPointerById = function(id) {
+    if (!window.spTour || !window.spTour.pointers || spTour.pointers.length === 0) {
+      return false;
+    }
+    for (var i = 0; i < spTour.pointers.length; i++) {
+      if (spTour.pointers[i].pointer_id === id) {
+        return spTour.pointers[i];
+      }
+    }
+    return false;
+  };
+
+  sp.showPointer = function(id, onDismiss) {
+    var pointer = sp.getPointerById(id);
+    if (pointer) {
+      $(pointer.target).pointer($.extend({}, pointer.options, {
+        close: function() {
+          if ($.isFunction(onDismiss)) {
+            onDismiss();
+          }
+          $.post(ajaxurl, {
+            pointer: pointer.pointer_id,
+            action: 'dismiss-wp-pointer'
+          });
+        }
+      })).pointer('open');
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  sp.dismissPointer = function(id) {
+    var pointer = sp.getPointerById('sp_connect_btn');
+    if (pointer) {
+      $(pointer.target).pointer(pointer.options).pointer('close');
+      return true;
+    } else {
+      return false;
+    }  
+  };
+
   sp.Update = Backbone.Model.extend({
 
   });

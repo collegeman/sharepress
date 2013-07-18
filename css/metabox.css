@@ -1,21 +1,31 @@
-#sp_metabox .media, #sp_metabox.bd { overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1; }
+#sp_metabox .media, #sp_metabox .bd { overflow: hidden; _overflow: visible; *overflow: visible; zoom: 1; }
 #sp_metabox .media .img { float: left; margin-right: 8px; display: block; }
 #sp_metabox .media .img img, #sp_metabox .post .img img { display: block; padding: 0; margin: 0; }
 #sp_metabox .media .img_right { float: right; margin-left: 10px; margin-right: 0; }
 #sp_metabox .media_small .img { width: 50px; height: 50px; overflow: hidden; text-align: center; }
-#sp_metabox .inside { padding: 0; }
+#sp_metabox .inside { padding: 0; overflow: hidden; }
 #sp_metabox .thumb { width: 25px; height: 25px; }
 #sp_metabox .buttons { padding: 10px 10px 0px; }
+#sp_metabox .updates { position: relative; }
 #sp_metabox .editor textarea { width: 99%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; min-height: 80px; }
 #sp_metabox .delete { display: inline-block; padding: 2px; color: red; }
 #sp_metabox .delete:hover { background-color: red; color: white; border: none; text-decoration: none; }
 #sp_metabox .editor .date { padding: 2px 0 5px 0; }
+#sp_metabox .editor { position: relative; }
+#sp_metabox .calendar { text-align: right; line-height: 34px; padding: 5px 10px 0px; border-top: 1px solid #ccc; background: #F8F8F8; position: absolute; left: 0; bottom: -200px; right: 0; 
+-webkit-transition: bottom 0.3s ease-in;
+-moz-transition: bottom 0.3s ease-in;
+-ms-transition: bottom 0.3s ease-in;
+-o-transition: bottom 0.3s ease-in;
+transition: bottom 0.3s ease-in;
+}
+#sp_metabox.show_calendar .calendar { bottom: 0; }
 #sp_metabox  b { color: #777; }
 #sp_metabox .pull-right { float: right; }
 #sp_metabox .profiles { padding: 0; margin: 0; list-style-type: none; }
 #sp_metabox .profiles .profile { padding: 0; margin: 0; display: inline-block; margin: 0 8px 8px 0; }
 #sp_metabox .combo-button { position: relative; display: inline-block; }
-#sp_metabox .dropdown { display: none; z-index: 1000000; position: absolute; top: 26px; width: 150px; background-color: white; border: 1px solid #ccc; border-radius: 2px; list-style-type: none; padding: 0; margin: 0; }
+#sp_metabox .dropdown { display: none; z-index: 1000000; position: absolute; bottom: 26px; width: 150px; background-color: white; border: 1px solid #ccc; border-radius: 2px; list-style-type: none; padding: 0; margin: 0; }
 #sp_metabox .dropdown .item { list-style-type: none; padding: 0; margin: 0; }
 #sp_metabox .dropdown .item > a { text-decoration: none; padding: 3px 8px; display: block; }
 #sp_metabox .dropdown .item > a:hover { background-color: #eee; }
