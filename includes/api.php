@@ -389,6 +389,8 @@ class SpApi_v1 extends AbstractSpApi {
     }
 
     if ($this->_isPost() || $action === 'create') {
+      return true;
+
       unset($_REQUEST['id']);
       if (is_wp_error($result = buf_update_update($_REQUEST))) {
         return $result;
@@ -408,6 +410,21 @@ class SpApi_v1 extends AbstractSpApi {
 
     } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
       return array('success' => buf_delete_update($id));
+
+    } else if ($id === 'queue') {
+      if (!empty($action)) {
+        $_REQUEST['post_id'] = $action;
+        if (is_wp_error($result = buf_get_updates($_REQUEST))) {
+          return $result;
+        }
+        array_map(array($this, '_addUpdateActions'), $result->updates);
+        return $result->updates;
+      }
+
+    } else if ($id === 'history') {
+      if (empty($action)) {
+        return new WP_Error("Request missing Post ID");
+      }
 
     } else if ($id) {
       if (is_wp_error($update = buf_get_update($id))) {

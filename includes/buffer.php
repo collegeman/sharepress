@@ -326,9 +326,10 @@ class SharePressUpdate {
       'user_id' => $post->post_author,
       'status' => $post->post_status,
       'text' => $post->post_content,
+      'schedule' => maybe_unserialize(get_post_meta($update->ID, 'serialize', true)),
       'due_at' => get_post_meta($update->ID, 'due_at', true),
       'due_time' => get_post_meta($update->ID, 'due_time', true),
-      'bound_to' => get_post_meta($update->ID, 'bound_to')
+      'post_id' => get_post_meta($update->ID, 'post_id', true)
     );
 
     return new SharePressUpdate($data);
@@ -407,7 +408,7 @@ function buf_post_pending($until = null) {
   global $wpdb;
 
   if (is_null($until)) {
-    // default cron job is on a 2-min interval, so we always
+    // default cron job is on a 2-min interval, so we
     // look one minute into the future
     $until = time() + 60;
   }
@@ -421,6 +422,7 @@ function buf_post_pending($until = null) {
       post_type = 'sp_update'
       AND post_status = 'buffer'
       AND meta_key = 'due_at' 
+      AND meta_value IS NOT NULL
       AND meta_value <= {$until}
   ");
 
@@ -721,6 +723,10 @@ function buf_update_profile($profile) {
     $meta['timezone'] = $profile['timezone'];
   }
 
+  if (!empty($profile['limit'])) {
+    $meta['limit'] = $profile['limit'];
+  }
+
   $meta['service'] = $profile['service'];
 
   $meta['service_tag'] = $service_tag;
@@ -879,7 +885,7 @@ function buf_update_update($update) {
     if (!$text = trim($update['text'])) {
       return new WP_Error('text', 'Cannot create empty Update');
     }
-  
+
   } else {
     if (!$existing = get_post($post_id)) {
       return new WP_Error("Update does not exist [{$post_id}]");
@@ -889,7 +895,7 @@ function buf_update_update($update) {
       return new WP_Error("Not an update [{$post_id}]");
     }
 
-    $post = (array) $emptyxisting;
+    $post = (array) $existing;
 
     if (!$profile = buf_get_profile($profile_id = get_post_meta($post_id, 'profile_id', true))) {
       return new WP_Error("Profile no longer exists [{$profile_id}]");
@@ -904,6 +910,10 @@ function buf_update_update($update) {
 
   if (array_key_exists('post_id', $update)) {
     $meta['post_id'] = $update['post_id'];
+  }
+
+  if (array_key_exists('schedule', $update)) {
+    $meta['schedule'] = maybe_serialize($update['schedule']);
   }
 
   $post_ids = array();
@@ -1100,7 +1110,7 @@ function buf_update_buffer($profile, $order = null, $offset = null, $limit = 100
     $update = array_shift($updates);
     
     // allow for updates whose publishing date/time is fixed
-    if (get_post_meta($update->ID, 'bound_to') || get_post_meta($update->ID, 'fixed_delivery')) {
+    if (get_post_meta($update->ID, 'post_id', true) || get_post_meta($update->ID, 'due_fixed', true)) {
       $update->menu_order = -1;
       wp_insert_post($update); 
       continue;
@@ -1141,8 +1151,10 @@ function buf_get_updates($args = '') {
 
   $args = wp_parse_args($args);
 
-  if (!$profile = buf_get_profile($args['profile_id'])) {
-    return new WP_Error("Profile does not exist [{$args['profile_id']}]");
+  if (!empty($args['profile_id'])) {
+    if (!$profile = buf_get_profile($args['profile_id'])) {
+      return new WP_Error("Profile does not exist [{$args['profile_id']}]");
+    }
   }
 
   $args['post_type'] = 'sp_update';
@@ -1169,46 +1181,50 @@ function buf_get_updates($args = '') {
   $args['orderby'] = 'post_date_gmt';
   $args['order'] = 'ASC';
 
-  $results = $wpdb->prepare("
-    SELECT * FROM {$wpdb->posts}
+  $params = array(
+    $args['post_type'],
+    $args['post_status']
+  );
+
+  $sql = "
     JOIN {$wpdb->postmeta} ON (post_ID = ID)
     WHERE 
       post_type = %s
       AND post_status = %s
+  ";
+
+  if (!empty($args['post_id'])) {
+    $sql .= "
+      AND meta_key = 'post_id'
+      AND meta_value = %s
+    ";
+    $params[] = $args['post_id'];
+  } else if (!empty($profile)) {
+    $sql .= "
       AND meta_key = 'profile_id'
       AND meta_value = %s
+    ";
+    $params[] = $profile->id;
+  }
+  
+  $orderAndLimit = "
     ORDER BY
       {$args['orderby']} {$args['order']}
     LIMIT %d OFFSET %d
-  ",
-    $args['post_type'],
-    $args['post_status'],
-    $profile->id,
-    $args['numberposts'],
-    $args['offset']
-  );
+  ";
 
-  $count = $wpdb->prepare("
-    SELECT COUNT(*) FROM {$wpdb->posts}
-    JOIN {$wpdb->postmeta} ON (post_ID = ID)
-    WHERE 
-      post_type = %s
-      AND post_status = %s
-      AND meta_key = 'profile_id'
-      AND meta_value = %s
-  ",
-    $args['post_type'],
-    $args['post_status'],
-    $profile->id,
-    $args['numberposts'],
-    $args['offset']
-  );
+  $params[] = $args['numberposts'];
+  $params[] = $args['offset'];
 
-  $count = $wpdb->get_var($count);
-  $posts = $wpdb->get_results($results);
+  $countSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT COUNT(post_ID) FROM {$wpdb->posts}" . $sql . $orderAndLimit), $params));
+  $postsSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT * FROM {$wpdb->posts}" . $sql), $params));
+  
+  $count = $wpdb->get_var($countSql);
+  $posts = $wpdb->get_results($postsSql);
 
   $updates = array();
   foreach($posts as $post) {
+    print_r($post);
     $updates[] = (object) buf_get_update($post)->toJSON();
   }
   

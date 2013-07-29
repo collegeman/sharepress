@@ -218,6 +218,7 @@ interface SharePressClient {
    *   'link' => '', // URL for remote profile page
    *   'user_token' => '', // current, authenticated user token, if available
    *   'user_secret' => '', // current, authenticated user secret, if available,
+   *   'limit' => false, // a length limit, if any
    *   'config' => '' // optionally, extra configuration data
    * );
    */

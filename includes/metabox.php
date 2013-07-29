@@ -21,8 +21,9 @@ function sp_metabox() {
 
 function sp_admin_notices() {
   $user = wp_get_current_user();
-  $dimissed = get_user_meta($user->ID, 'sp_dismiss_try_now_prompt', true);
-  if ($dismissed || preg_match('/(options-general.php|post.php|post-new.php)$/i', $_SERVER['PHP_SELF'])) {
+  $all_dismissed = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
+  $is_dismissed = in_array('try_sharepress_nag', $all_dismissed);
+  if ($is_dismissed || preg_match('/(options-general.php|post.php|post-new.php)$/i', $_SERVER['PHP_SELF'])) {
     return;
   }
     
@@ -30,7 +31,7 @@ function sp_admin_notices() {
     <div id="message" class="updated fade">
       <p><strong>SharePress is ready!</strong> 
         <a href="<?php echo admin_url('post-new.php') ?>" style="text-decoration:underline;">Try it now</a>, 
-        or <a id="spdismisstrynowprompt" href="#" style="text-decoration:underline;">dismiss this message</a>.</p>
+        or <a id="spdismisstrynowprompt" href="#" onclick="jQuery.post(ajaxurl, { action: 'dismiss-wp-pointer', pointer: 'try_sharepress_nag' }); jQuery('#message').hide(); return false;" style="text-decoration:underline;">dismiss this message</a>.</p>
     </div>
     <script>
       !function($) {
