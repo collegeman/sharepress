@@ -82,7 +82,8 @@
       <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
     </div>
     <div class="bd">
-     <b data-value="schedule"></b> <span data-value="message"></span> &nbsp;<a href="#" data-action="edit">Edit</a>
+     <b><span data-value="schedule"></span>:</b> 
+     <span data-value="text"></span> &nbsp;<a href="#" data-action="edit">Edit</a>
     </div>
   </div>
 </div>
@@ -92,7 +93,7 @@
       <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
     </div>
     <div class="bd">
-      <textarea data-value="message"></textarea>
+      <textarea data-value="text"></textarea>
       <div class="date">
         <b data-value="schedule"></b>
         &nbsp;<a href="#" data-action="change-schedule">Change</a>

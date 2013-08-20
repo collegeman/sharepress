@@ -77,13 +77,15 @@ sp.models = sp.models || {};
         return 'Post on publish';
       } else {
         var label = 'Post on ';
-        label += moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D h:mm A');
+        label += moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');
         if (schedule.repeat !== 'never') {
           label += ', then repeat ' + schedule.repeat;
-          if (schedule.until === 'forever' || schedule.until === 'once') {
+          if (schedule.until === 'forever') {
             label += ' ' + schedule.until;
+          } else if (schedule.until === 'once') {
+            label += ' one time';
           } else {
-            label += ' until ' + moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D h:mm A');
+            label += ' until ' + moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');
           }
         }
         return label;

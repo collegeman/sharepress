@@ -172,11 +172,18 @@ sp.views = sp.views || {};
         this.options.metabox.ui.calendar.edit(this.model);
         return false;
       },
-      'keydown textarea, input[type="text"], select': function(e) {
-        var key = e.which || e.keyCode;
-        if (key === 13) {
-          this.save();
-          return false;
+      'keydown textarea': function(e) {
+        if (this._editing) {
+          var key = e.which || e.keyCode;
+          if (key === 13) {
+            this.save();
+            return false;
+          }
+        }
+      },
+      'keyup textarea': function(e) {
+        if (this._editing) {
+          this.model.set('text', $(e.currentTarget).val());
         }
       },
       'click [data-action="save"]': function(e) {
@@ -193,7 +200,7 @@ sp.views = sp.views || {};
       'click [data-action="edit"]': function(e) {
         this._editing = true;
         this.render();
-        this.$el.find('textarea').focus();
+        this.$('textarea').focus();
         return false;
       }
     },
@@ -225,8 +232,9 @@ sp.views = sp.views || {};
       } else {
         var $template = this._editing ? this.options.metabox.$('[data-template="editor"]') : this.options.metabox.$('[data-template="update"]');
         this.$el.html( $template.html() );
-        this.$el.find('[data-value="schedule"]').text(this.model.getScheduleText());
-        this.$el.find('[data-ui="avatar"]').attr('src', this.model.profile.get('avatar'));
+        this.$('[data-value="schedule"]').text(this.model.getScheduleText());
+        this.$('[data-ui="avatar"]').attr('src', this.model.profile.get('avatar'));
+        this.$('[data-value="text"]').text(this.model.get('text'));
       }
       this.$el.toggle(!this.model.get('hidden'));
       return this;
