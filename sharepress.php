@@ -1256,6 +1256,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     }
     
     $post = get_post($post_id);
+    
     if ($post && ($post->post_status == 'publish')) {
       $this->share($post);
     }
@@ -1429,9 +1430,13 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   }
   
   function share($post) {
+    if ( ! in_array($post->post_type, self::supported_post_types()) ) {
+      return false;
+    }
+    
     if (self::debug()) {
       self::log(sprintf("share(%s)", is_object($post) ? $post->post_title : $post));
-    }
+    }    
     
     if (!is_object($post)) {
       $post = get_post($post);
