@@ -128,6 +128,7 @@ sp.views = sp.views || {};
       schedule.until_time = date.unix();
 
       this._update.set('schedule', schedule);
+      this._update.set('text', );
 
       this._hide();
     },

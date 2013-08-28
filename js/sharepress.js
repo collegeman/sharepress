@@ -72,24 +72,26 @@ sp.models = sp.models || {};
       return sp.api + '/updates' + ( this.get('id') ? '/' + this.get('id') : '' );
     },
     getScheduleText: function() {
-      var schedule = this.get('schedule') || { when: 'publish' };
+      var schedule = this.get('schedule') || { when: 'publish' }, label = '';
+
       if (schedule.when === 'publish') {
-        return 'Post on publish';
+        label = 'Post on publish';
       } else {
-        var label = 'Post on ';
-        label += moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');
-        if (schedule.repeat !== 'never') {
-          label += ', then repeat ' + schedule.repeat;
-          if (schedule.until === 'forever') {
-            label += ' ' + schedule.until;
-          } else if (schedule.until === 'once') {
-            label += ' one time';
-          } else {
-            label += ' until ' + moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');
-          }
-        }
-        return label;
+        label = 'Post on ' + moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');
       }
+
+      if (schedule.repeat && schedule.repeat !== 'never') {
+        label += ', then repeat ' + schedule.repeat;
+        if (schedule.until === 'forever') {
+          label += ' ' + schedule.until;
+        } else if (schedule.until === 'once') {
+          label += ' one time';
+        } else {
+          label += ' until ' + moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');
+        }
+      }
+
+      return label;
     }
   });
 
