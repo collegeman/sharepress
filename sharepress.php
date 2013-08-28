@@ -364,7 +364,7 @@ class Sharepress {
         $defaults = array(
           'og:type' => 'article',
           'og:url' => $this->get_permalink(),
-          'og:title' => get_the_title(),
+          'og:title' => strip_tags(get_the_title()),
           'og:image' => $picture,
           'og:site_name' => get_bloginfo('name'),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
@@ -376,7 +376,7 @@ class Sharepress {
         $defaults = array(
           'og:type' => self::setting('page_og_type', 'blog'),
           'og:url' => is_front_page() ? get_bloginfo('siteurl') : $this->get_permalink(),
-          'og:title' => get_the_title(),
+          'og:title' => strip_tags(get_the_title()),
           'og:site_name' => get_bloginfo('name'),
           'og:image' => $this->get_default_picture(),
           'fb:app_id' => get_option(self::OPTION_API_KEY),
