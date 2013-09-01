@@ -7,7 +7,7 @@
   <ul class="sp_profiles">
     <?php 
       foreach($profiles as $profile) {
-        $c = buf_get_client($service, $profile);
+        $c = sp_get_client($service, $profile);
         if ($children = $c->profiles()) {
           $subprofiles[$profile->id] = $children;
         }
@@ -38,7 +38,7 @@
 
     <ul class="sp_profiles">
       <?php foreach($subprofiles as $parent => $children) { if (!$children) continue; ?>
-        <?php foreach($children as $profile) { if (buf_get_profile($profile)) continue; ?>
+        <?php foreach($children as $profile) { if (sp_get_profile($profile)) continue; ?>
           <li class="profile media">
             <div class="img">
               <img src="<?php echo $profile->avatar ?>">

@@ -100,19 +100,19 @@
               <p>Build new SharePress features on top of these actions.</p>
               <h3>sp_activated</h3>
               <p>Triggered at the end of <code>sp_activate()</code> when SharePress is activated in <b>includes/client.php</b></p>
-              <h3>pre_buf_post_pending</h3>
-              <p>Triggered by <code>buf_post_pending()</code> before publishing queued updates in <b>includes/buffer.php</b></p>
-              <h3>post_buf_post_pending</h3>
-              <p>Triggered by <code>buf_post_pending()</code> after publishing queued updates in <b>includes/buffer.php</b></p>
-              <h3>pre_buf_get_client</h3>
-              <p>Triggered by <code>buf_get_client()</code> before client scripts are loaded in <b>includes/buffer.php</b></p>
-              <h3>init_buf_get_client_{$service}</h3>
-              <p>Triggered by <code>buf_get_client()</code> after built-in core and pro client scripts have been loaded in <b>includes/buffer.php</b></p>
+              <h3>pre_sp_post_pending</h3>
+              <p>Triggered by <code>sp_post_pending()</code> before publishing queued updates in <b>includes/buffer.php</b></p>
+              <h3>post_sp_post_pending</h3>
+              <p>Triggered by <code>sp_post_pending()</code> after publishing queued updates in <b>includes/buffer.php</b></p>
+              <h3>pre_sp_get_client</h3>
+              <p>Triggered by <code>sp_get_client()</code> before client scripts are loaded in <b>includes/buffer.php</b></p>
+              <h3>init_sp_get_client_{$service}</h3>
+              <p>Triggered by <code>sp_get_client()</code> after built-in core and pro client scripts have been loaded in <b>includes/buffer.php</b></p>
             </section>
             <section id="filters">
               <h2>Filters</h2>
               <p>Modify SharePress data by hooking these filters.</p>
-              <h3>buf_has_installed($service, $keys)</h3>
+              <h3>sp_has_installed($service, $keys)</h3>
               <p>Filter the keys for a specific service, identified by its unique name <code>$service</code></p>
               <p>The return value should be an <code>array</code> with the following structure
               <pre class="prettyprint">return array(
@@ -125,7 +125,7 @@
               <p>SharePress clients provide a standard API for connecting to third-party
                 networks, authenticating, setting up local profiles, and posting messages.
                 There must be one implementation of <code>SharePressClient</code> for each service
-                that SharePress can interoperate with. There is also a built-in pattern for
+                that SharePress can connect to. There is also a built-in pattern for
                 creating "pro" clients that inherit from and override their core counterparts.</p>
               <p>This section explains how to create your own clients. For examples refer to the 
                 built-in clients in <b>includes/clients</b>.</p>
@@ -144,10 +144,6 @@
                   <th>./includes/clients/myspclient.php</th>
                   <td>The PHP script that defines your implementation of <code>SharePressClient</code>.
                     This file should have the same name as the unique name you have chosen for your service.</td>
-                </tr>
-                <tr>
-                  <th>./includes/views/config&#8209;myspclient.php</th>
-                  <td><b>Optional.</b> The PHP script that defines the config screen for your client.</td>
                 </tr>
                 <tr>
                   <th>./plugin.php</th>
@@ -260,7 +256,7 @@ class MySpClient extends AbstractSharePressClient {
               <h4 id="client_test">test()</h4> 
               <hr>
               
-              <h3>5. Optionally, create your client's config screen.</h3> 
+              <h3>5. Create your client's config screen.</h3> 
               <div class="alert alert-error">Not yet implemented. Store client keys in <b>wp-config.php</b>. See <a href="#multisite">Multsite</a></div>
 
               <hr>

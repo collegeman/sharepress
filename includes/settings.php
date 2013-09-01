@@ -36,7 +36,7 @@ function sp_settings_field_text($args) {
 }
 
 function sp_get_client_for_settings_page($service) {
-  $client = buf_get_client($service);
+  $client = sp_get_client($service);
   if (is_wp_error($client)) {
     if ($client->get_error_code() === 'keys') {
       $error_data = $client->get_error_data('keys');
@@ -57,7 +57,7 @@ function sp_settings_page() {
     $client = sp_get_client_for_settings_page($service);
 
     $option_group = "sp-settings-{$service}";
-    $profiles = buf_get_profiles(array('service' => $service));
+    $profiles = sp_get_profiles(array('service' => $service));
     $subprofiles = array();
     
     // profiles picker:

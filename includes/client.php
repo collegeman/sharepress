@@ -7,6 +7,8 @@ function sp_activate() {
 
 function sp_init() {
   // load remaining dependencies...
+  require(SP_DIR.'/includes/profile.php');
+  require(SP_DIR.'/includes/update.php');
   require(SP_DIR.'/includes/buffer.php');
   require(SP_DIR.'/includes/cron.php');
   require(SP_DIR.'/includes/api.php');
@@ -23,6 +25,42 @@ function sp_init() {
   ));
 
   do_action('sp_init');
+}
+
+
+
+/**
+ * Seek out the public and private keys for the given service. Default sources
+ * of keys are WP options (via sp_get_opt) and constants, with WP optiosn taking
+ * precedence.
+ * @param String $service The unique name for the service, e.g., 'facebook'
+ * @return mixed If available, an array of the keys with entries "key" and "secret",
+ * otherwise false.
+ * @see sp_get_opt($name, $default)
+ * @filter sp_has_installed($service, $keys) Allows for other plugins to override
+ * the keys used for a given service.
+ */
+function sp_service_has_keys($service) {
+  $lower = strtolower($service);
+  $upper = strtoupper($service);
+  
+  $key = @sp_get_opt("{$lower}_key", constant("SP_{$upper}_KEY"));
+  $secret = @sp_get_opt("{$lower}_secret", constant("SP_{$upper}_SECRET"));
+
+  $keys = false;
+
+  if ($key && $secret) {
+    $keys = (object) array(
+      'key' => $key,
+      'secret' => $secret
+    );  
+  }
+
+  if (apply_filters('sp_has_installed', $service, $keys)) {
+    return $keys;
+  }  
+
+  return $keys;
 }
 
 function sp_get_opt($option, $default = false) {
@@ -45,6 +83,80 @@ function sp_flash($name, $value = null) {
     delete_transient($key);
     return $value;
   }
+}
+
+/**
+ * An alias for identifying whether or not the current user is considered to
+ * have administrative privileges over the buffering features of this application.
+ * Currently this implies that the current user must have the "list_users" privilege,
+ * which is currently given to WordPress Super Admins and Administrators.
+ * @return bool
+ */
+function sp_current_user_is_admin() {
+  return current_user_can('list_users');
+}
+
+/**
+ * Get a SharePressClient instance, optionally configured for accessing
+ * the underlying network on behalf of the given SharePressProfile.
+ * @param mixed $service Either a string uniquely naming a service, e.g., 'facebook',
+ * or a SharePressProfile object from which the service name will be derived
+ * (SharePressProfile::$service). 
+ * @param SharePressProfile $profile Optionally, configure the client
+ * for posting to this profile
+ * @return SharePressClient or, in the case of misconfiguration, a WP_Error object.
+ */
+function sp_get_client($service, $profile = false) {
+  global $sp_clients;
+
+  if ($service instanceof SharePressProfile) {
+    $profile = $service;
+    $service = $profile->service;
+  }
+
+  $service = strtolower($service);
+
+  do_action('pre_sp_get_client', $service);
+
+  if (!isset($sp_clients[$service])) {
+    if (file_exists($core = SP_DIR.'/includes/clients/'.$service.'.php')) {
+      require_once($core);
+    }
+    do_action("init_sp_get_client_{$service}", $service);
+  }
+
+  $class = sprintf('%sSharePressClientPro', ucwords($service));
+  if (!class_exists($class)) {
+    $class = sprintf('%sSharePressClient', ucwords($service));
+    if (!class_exists($class)) {
+      return new WP_Error('client', "No client exists for service [$service]");
+    }
+  }
+
+  if (!$keys = sp_service_has_keys($service)) {
+    @session_start();
+    $client = new $class(false, false);
+    return new WP_Error(
+      'keys', 
+      "No keys configured for service [$service]",
+      array(
+        'client' => $client
+      )
+    );
+  }
+
+  @session_start();
+
+  if (!$profile) {
+    if (!isset($sp_clients[$service])) {
+      $sp_lients[$service] = new $class($keys->key, $keys->secret);
+    }
+    return $sp_clients[$service];
+  } else {
+    $client = new $class($keys->key, $keys->secret, $profile);
+  }
+
+  return $client;
 }
 
 /**
@@ -145,7 +257,7 @@ class SharePressClientLoader {
   function __construct($file, $service) {
     $this->file = $file;
     $this->service = $service;
-    add_action("init_buf_get_client_{$this->service}", array($this, 'init'));
+    add_action("init_sp_get_client_{$this->service}", array($this, 'init'));
   }
 
   function init() {

@@ -128,7 +128,7 @@ sp.views = sp.views || {};
       schedule.until_time = date.unix();
 
       this._update.set('schedule', schedule);
-      this._update.set('text', );
+      this._update.set('text', this.$get('text').val());
 
       this._hide();
     },
@@ -337,7 +337,7 @@ sp.views = sp.views || {};
       });
     },
     addProfile: function(profile) {
-      var $ui = $('<li class="profile ' + profile.get('service') + '"><a href="#" data-action="create-update" data-profile="' + profile.get('id') + '" title="' + profile.get('service') + ': ' + profile.get('formatted_username') + '"><img class="thumb" src="' + profile.get('avatar') + '"></a></li>');
+      var $ui = $('<li class="profile ' + profile.get('service') + '"><a href="#" data-action="create-update" data-profile="' + profile.get('id') + '" title="' + profile.get('service') + ': ' + profile.get('formatted_username') + '" data-default-text="' + profile.get('default_text') + '"><img class="thumb" src="' + profile.get('avatar') + '"></a></li>');
       this.ui.profiles.append($ui);
       profile.$ui = $ui;
     },

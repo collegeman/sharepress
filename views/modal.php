@@ -9,7 +9,7 @@
       <div class="modal-header">
         <button type="button" class="close" rel="tooltip" title="Cancel this post" data-dismiss="host">&times;</button>
         <ul class="thumbnails">
-          <?php foreach(buf_get_profiles() as $profile) { ?>
+          <?php foreach(sp_get_profiles() as $profile) { ?>
             <li class="profile">
               <a href="#" class="thumbnail" data-profile-service="<?php echo $profile->service ?>" data-profile-id="<?php echo $profile->id ?>" title="<?php echo esc_attr($profile->formatted_username) ?>">
                 <img src="<?php echo $profile->avatar ?>">
@@ -23,9 +23,9 @@
             </a>
             <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
               <?php do_action('sp_add_new_account_menu') ?>
-              <?php if (!buf_has_keys('linkedin')) { ?>
+              <?php if (!sp_service_has_keys('linkedin')) { ?>
                 <li class="divider"></li>
-                <?php if (!buf_has_keys('linkedin')) { ?>
+                <?php if (!sp_service_has_keys('linkedin')) { ?>
                   <li><a tabindex="-1" href="#">Get LinkedIn Support</a></li>
                 <?php } ?>
               <?php } ?>

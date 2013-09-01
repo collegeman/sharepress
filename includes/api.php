@@ -65,7 +65,7 @@ class SpApi_v1 extends AbstractSpApi {
     if ( $doing_cron_transient != $doing_wp_cron )
       return;
 
-    buf_post_pending();
+    sp_post_pending();
 
     if ( get_transient('sp_doing_cron') == $doing_wp_cron ) {
       delete_transient( 'sp_doing_cron' );
@@ -135,7 +135,7 @@ class SpApi_v1 extends AbstractSpApi {
       return false;
     }
 
-    if (!$client = buf_get_client($service)) {
+    if (!$client = sp_get_client($service)) {
       return false;
     }
 
@@ -178,7 +178,7 @@ class SpApi_v1 extends AbstractSpApi {
       } else {
         return wp_redirect( $login_url );
       }
-    } else if (is_wp_error($profile = buf_update_profile($profile))) {
+    } else if (is_wp_error($profile = sp_update_profile($profile))) {
       // did use request profiles screen? if so, display error message
       if ($profiles) {
         sp_flash('error', $profile);
@@ -240,13 +240,13 @@ class SpApi_v1 extends AbstractSpApi {
       // create a new profile
       if ($this->_isPost()) {
         unset($_REQUEST['id']);
-        return buf_update_profile($_REQUEST);
+        return sp_update_profile($_REQUEST);
       // get profiles for current user
       } else {
         if (!$this->_isAdmin()) {
           $_GET['user_id'] = get_current_user_id();
         }
-        $profiles = array_map(array($this, '_sanitizeProfile'), buf_get_profiles($_GET));
+        $profiles = array_map(array($this, '_sanitizeProfile'), sp_get_profiles($_GET));
     
         if ($this->_isAdmin()) {
           $profiles = array_map(array($this, '_addProfileActions'), $profiles);
@@ -256,7 +256,7 @@ class SpApi_v1 extends AbstractSpApi {
 
     } else {
       // look up requested profile
-      $profile = buf_get_profile($id);
+      $profile = sp_get_profile($id);
       if ($profile->user_id != get_current_user_id()) {
         if (!$this->_isAdmin() && !in_array(get_current_user_id(), $profile->team_members)) {
           return new WP_Error('access-denied', "You are not allowed to post to this Profile [{$profile_id}]");
@@ -269,7 +269,7 @@ class SpApi_v1 extends AbstractSpApi {
 
         // delete profile
         } else if ($this->_isDelete()) {
-          return array('success' => buf_delete_profile($profile));
+          return array('success' => sp_delete_profile($profile));
         // load profile data
         } else {
           return $profile->toJSON();
@@ -280,26 +280,26 @@ class SpApi_v1 extends AbstractSpApi {
         if (!empty($_REQUEST['user_ids'])) {
           if ($update === 'add') {
             foreach($_REQUEST['user_ids'] as $user_id) {
-              buf_add_team_member($profile, $user_id);
+              sp_add_team_member($profile, $user_id);
             }
           } else if ($update === 'remove') {
             foreach($_REQUEST['user_ids'] as $user_id) {
-              buf_remove_team_member($profile, $user_id);
+              sp_remove_team_member($profile, $user_id);
             }
           }
         }
-        return buf_get_profile($profile->id)->team_members;
+        return sp_get_profile($profile->id)->team_members;
       }
 
       // lookup subprofiles for this profile
       if ($action === 'profiles') {
-        $client = buf_get_client($profile);
+        $client = sp_get_client($profile);
         $profiles = array();
 
         if ($children = $client->profiles()) {
           foreach($children as $child) {
             // does the profile already exist?
-            if ($exists = buf_get_profile($child)) {
+            if ($exists = sp_get_profile($child)) {
               $child = $exists->toJSON();
 
             // otherwise, if admin, add create URL for debugging
@@ -323,7 +323,7 @@ class SpApi_v1 extends AbstractSpApi {
       if ($action === 'schedules') {
         // update the schedules
         if ($update || $this->_isPut()) {
-          $profile = buf_update_profile(array(
+          $profile = sp_update_profile(array(
             'service' => $profile->service,
             'service_id' => $profile->service_id,
             'schedules' => $_REQUEST['schedules']
@@ -339,11 +339,11 @@ class SpApi_v1 extends AbstractSpApi {
 
       if ($action === 'updates') {
         if ($update === 'reorder') {
-          if (is_wp_error($result = buf_update_buffer($profile, $_REQUEST['order'], $_REQUEST['offset']))) {
+          if (is_wp_error($result = sp_update_buffer($profile, $_REQUEST['order'], $_REQUEST['offset']))) {
             return $result;
           }
           // TODO: consider using offset her to limit size of reply
-          $result = buf_get_updates(array('profile_id' => $id));
+          $result = sp_get_updates(array('profile_id' => $id));
           array_map(array($this, '_addUpdateActions'), $result->updates);
           return array(
             'success' => true,
@@ -364,7 +364,7 @@ class SpApi_v1 extends AbstractSpApi {
 
           $args['profile_id'] = $id;
 
-          if (is_wp_error($result = buf_get_updates($args))) {
+          if (is_wp_error($result = sp_get_updates($args))) {
             return $result;
           }
           array_map(array($this, '_addUpdateActions'), $result->updates);
@@ -374,7 +374,7 @@ class SpApi_v1 extends AbstractSpApi {
 
       if ($action === 'test' && $this->_isPost()) {
         $this->_assertIsAdmin();
-        $client = buf_get_client($profile);
+        $client = sp_get_client($profile);
         return $client->test(SP_TEST_MESSAGE, SP_TEST_URL);
       }
     }
@@ -392,7 +392,7 @@ class SpApi_v1 extends AbstractSpApi {
       return true;
 
       unset($_REQUEST['id']);
-      if (is_wp_error($result = buf_update_update($_REQUEST))) {
+      if (is_wp_error($result = sp_update_update($_REQUEST))) {
         return $result;
       }
       if ($result->updates) {
@@ -402,19 +402,19 @@ class SpApi_v1 extends AbstractSpApi {
 
     } else if ($id && ( $this->_isPut() || $action === 'update' )) {
       $_REQUEST['id'] = $id;
-      if (is_wp_error($result = buf_update_update($_REQUEST))) {
+      if (is_wp_error($result = sp_update_update($_REQUEST))) {
         return $result;
       }
       $this->_addUpdateActions($result->update);
       return $result;
 
     } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
-      return array('success' => buf_delete_update($id));
+      return array('success' => sp_set_error_status($id));
 
     } else if ($id === 'queue') {
       if (!empty($action)) {
         $_REQUEST['post_id'] = $action;
-        if (is_wp_error($result = buf_get_updates($_REQUEST))) {
+        if (is_wp_error($result = sp_get_updates($_REQUEST))) {
           return $result;
         }
         array_map(array($this, '_addUpdateActions'), $result->updates);
@@ -427,7 +427,7 @@ class SpApi_v1 extends AbstractSpApi {
       }
 
     } else if ($id) {
-      if (is_wp_error($update = buf_get_update($id))) {
+      if (is_wp_error($update = sp_get_update($id))) {
         return $update;
       }
       $this->_addUpdateActions($update);
@@ -473,7 +473,7 @@ abstract class AbstractSpApi {
   }
 
   function _isAdmin() {
-    return buf_current_user_is_admin();
+    return sp_current_user_is_admin();
   }
 
   function _assertIsAdmin() {
