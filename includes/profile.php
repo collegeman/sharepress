@@ -1,5 +1,6 @@
 <?php
 add_action('init', 'sp_profile_init');
+add_action('wp_insert_post', 'sp_create_default_updates');
 
 function sp_profile_init() {
   register_post_type('sp_profile', array(
@@ -25,6 +26,12 @@ function sp_get_profile($profile) {
     return $profile;
   }
   return SharePressProfile::forPost($profile);
+}
+
+function sp_create_default_updates($new_post) {
+  // TODO: finish implementing this hook
+  // if there are any updates that should be
+  // buffered by default, this is where we do it
 }
 
 
@@ -383,6 +390,10 @@ function sp_update_profile($profile) {
 
   if (!empty($profile['limit'])) {
     $meta['limit'] = $profile['limit'];
+  }
+
+  if (array_key_exists('default_text', $profile)) {
+    $meta['default_text'] = $profile['default_text'];
   }
 
   $meta['service'] = $profile['service'];

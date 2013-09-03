@@ -380,7 +380,16 @@ class SpApi_v1 extends AbstractSpApi {
     }
   }
 
-  function updates($id, $action = null) {
+  function update($id = null, $action = null) {
+    $this->_assertLoggedIn();
+    if (is_wp_error($result = $this->updates($id, $action))) {
+      return $result;
+    } else {
+      return $result->updates[0];
+    }
+  }
+
+  function updates($id = null, $action = null) {
     $this->_assertLoggedIn();
 
     if ($id === 'create') {
@@ -389,8 +398,6 @@ class SpApi_v1 extends AbstractSpApi {
     }
 
     if ($this->_isPost() || $action === 'create') {
-      return true;
-
       unset($_REQUEST['id']);
       if (is_wp_error($result = sp_update_update($_REQUEST))) {
         return $result;

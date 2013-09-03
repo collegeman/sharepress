@@ -82,8 +82,8 @@
       <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
     </div>
     <div class="bd">
-     <b><span data-value="schedule"></span>:</b> 
-     <span data-value="text"></span> &nbsp;<a href="#" data-action="edit">Edit</a>
+     <span data-value="text"></span><br>
+     <b><span data-value="schedule"></span></b>&nbsp;&nbsp;<a href="#" data-action="edit">Edit</a>
     </div>
   </div>
 </div>

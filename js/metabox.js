@@ -128,7 +128,6 @@ sp.views = sp.views || {};
       schedule.until_time = date.unix();
 
       this._update.set('schedule', schedule);
-      this._update.set('text', this.$get('text').val());
 
       this._hide();
     },
@@ -220,6 +219,7 @@ sp.views = sp.views || {};
     },
     save: function() {
       this._editing = false;
+      this.model.save();
       this.render();
     },
     delete: function() {

@@ -68,8 +68,13 @@ sp.models = sp.models || {};
   };
 
   sp.models.Update = Backbone.Model.extend({
+    initialize: function() {
+      this.on('change:text', function() {
+        
+      });
+    },
     url: function() {
-      return sp.api + '/updates' + ( this.get('id') ? '/' + this.get('id') : '' );
+      return sp.api + '/update' + ( this.get('id') ? '/' + this.get('id') : '' );
     },
     getScheduleText: function() {
       var schedule = this.get('schedule') || { when: 'publish' }, label = '';
@@ -111,7 +116,7 @@ sp.models = sp.models || {};
 
   sp.models.Profile = Backbone.Model.extend({
     url: function() {
-      return sp.api + '/updates' + ( this.get('id') ? '/' + this.get('id') : '' );
+      return sp.api + '/profile' + ( this.get('id') ? '/' + this.get('id') : '' );
     }
   });
 

@@ -49,7 +49,7 @@ class SharePressUpdate {
       'user_id' => $post->post_author,
       'status' => $post->post_status,
       'text' => $post->post_content,
-      'schedule' => maybe_unserialize(get_post_meta($update->ID, 'serialize', true)),
+      'schedule' => get_post_meta($update->ID, 'schedule', true),
       'due_at' => get_post_meta($update->ID, 'due_at', true),
       'due_time' => get_post_meta($update->ID, 'due_time', true),
       'post_id' => get_post_meta($update->ID, 'post_id', true)
@@ -291,13 +291,12 @@ function sp_get_updates($args = '') {
 
   $countSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT COUNT(post_ID) FROM {$wpdb->posts}" . $sql . $orderAndLimit), $params));
   $postsSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT * FROM {$wpdb->posts}" . $sql), $params));
-  
+
   $count = $wpdb->get_var($countSql);
   $posts = $wpdb->get_results($postsSql);
 
   $updates = array();
   foreach($posts as $post) {
-    print_r($post);
     $updates[] = (object) sp_get_update($post)->toJSON();
   }
   
@@ -350,6 +349,15 @@ function sp_update_update($update) {
     $create = true;
 
     $meta['created_at'] = time();
+
+    if (!empty($update['profile_id'])) {
+      if (isset($update['profile_ids'])) {
+        $update['profile_ids'][] = $update['profile_id'];
+      } else {
+        $update['profile_ids'] = array($update['profile_id']);
+      }
+      unset($update['profile_id']);  
+    }
 
     if (empty($update['profile_ids'])) {
       return new WP_Error('profile', 'Missing profile_ids arg');
@@ -412,7 +420,7 @@ function sp_update_update($update) {
   }
 
   if (array_key_exists('schedule', $update)) {
-    $meta['schedule'] = maybe_serialize($update['schedule']);
+    $meta['schedule'] = $update['schedule'];
   }
 
   $post_ids = array();
@@ -467,12 +475,8 @@ function sp_update_update($update) {
       'buffer_percentage' => null
     );
 
-    if ($create) {
-      $result['updates'] = $updates;
-    } else {
-      $result['update'] = array_shift($updates);
-    }
-
+    $result['updates'] = $updates;
+  
     return (object) $result;
   }  
 }
