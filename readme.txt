@@ -4,7 +4,7 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.6
-Stable tag: 2.2.16
+Stable tag: 2.2.17
 
 Automatic posting and reposting to Facebook and Twitter.
 
@@ -120,6 +120,9 @@ Documentation and support for SharePress are available [here](http://fatpanda.ze
 E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.17 =
+* Fix bug where scheduled/delayed posts would fail.
 
 = 2.2.16 =
 * Version bump to fix bug in deployment script
