@@ -1430,9 +1430,6 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   }
   
   function share($post) {
-    if ( ! in_array($post->post_type, self::supported_post_types()) ) {
-      return false;
-    }
     
     if (self::debug()) {
       self::log(sprintf("share(%s)", is_object($post) ? $post->post_title : $post));
@@ -1442,10 +1439,14 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       $post = get_post($post);
     }
 
+    if ( ! in_array($post->post_type, self::supported_post_types()) ) {
+      return false;
+    }
+
+
     $posted = $error = false;
 
     if ($meta = $this->can_post_on_facebook($post)) {
-
       // determine if this should be delayed
       if ($meta['delay_length']) {
         self::log("Sharing of this post has been delayed {$meta['delay_length']} {$meta['delay_unit']}({$post->ID})");
