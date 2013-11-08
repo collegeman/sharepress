@@ -242,6 +242,37 @@ sp.views = sp.views || {};
     }
   });
 
+  sp.views.SocialMetabox = Backbone.View.extend({
+    events: {
+      'click [data-action="save"]': function(e){
+        this.model.set({
+          'title': this.$title.val(),
+          'image': this.$img.val(),
+          'description': this.$desc.val()
+        });
+        this.model.save();
+        return false;
+      }
+    },
+    initialize: function() {
+      var that = this;
+      this.$title = this.$('[data-value="social:title"]');
+      this.$img = this.$('[data-value="social:image"]');
+      this.$desc = this.$('[data-value="social:description"]');
+      this.model = new sp.models.SocialMeta({ post_id: $('#post_ID').val() });
+      this.model.fetch({
+        success: function(social_metadata) {
+          that.render();
+        }
+      })
+      //this.socialmeta.on('change', $.proxy(this.addUpdate, this));
+    },
+    render: function() {
+      this.$title.val(this.model.get('title'));
+      this.$img.val(this.model.get('image'));
+      this.$desc.val(this.model.get('description'));
+    }
+  });
 
   sp.views.Metabox = Backbone.View.extend({
     events: {

@@ -5,6 +5,7 @@ add_action('admin_notices', 'sp_admin_notices', 10, 10);
 
 function sp_add_meta_boxes() {
   add_meta_box('sp_metabox', 'SharePress', 'sp_metabox', 'post', 'side', 'high');
+  add_meta_box('sp_metabox_og', 'Social Metadata', 'sp_metabox_og', 'post', 'side', 'high');
 }
 
 function sp_meta_admin_enqueue_scripts($hook) {
@@ -17,6 +18,11 @@ function sp_meta_admin_enqueue_scripts($hook) {
 function sp_metabox() {
   add_thickbox();
   require(SP_DIR.'/views/metabox.php');
+}
+
+function sp_metabox_og() {
+  add_thickbox();
+  require(SP_DIR.'/views/social_metabox.php');
 }
 
 function sp_admin_notices() {
