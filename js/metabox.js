@@ -22,7 +22,9 @@ sp.views = sp.views || {};
 
 !function($, B) {
   
-  'use strict';  
+  'use strict';
+
+  var sp_media_frame;  
 
   $(document).on('click', function() {
     $('.combo-button .dropdown:visible').each(function() {
@@ -252,7 +254,14 @@ sp.views = sp.views || {};
         });
         this.model.save();
         return false;
+      },
+      'click [data-value="social:image"]': function(e) {
+        sp.media(this.setImage);
+        return false;
       }
+    },
+    setImage: function(media) {
+      console.log('media', media);
     },
     initialize: function() {
       var that = this;
@@ -265,7 +274,8 @@ sp.views = sp.views || {};
           that.render();
         }
       })
-      //this.socialmeta.on('change', $.proxy(this.addUpdate, this));
+      console.log(wp.media.featuredImage, 'fi');
+      overrideFeaturedImage();
     },
     render: function() {
       this.$title.val(this.model.get('title'));
@@ -273,6 +283,77 @@ sp.views = sp.views || {};
       this.$desc.val(this.model.get('description'));
     }
   });
+
+  function overrideFeaturedImage() {
+    wp.media.featuredImage = {
+      get: function() {
+        return wp.media.view.settings.post.featuredImageId;
+      },
+
+      set: function( id ) {
+        var settings = wp.media.view.settings;
+
+        settings.post.featuredImageId = id;
+
+        wp.media.post( 'set-post-thumbnail', {
+          json:         true,
+          post_id:      settings.post.id,
+          thumbnail_id: settings.post.featuredImageId,
+          _wpnonce:     settings.post.nonce
+        }).done( function( html ) {
+          $( '.inside', '#postimagediv' ).html( html );
+        });
+      },
+
+      frame: function() {
+        if ( this._frame )
+          return this._frame;
+
+        this._frame = wp.media({
+          state: 'featured-image',
+          states: [ new wp.media.controller.FeaturedImage() ]
+        });
+
+        this._frame.on( 'toolbar:create:featured-image', function( toolbar ) {
+          this.createSelectToolbar( toolbar, {
+            text: wp.media.view.l10n.setFeaturedImage
+          });
+        }, this._frame );
+
+        this._frame.state('featured-image').on( 'select', this.select );
+        return this._frame;
+      },
+
+      select: function() {
+        var settings = wp.media.view.settings,
+          selection = this.get('selection').single();
+
+        if ( ! settings.post.featuredImageId )
+          return;
+
+        console.log(selection);
+        wp.media.featuredImage.set( selection ? selection.id : -1 );
+      },
+
+      init: function() {
+        // Open the content media manager to the 'featured image' tab when
+        // the post thumbnail is clicked.
+        $('#postimagediv').on( 'click', '#set-post-thumbnail', function( event ) {
+          event.preventDefault();
+          // Stop propagation to prevent thickbox from activating.
+          event.stopPropagation();
+
+          wp.media.featuredImage.frame().open();
+
+        // Update the featured image id when the 'remove' link is clicked.
+        }).on( 'click', '#remove-post-thumbnail', function() {
+          wp.media.view.settings.post.featuredImageId = -1;
+        });
+      }
+    };
+
+    $( wp.media.featuredImage.init );
+  }
 
   sp.views.Metabox = Backbone.View.extend({
     events: {
@@ -409,5 +490,34 @@ sp.views = sp.views || {};
       });
     }
   });
+
+  sp.media = function(callback) {
+    // If the frame already exists, re-open it.
+    if ( sp_media_frame ) {
+        sp_media_frame.open();
+        return;
+    }
+    sp_media_frame = wp.media.frames.sp_media_frame = wp.media({
+      className: 'media-frame sp-media-frame',
+      frame: 'select',
+      multiple: false,
+      title: 'Choose a share image',
+      library: {
+          type: 'image'
+      },
+      button: {
+          text:  'share image'
+      }
+    });
+ 
+    sp_media_frame.on('select', function(){
+      // Grab our attachment selection and construct a JSON representation of the model.
+      var media_attachment = sp_media_frame.state().get('selection').first().toJSON();
+      callback(media_attachment);
+    });
+
+    // Now that everything has been set, let's open up the frame.
+    sp_media_frame.open();
+  }
 
 }(jQuery, Backbone);

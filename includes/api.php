@@ -464,7 +464,12 @@ class SpApi_v1 extends AbstractSpApi {
       return new WP_Error("No post with that ID");
     }
     if ( $this->_isGet() ) {
-      return get_post_meta($post_id, 'socialmeta', true);
+      $socialmeta = get_post_meta($post_id, 'socialmeta', true);
+      if ( $socialmeta ) {
+        $post_thumbnail_id = get_post_thumbnail_id( $post_id );
+        $socialmeta['image'] = ( !empty($socialmeta['image']) ) ? $socialmeta['image'] : ( ( !empty($post_thumbnail_id) ) ? $this->media($post_thumbnail_id) : false );
+      }
+      return $socialmeta;
     }
     $socialmeta = array(
       'title' => $_REQUEST['title'],
