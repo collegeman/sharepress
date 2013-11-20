@@ -3,7 +3,7 @@ Contributors: aaroncollegeman, joeyblake
 Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
-Tested up to: 3.7
+Tested up to: 3.7.1
 Stable tag: 2.2.20
 
 Automatic posting and reposting to Facebook and Twitter.
@@ -125,6 +125,7 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 * Fixed: facebook cache buster the old one is behind a login now! Uses api call.
 * Added: a link to the posts editing page to kick the facebook linter for a published post
 * Fixed: a couple of og:meta bugs
+* Compatible with WordPress 3.7.1
 
 = 2.2.19 =
 * Version bump: compatible with WordPress 3.7
