@@ -271,8 +271,8 @@ class Sharepress {
     }
 
     $actions['fb-kick'] = '<a data-action="fb-kick" target="_blank" href="'. sprintf('http://developers.facebook.com/tools/debug/og/object?q=%s', urlencode(get_permalink($post->ID))) .'" title="'
-      . esc_attr( __( 'Kick the Facebook Debugger', $this->textdomain  ) ) 
-      . '">' . __( 'FB Debugger', $this->textdomain  ) . '</a>';
+      . esc_attr( __( 'Use this feature to flush Facebook\'s cache of your content, fixing most issues with images and meta data.', $this->textdomain  ) ) 
+      . '">' . __( 'Flush Facebook', $this->textdomain  ) . '</a>';
 
     return $actions;
   }
