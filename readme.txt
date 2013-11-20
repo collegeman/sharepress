@@ -121,6 +121,11 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 
 == Changelog ==
 
+= 2.2.20 =
+* Fixed: facebook cache buster the old one is behind a login now! Uses api call.
+* Added: a link to the posts editing page to kick the facebook linter for a published post
+* Fixed: a couple of og:meta bugs
+
 = 2.2.19 =
 * Version bump: compatible with WordPress 3.7
 * Note: though we increased og:image image size in version 2.2.18, the Facebook API appears to only use small thumbnails for links posted this way; but rest assured we'll be prepared to support larger images if and when Zuck changes his mind... which happens all the time.
