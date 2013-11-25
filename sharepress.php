@@ -41,7 +41,7 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 
 class Sharepress {
 
-  const VERSION = '2.2.20';
+  const VERSION = '2.2.21';
   
   const MISSED_SCHEDULE_DELAY = 5;
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
@@ -1794,17 +1794,24 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   
   function error($post, $meta, $error) {
     if (is_object($error)) {
+      $code = $error->getCode();
       $error = $error->getMessage();
     }
 
     if ($post) {
       update_post_meta($post->ID, self::META_ERROR, $error);
-      if ($this->notify_on_error()) {
+      if ($this->notify_on_error()) { 
         $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
+
+        $message = "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}";
+        if ($code == 1611070) { 
+          $message = "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nWhyyyyyy!?!\n==============\nThis happened because there are more than one set of Open Graph Meta tags in the <head> of your page. These could be added either by your theme, or by another plugin.\n\nHow do I fix it?\n==============\nThe recommended fix is to disable those settings elsewhere, and let sharepress be the open graph meta tag authority. If this isn't possible, you can uncheck the open graph checkboxes in sharepress settings.\n\nThis can be debugged with the facebook object debugger https://developers.facebook.com/tools/debug/og/object?q={$this->get_permalink($post->ID)}";
+        }
+
         wp_mail(
           $this->get_error_email(),
           "SharePress Error",
-          "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}"
+          $message
         );
       }
       error_log("SharePress Error: $error; while sending {$meta['message']} for post {$post->ID}");   
