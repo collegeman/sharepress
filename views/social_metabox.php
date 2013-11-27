@@ -8,7 +8,7 @@
   }
   .shared_img_thumb {
     width:100%;
-    height:106px;
+    height:76px;
     background:#e6e6e6;
     overflow:hidden;
     position:relative;
@@ -30,7 +30,6 @@
     <div class="shared_img_container">
       <input type="radio" name="shared_image" value="featured" id="shared_image_0" checked><label for="shared_image_0"> Featured</label>  <input type="radio" name="shared_image" value="custom" id="shared_image_1"><label for="shared_image_1"> Custom</label>
       <div class="shared_img_thumb">
-        
       </div>
       <input type="hidden" data-value="social:image" name="socialmeta[image]">
     </div>

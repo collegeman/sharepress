@@ -255,36 +255,62 @@ sp.views = sp.views || {};
         this.model.save();
         return false;
       },
+      'change [name="shared_image"]':function(e){
+        var val = $(e.currentTarget).val();
+        if ( val === 'custom' ) {
+          sp.media(this);
+        } else {
+          this.$img.val(val);
+          this.setThumb($('.attachment-post-thumbnail').attr('src'));
+        }
+      },
       'click [data-value="social:image"]': function(e) {
-        sp.media(this.setImage);
+        sp.media(this);
         return false;
       }
     },
-    setImage: function(media) {
-      console.log('media', media);
+    setImage: function(media, checkFeatured) {
+      console.log(checkFeatured, this.$('[name="shared_image"]:checked').val());
+      var whichImage = this.$('[name="shared_image"]:checked').val();
+      if ( checkFeatured && whichImage === 'featured'  ) {
+        this.$img.val(media.url);
+        this.setThumb(media.url);
+      } else if ( ! checkFeatured && whichImage !== 'featured') {
+        this.$img.val(media.url);
+        this.setThumb(media.url);
+      }
+    },
+    setThumb: function(img_url) {
+      this.$thumb.html($('<img>').attr('src', img_url));
     },
     initialize: function() {
       var that = this;
       this.$title = this.$('[data-value="social:title"]');
       this.$img = this.$('[data-value="social:image"]');
       this.$desc = this.$('[data-value="social:description"]');
+      this.$thumb = this.$('.shared_img_thumb');
       this.model = new sp.models.SocialMeta({ post_id: $('#post_ID').val() });
       this.model.fetch({
         success: function(social_metadata) {
           that.render();
         }
-      })
-      console.log(wp.media.featuredImage, 'fi');
-      overrideFeaturedImage();
+      });
+      overrideFeaturedImage(that);
     },
     render: function() {
       this.$title.val(this.model.get('title'));
       this.$img.val(this.model.get('image'));
+      /*if ( this.model.get('image') && this.model.get('image') !== 'featured' ){
+        this.$('#shared_image_1').attr('checked', 'checked');
+        this.setThumb(this.model.get('image'));
+      } else if ( $('.attachment-post-thumbnail').attr('src').trim().length ) {
+        this.setThumb($('.attachment-post-thumbnail').attr('src'));
+      }*/
       this.$desc.val(this.model.get('description'));
     }
   });
 
-  function overrideFeaturedImage() {
+  function overrideFeaturedImage($SocialMetabox) {
     wp.media.featuredImage = {
       get: function() {
         return wp.media.view.settings.post.featuredImageId;
@@ -292,16 +318,16 @@ sp.views = sp.views || {};
 
       set: function( id ) {
         var settings = wp.media.view.settings;
-
         settings.post.featuredImageId = id;
-
         wp.media.post( 'set-post-thumbnail', {
           json:         true,
           post_id:      settings.post.id,
           thumbnail_id: settings.post.featuredImageId,
           _wpnonce:     settings.post.nonce
         }).done( function( html ) {
-          $( '.inside', '#postimagediv' ).html( html );
+          var $img = $(html);
+          $( '.inside', '#postimagediv' ).html( $img );
+          $SocialMetabox.setThumb($img.find('img').attr('src'), true);
         });
       },
 
@@ -331,7 +357,6 @@ sp.views = sp.views || {};
         if ( ! settings.post.featuredImageId )
           return;
 
-        console.log(selection);
         wp.media.featuredImage.set( selection ? selection.id : -1 );
       },
 
@@ -491,7 +516,7 @@ sp.views = sp.views || {};
     }
   });
 
-  sp.media = function(callback) {
+  sp.media = function(metabox) {
     // If the frame already exists, re-open it.
     if ( sp_media_frame ) {
         sp_media_frame.open();
@@ -506,14 +531,14 @@ sp.views = sp.views || {};
           type: 'image'
       },
       button: {
-          text:  'share image'
+          text:  'Choose Share Image'
       }
     });
  
     sp_media_frame.on('select', function(){
       // Grab our attachment selection and construct a JSON representation of the model.
       var media_attachment = sp_media_frame.state().get('selection').first().toJSON();
-      callback(media_attachment);
+      metabox.setImage(media_attachment);
     });
 
     // Now that everything has been set, let's open up the frame.
