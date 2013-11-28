@@ -88,13 +88,15 @@
           <p style="color:red; display:none; padding-top: 0; margin-top: 0;" id="publish_target_error">
             Choose at least one.
           </p>
-          <p>
-            <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
-            <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
-              <input type="checkbox" class="sharepress_target" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
-              <?php echo $wall_name ?>
-            </label>
-          </p>
+          <?php if (!self::is_excluded_page('wall')) { ?>
+            <p>
+              <?php $wall_name = ((preg_match('/s$/i', trim($name = Sharepress::me('name')))) ? $name.'&apos;' : $name.'&apos;s') . ' Wall'; ?>
+              <label for="sharepress_target_wall" title="<?php echo $wall_name ?>"> 
+                <input type="checkbox" class="sharepress_target" id="sharepress_target_wall" name="sharepress_meta[targets][]" value="wall" <?php if (@in_array('wall', $meta['targets'])) echo 'checked="checked"' ?> />
+                <?php echo $wall_name ?>
+              </label>
+            </p>
+          <?php } ?>
           <?php 
             $pages = self::pages(); 
             usort($pages, array('Sharepress', 'sort_by_selected')); 

@@ -336,13 +336,15 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
 
             <tbody>
               <!-- our blog owner's wall -->
-              <tr id="" class="alternate">
-                <th scope="row" class="check-column">
-                  <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
-                </th>
-                <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo self::me('id') ?>">
-                  <?php echo (preg_match('/s$/i', trim($name = self::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
-              </tr>
+              <?php if (!self::$pro || !self::$pro->is_excluded_page('wall')) { ?>
+                <tr id="" class="alternate">
+                  <th scope="row" class="check-column">
+                    <input type="checkbox" name="sharepress_publishing_targets[wall]" value="1" <?php if (self::targets('wall')) echo 'checked="checked"' ?>>
+                  </th>
+                  <td><a target="_blank" href="http://facebook.com/profile.php?id=<?php echo self::me('id') ?>">
+                    <?php echo (preg_match('/s$/i', trim($name = self::me('name')))) ? $name.'&apos;' : $name.'&apos;s' ?> Wall</a></td>
+                </tr>
+              <?php } ?>
               <!-- /blog owner's wall -->
             
               <!-- all of the blog owner's pages -->

@@ -4,7 +4,7 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.7.1
-Stable tag: 2.2.21
+Stable tag: 2.2.22
 
 Automatic posting and reposting to Facebook and Twitter.
 
@@ -121,8 +121,11 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 
 == Changelog ==
 
+= 2.2.22 =
+* Added: Finally, pro users can hide their personal wall using custom filters. Refer to the instructions in sharepress-mu.php
+
 = 2.2.21 =
-* Added more detailed sharepress error email when multiple open graph tags exist
+* Added: more detailed sharepress error email when multiple open graph tags exist
 
 = 2.2.20 =
 * Fixed: facebook cache buster the old one is behind a login now! Uses api call.

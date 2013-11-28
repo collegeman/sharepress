@@ -5,7 +5,7 @@ Plugin URI: https://getsharepress.com
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.21
+Version: 2.2.22
 License: GPL2
 */
 
@@ -572,7 +572,11 @@ class Sharepress {
   static function targets($id = null) {
     $targets = get_option(self::OPTION_PUBLISHING_TARGETS, false);
     if ($targets === false) {
-      $targets = array('wall' => 1);
+      if (!self::$pro || !self::$pro->is_excluded_page('wall')) {
+        $targets = array('wall' => 1);
+      } else {
+        $targets = array();
+      }
     }
     
     return ($id) ? isset($targets[$id]) : $targets;
@@ -787,7 +791,7 @@ class Sharepress {
       $meta['name'] = apply_filters('post_title', $post->post_title);
     }
     
-    if (!@$meta['targets'] && !self::$pro) {
+    if (!@$meta['targets'] && ( !self::$pro || !self::$pro->is_excluded_page('wall') )) {
       $meta['targets'] = array('wall');
     }
     

@@ -408,6 +408,7 @@ class SharepressPro {
   static function is_excluded_page($page) {
     if (is_null(self::$ok_page_names)) {
       self::$ok_page_names = array_map(array(__CLASS__, '_map_page_names'), self::pages());
+      self::$ok_page_names[] = 'wall';
       self::$ok_page_names = apply_filters('sharepress_ok_page_names', self::$ok_page_names, function_exists('get_current_site') ? get_current_site() : null);
     }
 
