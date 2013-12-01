@@ -149,7 +149,7 @@ function sp_get_client($service, $profile = false) {
 
   if (!$profile) {
     if (!isset($sp_clients[$service])) {
-      $sp_lients[$service] = new $class($keys->key, $keys->secret);
+      $sp_clients[$service] = new $class($keys->key, $keys->secret);
     }
     return $sp_clients[$service];
   } else {
