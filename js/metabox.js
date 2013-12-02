@@ -348,6 +348,7 @@ sp.views = sp.views || {};
     },
     addUpdate: function(update) {
       this.$('[data-ui="none"]').hide();
+      update.profile = this.profiles.get(parseInt(update.get('profile_id'))); 
       if (!update.profile) {
         update.set({ hidden: true });
       }
