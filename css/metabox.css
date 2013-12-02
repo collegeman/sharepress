@@ -17,16 +17,9 @@
 #sp_metabox .delete:hover { background-color: red; color: white; border: none; text-decoration: none; }
 #sp_metabox .editor .date { padding: 2px 0 5px 0; }
 #sp_metabox .editor { position: relative; }
-#sp_metabox .calendar-container { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
-#sp_metabox .calendar { line-height: 34px; padding: 5px 10px 0px; border-top: 1px solid #ccc; background: #F8F8F8; position: absolute; left: 0; bottom: -250px; right: 0; 
--webkit-transition: bottom 0.3s ease-in;
--moz-transition: bottom 0.3s ease-in;
--ms-transition: bottom 0.3s ease-in;
--o-transition: bottom 0.3s ease-in;
-transition: bottom 0.3s ease-in;
-}
-#sp_metabox .onion { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.60); }
-#sp_metabox.show_calendar .calendar { bottom: 0; }
+#sp_calendar { display: none; line-height: 34px; padding: 5px 10px 0px !important; }
+#sp_calendar .controls { border-bottom: 1px solid #dfdfdf; padding-bottom: 10px; margin-bottom: 10px; }
+#sp_calendar .submitbox { height: 34px; }
 #sp_metabox  b { color: #777; }
 #sp_metabox .pull-right { float: right; }
 #sp_metabox .profiles { padding: 0; margin: 0; list-style-type: none; }

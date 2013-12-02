@@ -16,9 +16,8 @@
   </div>
   <button href="#" class="button pull-right" disabled>History</button>
 </div>
-<div class="calendar-container">
-  <div class="onion"></div>
-  <div class="calendar" data-ui="calendar">
+<div class="calendar" id="sp_calendar" data-ui="calendar">
+  <div class="controls">
     Post on 
     <select data-value="when">
       <option value="publish">publish</option>
@@ -70,9 +69,13 @@
         </div>
       </div>
     </div>
-    <div>
-      <button class="button" data-action="save">Update</button>
-      &nbsp;<a href="#" data-action="cancel">Cancel</a>
+  </div>
+  <div class="submitbox">
+    <div id="wp-link-update">
+      <button type="submit" class="button-primary" data-action="save">Change</button>
+    </div>
+    <div id="wp-link-cancel">
+      <a class="submitdelete deletion" data-action="cancel" href="#">Cancel</a>
     </div>
   </div>
 </div>

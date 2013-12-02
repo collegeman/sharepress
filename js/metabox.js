@@ -95,11 +95,16 @@ sp.views = sp.views || {};
       this.$('[data-ui="date"]').toggle( this.$('[data-value="when"]').val() !== 'publish' );
       this.$('[data-ui="until"]').toggle( this.$('[data-value="repeat"]').val() !== 'never' );
       this.$('[data-ui="until_date"]').toggle( this.$('[data-value="until"]').val() === 'future' );
+      this.$el.dialog({
+        modal: true,
+        resizable: false,
+        draggable: false,
+        title: 'Change publish date for this update'
+      }).parent('.ui-dialog').addClass('wp-dialog');
     },
     edit: function(update) {
       this._setUpdate(update);
       this.render();
-      this._show();
     },
     save: function() {
       var schedule = {};
@@ -151,18 +156,8 @@ sp.views = sp.views || {};
       this.$get('until_year').val(untilDate.year());
       this.$get('until_time').val(untilDate.local().format('HH:mm'));
     },
-    _show: function() {
-      this.options.metabox.$('.calendar-container').show();
-      this.options.metabox.$('.calendar-container .onion').fadeIn();
-      this.options.metabox.$el.addClass('show_calendar');
-    },
     _hide: function() {
-      var metabox = this.options.metabox;
-      metabox.$('.onion').hide();
-      metabox.$el.removeClass('show_calendar');
-      setTimeout(function() {
-        metabox.$('.calendar-container').hide();
-      }, 500);
+      this.$el.dialog('destroy')
     }
   });
 
