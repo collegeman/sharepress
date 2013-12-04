@@ -1,5 +1,6 @@
 <?php
 add_action('init', 'sp_init', 1, 12);
+add_action('wp_head', 'sp_wp_head');
 
 function sp_activate() {
   do_action('sp_activated');
@@ -27,7 +28,100 @@ function sp_init() {
   do_action('sp_init');
 }
 
+function sp_wp_head() {
+  global $wpdb, $post;
 
+  // get any values stored in meta data
+  $defaults = array();
+  $overrides = array();
+
+  if (is_single() || ( is_page() && !is_front_page() )) {
+    $socialmeta = get_post_meta($post->ID, 'socialmeta', true);
+    $defaults = array(
+      'og:type' => 'article',
+      'og:url' => get_permalink(),
+      'og:title' => strip_tags(get_the_title()),
+      'og:image' => $picture,
+      'og:site_name' => get_bloginfo('name'),
+      'fb:app_id' => get_option(SP_OPTION_API_KEY),
+      'og:description' => strip_shortcodes($excerpt),
+      'og:locale' => sp_setting('og_locale', 'en_US')
+    );
+    $overrides['og:title'] = $socialmeta['title'];
+    $overrides['og:image'] = $socialmeta['image'];
+    $overrides['og:description'] = $socialmeta['description'];
+  } else {
+    $defaults = array(
+      'og:type' => self::setting('page_og_type', 'blog'),
+      'og:url' => is_front_page() ? get_bloginfo('siteurl') : $this->get_permalink(),
+      'og:title' => strip_tags(get_bloginfo('name')),
+      'og:site_name' => get_bloginfo('name'),
+      'og:image' => $this->get_default_picture(),
+      'fb:app_id' => get_option(OPTION_API_KEY),
+      'og:description' => $this->strip_shortcodes(get_bloginfo('description')),
+      'og:locale' => sp_setting('og_locale', 'en_US')
+    );
+  }
+   
+  $og = array_merge($defaults, $overrides);
+
+  if ( $fb_publisher = sp_setting('fb_publisher_url') ) {
+    $og['article:publisher'] = $fb_publisher;
+  }
+
+  if ( $fb_author = get_the_author_meta( 'fb_author_url', $post->post_author ) ) {
+    $og['article:author'] = $fb_author;
+  }
+
+  // old way:
+  if ($page_og_tags = sp_setting('page_og_tags')) {
+    if ($page_og_tags == 'imageonly') {
+      $og = array('og:image' => $og['og:image']);
+    } else if ($page_og_tags == 'off') {
+      $og = array();
+    }
+
+  // new way:
+  } else {
+    $allowable = array_merge(array(
+      'og:title' => false,
+      'og:type' => false,
+      'og:image' => false,
+      'og:url' => false,
+      'fb:app_id' => false,
+      'og:site_name' => false,
+      'og:description' => false,
+      'og:locale' => false
+    ), sp_setting('page_og_tag', array()));
+
+    foreach($allowable as $tag => $allowed) {
+      if (!$allowed) {
+        unset($og[$tag]);
+      }
+    }
+  }
+
+  $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
+
+  if ($og) {
+    foreach($og as $property => $content) {
+      list($prefix, $tagName) = explode(':', $property);
+      $og[$property] = apply_filters("sharepress_og_tag_{$tagName}", $content, $post, $meta);
+      // allow for overrides from custom field data
+      if ($content = get_post_meta($post->ID, $property, true)) {
+        $og[$property] = $content;
+      }
+    }
+
+    foreach($og as $property => $content) {
+      echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
+        array('"', '<', '>'), 
+        array('&quot;', '&lt;', '&gt;'), 
+        strip_shortcodes($content)
+      ));
+    }
+  } 
+}
 
 /**
  * Seek out the public and private keys for the given service. Default sources
