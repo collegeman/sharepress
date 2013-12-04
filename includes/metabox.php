@@ -2,6 +2,42 @@
 add_action('add_meta_boxes', 'sp_add_meta_boxes');
 add_action('admin_enqueue_scripts', 'sp_meta_admin_enqueue_scripts');
 add_action('admin_notices', 'sp_admin_notices', 10, 10);
+add_action( 'save_post', 'sp_save_social_metadata' );
+
+function sp_save_social_metadata($post_id) {
+
+  if ( ! isset( $_POST['sp_metabox_og_nonce'] ) )
+    return $post_id;
+
+  $nonce = $_POST['sp_metabox_og_nonce'];
+
+  // Verify that the nonce is valid.
+  if ( ! wp_verify_nonce( $nonce, 'sp_metabox_og' ) )
+      return $post_id;
+
+  // If this is an autosave, our form has not been submitted, so we don't want to do anything.
+  if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) 
+      return $post_id;
+
+  // Check the user's permissions.
+  if ( 'page' == $_POST['post_type'] ) {
+
+    if ( ! current_user_can( 'edit_page', $post_id ) )
+        return $post_id;
+  
+  } else {
+
+    if ( ! current_user_can( 'edit_post', $post_id ) )
+        return $post_id;
+  }
+
+  $socialmeta = array(
+    'title' => sanitize_text_field($_POST['socialmeta']['title']),
+    'image' => sanitize_text_field($_POST['socialmeta']['image']),
+    'description' => sanitize_text_field($_POST['socialmeta']['description'])
+  );
+  update_post_meta($post_id, 'socialmeta', $socialmeta);
+}
 
 function sp_add_meta_boxes() {
   add_meta_box('sp_metabox', 'SharePress', 'sp_metabox', 'post', 'side', 'high');
@@ -21,8 +57,10 @@ function sp_metabox() {
   require(SP_DIR.'/views/metabox.php');
 }
 
-function sp_metabox_og() {
+function sp_metabox_og($post) {
   add_thickbox();
+  wp_nonce_field( 'sp_metabox_og', 'sp_metabox_og_nonce' );
+  $socialmeta = get_post_meta($post->ID, 'socialmeta', true);
   require(SP_DIR.'/views/social_metabox.php');
 }
 

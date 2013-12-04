@@ -127,16 +127,6 @@ sp.models = sp.models || {};
     model: sp.models.Profile
   });
 
-  sp.models.SocialMeta = Backbone.Model.extend({
-    initialize: function(options) {
-      this.options = options;
-      console.log(options, 'options');
-    },
-    url: function() {
-      return sp.api + '/metadata/' + this.options.post_id;
-    }
-  });
-
 }(jQuery, Backbone);
 
 // moment.js

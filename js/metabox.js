@@ -246,39 +246,23 @@ sp.views = sp.views || {};
 
   sp.views.SocialMetabox = Backbone.View.extend({
     events: {
-      'click [data-action="save"]': function(e){
-        this.model.set({
-          'title': this.$title.val(),
-          'image': this.$img.val(),
-          'description': this.$desc.val()
-        });
-        this.model.save();
+      'click [data-action="set-social-image"]': function(e) {
+        sp.media(this);
         return false;
       },
-      'change [name="shared_image"]':function(e){
-        var val = $(e.currentTarget).val();
-        if ( val === 'custom' ) {
-          sp.media(this);
-        } else {
-          this.$img.val(val);
-          this.setThumb($('.attachment-post-thumbnail').attr('src'));
-        }
-      },
-      'click [data-value="social:image"]': function(e) {
-        sp.media(this);
+      'click [data-action="remove-social-image"]': function(e) {
+        $(e.currentTarget).hide();
+        this.$('[data-action="set-social-image"]').show();
+        this.$img.val('');
+        this.$thumb.find('img').remove();
         return false;
       }
     },
-    setImage: function(media, checkFeatured) {
-      console.log(checkFeatured, this.$('[name="shared_image"]:checked').val());
-      var whichImage = this.$('[name="shared_image"]:checked').val();
-      if ( checkFeatured && whichImage === 'featured'  ) {
-        this.$img.val(media.url);
-        this.setThumb(media.url);
-      } else if ( ! checkFeatured && whichImage !== 'featured') {
-        this.$img.val(media.url);
-        this.setThumb(media.url);
-      }
+    setImage: function(media) {
+      this.$('[data-action="set-social-image"]').hide();
+      this.$('[data-action="remove-social-image"]').show();
+      this.$img.val(media.url);
+      this.setThumb(media.url);
     },
     setThumb: function(img_url) {
       this.$thumb.html($('<img>').attr('src', img_url));
@@ -289,96 +273,8 @@ sp.views = sp.views || {};
       this.$img = this.$('[data-value="social:image"]');
       this.$desc = this.$('[data-value="social:description"]');
       this.$thumb = this.$('.shared_img_thumb');
-      this.model = new sp.models.SocialMeta({ post_id: $('#post_ID').val() });
-      this.model.fetch({
-        success: function(social_metadata) {
-          that.render();
-        }
-      });
-      overrideFeaturedImage(that);
-    },
-    render: function() {
-      this.$title.val(this.model.get('title'));
-      this.$img.val(this.model.get('image'));
-      /*if ( this.model.get('image') && this.model.get('image') !== 'featured' ){
-        this.$('#shared_image_1').attr('checked', 'checked');
-        this.setThumb(this.model.get('image'));
-      } else if ( $('.attachment-post-thumbnail').attr('src').trim().length ) {
-        this.setThumb($('.attachment-post-thumbnail').attr('src'));
-      }*/
-      this.$desc.val(this.model.get('description'));
     }
   });
-
-  function overrideFeaturedImage($SocialMetabox) {
-    wp.media.featuredImage = {
-      get: function() {
-        return wp.media.view.settings.post.featuredImageId;
-      },
-
-      set: function( id ) {
-        var settings = wp.media.view.settings;
-        settings.post.featuredImageId = id;
-        wp.media.post( 'set-post-thumbnail', {
-          json:         true,
-          post_id:      settings.post.id,
-          thumbnail_id: settings.post.featuredImageId,
-          _wpnonce:     settings.post.nonce
-        }).done( function( html ) {
-          var $img = $(html);
-          $( '.inside', '#postimagediv' ).html( $img );
-          $SocialMetabox.setThumb($img.find('img').attr('src'), true);
-        });
-      },
-
-      frame: function() {
-        if ( this._frame )
-          return this._frame;
-
-        this._frame = wp.media({
-          state: 'featured-image',
-          states: [ new wp.media.controller.FeaturedImage() ]
-        });
-
-        this._frame.on( 'toolbar:create:featured-image', function( toolbar ) {
-          this.createSelectToolbar( toolbar, {
-            text: wp.media.view.l10n.setFeaturedImage
-          });
-        }, this._frame );
-
-        this._frame.state('featured-image').on( 'select', this.select );
-        return this._frame;
-      },
-
-      select: function() {
-        var settings = wp.media.view.settings,
-          selection = this.get('selection').single();
-
-        if ( ! settings.post.featuredImageId )
-          return;
-
-        wp.media.featuredImage.set( selection ? selection.id : -1 );
-      },
-
-      init: function() {
-        // Open the content media manager to the 'featured image' tab when
-        // the post thumbnail is clicked.
-        $('#postimagediv').on( 'click', '#set-post-thumbnail', function( event ) {
-          event.preventDefault();
-          // Stop propagation to prevent thickbox from activating.
-          event.stopPropagation();
-
-          wp.media.featuredImage.frame().open();
-
-        // Update the featured image id when the 'remove' link is clicked.
-        }).on( 'click', '#remove-post-thumbnail', function() {
-          wp.media.view.settings.post.featuredImageId = -1;
-        });
-      }
-    };
-
-    $( wp.media.featuredImage.init );
-  }
 
   sp.views.Metabox = Backbone.View.extend({
     events: {
