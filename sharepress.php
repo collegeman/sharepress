@@ -284,7 +284,7 @@ class Sharepress {
     <table class="form-table">
       <tbody><tr>
         <th><label for="fb_author_link">Facebook article:author link</label></th>
-        <td><input name="fb_author_url" type="text" id="fb_author_link" value="<?= $fb_profile_url ?>" class="regular-text"><br>
+        <td><input name="fb_author_url" type="text" id="fb_author_link" value="<?php echo $fb_profile_url ?>" class="regular-text"><br>
         <span class="description">If you have enabled "Follow" on your facebook profile. You can add your facebook profile link, and readers will be able to subscribe to you as an author on Facebook. See <a href="https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/">this article for details.</a></span></td>
       </tr>
       </tbody>
