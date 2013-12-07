@@ -4,7 +4,7 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.7.1
-Stable tag: 2.2.22
+Stable tag: 2.2.23
 
 Automatic posting and reposting to Facebook and Twitter.
 
@@ -120,6 +120,9 @@ Documentation and support for SharePress are available [here](http://fatpanda.ze
 E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.23 =
+* Fix syntax for older versions of php
 
 = 2.2.22 =
 * Added: Finally, pro users can hide their personal wall using custom filters. Refer to the instructions in sharepress-mu.php
