@@ -283,6 +283,7 @@
       if (check_for_featured_image && will_share && !$('#postimagediv img').size() && let_facebook_pick_pic.val() == '0') {
         $('#ajax-loading').hide();
         $('#publish').removeClass('button-primary-disabled');
+        $('#publishing-action').find('.spinner').hide();
         $('.sharepress_show_advanced').hide(); 
         $('.sharepress_advanced').slideDown();
         $('#picture_error').show();
@@ -299,6 +300,7 @@
           // reveal the targets selection, and try to focus the screen on it:
           $('#ajax-loading').hide();
           $('#publish').removeClass('button-primary-disabled');
+          $('#publishing-action').find('.spinner').hide();
           $('.sharepress_show_advanced').hide(); 
           $('.sharepress_advanced').slideDown();
           $('label[for="sharepress_meta_targets"]').css('color', 'red');

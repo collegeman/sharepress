@@ -5,7 +5,7 @@ Plugin URI: https://getsharepress.com
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.23
+Version: 2.2.24
 License: GPL2
 */
 
@@ -554,17 +554,19 @@ class Sharepress {
 
     }
   }
+
+  private static $default_settings = array(
+    'default_behavior' => 'on',
+    'excerpt_length' => 20,
+    'excerpt_more' => '...',
+    'og_tags' => 'on',
+    'og_type' => 'blog',
+    'license_key' => null,
+    'append_link' => 'on'
+  );
   
   static function setting($name = null, $default = null) {
-    $settings = get_option(self::OPTION_SETTINGS, array(
-      'default_behavior' => 'on',
-      'excerpt_length' => 20,
-      'excerpt_more' => '...',
-      'og_tags' => 'on',
-      'og_type' => 'blog',
-      'license_key' => null,
-      'append_link' => 1
-    ));
+    $settings = get_option(self::OPTION_SETTINGS, self::$default_settings);
     
     return (!is_null($name)) ? ( !is_null(@$settings[$name]) ? $settings[$name] : $default ) : $settings;
   }
@@ -1644,6 +1646,8 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
 
     register_setting('fb-step1', self::OPTION_API_KEY);
     register_setting('fb-step1', self::OPTION_APP_SECRET);
+    register_setting('fb-step1', self::OPTION_SETTINGS, array($this, 'sanitize_settings'));
+
     register_setting('fb-settings', self::OPTION_PUBLISHING_TARGETS);
     register_setting('fb-settings', self::OPTION_NOTIFICATIONS);
     register_setting('fb-settings', self::OPTION_SETTINGS, array($this, 'sanitize_settings'));
@@ -1655,7 +1659,8 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       $settings['license_key'] = trim($settings['license_key']);
     }
 
-    return $settings;
+    return array_merge(get_option(self::OPTION_SETTINGS, self::$default_settings), $settings);
+
   }
 
   static function has_keys() {
@@ -1685,7 +1690,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       if ( !self::installed() && self::$ok_to_show_error ) {
         ?>
           <div class="error">
-            <p>You haven't finished setting up <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">SharePress</a>.</p>
+            <p><a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">Click here</a> to finish setting up <b>SharePress</b>.</p>
           </div>
         <?php
       } else if (@$_REQUEST['page'] == 'sharepress' && !self::$pro) {
@@ -1693,12 +1698,6 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
           ?>
             <div class="error">
               <p>Hmm... looks like there's something wrong with your <a href="<?php echo get_admin_url() ?>options-general.php?page=sharepress">SharePress</a> license key.</p>
-            </div>
-          <?php
-        } else {
-          ?>
-            <div class="updated">
-              <p><b>Go pro!</b> This plugin can do more: a lot more. <a href="https://getsharepress.com/?utm_source=sharepress&amp;utm_medium=in-app-promo&amp;utm_campaign=learn-more">Learn more</a>.</p>
             </div>
           <?php
         }
