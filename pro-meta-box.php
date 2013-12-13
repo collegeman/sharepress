@@ -1,5 +1,28 @@
 <?php if (!defined('ABSPATH')) exit; /* silence is golden... */ ?>
-
+<style>
+  .timestamp-wrap {
+    line-height: 23px;
+  }
+  .timestamp-wrap select {
+    height: 21px;
+    line-height: 14px;
+    padding: 0;
+    vertical-align: top;
+    font-size: 12px;
+  }
+  #sp_jj, #sp_hh, #sp_mn {
+    width: 2em;
+  }
+  #sp_aa {
+    width: 3.4em;
+  }
+  .timestamp-wrap input {
+    border-width: 1px;
+    border-style: solid;
+    padding: 1px;
+    font-size: 12px;
+  }
+</style>
 <div id="sharepress" <?php if (($posted || $scheduled || $last_posted) && @$_GET['sharepress'] != 'schedule') echo 'style="display:none;"' ?>>
   
   <br />
