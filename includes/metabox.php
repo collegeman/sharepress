@@ -31,12 +31,9 @@ function sp_save_social_metadata($post_id) {
         return $post_id;
   }
 
-  $socialmeta = array(
-    'title' => sanitize_text_field($_POST['socialmeta']['title']),
-    'image' => sanitize_text_field($_POST['socialmeta']['image']),
-    'description' => sanitize_text_field($_POST['socialmeta']['description'])
-  );
-  update_post_meta($post_id, 'socialmeta', $socialmeta);
+  update_post_meta($post_id, 'social:title', sanitize_text_field($_POST['social:title']));
+  update_post_meta($post_id, 'social:image', sanitize_text_field($_POST['social:image']));
+  update_post_meta($post_id, 'social:description', sanitize_text_field($_POST['social:description']));
 }
 
 function sp_add_meta_boxes() {
@@ -60,7 +57,11 @@ function sp_metabox() {
 function sp_metabox_og($post) {
   add_thickbox();
   wp_nonce_field( 'sp_metabox_og', 'sp_metabox_og_nonce' );
-  $socialmeta = get_post_meta($post->ID, 'socialmeta', true);
+  $socialmeta = array(
+    'title' => get_post_meta($post->ID, 'social:title', true),
+    'image' => get_post_meta($post->ID, 'social:image', true),
+    'description' => get_post_meta($post->ID, 'social:description', true)
+  );
   require(SP_DIR.'/views/social_metabox.php');
 }
 

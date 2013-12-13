@@ -250,6 +250,10 @@ sp.views = sp.views || {};
         sp.media(this);
         return false;
       },
+      'click .shared_img_thumb': function(e) {
+        sp.media(this);
+        return false;
+      },
       'click [data-action="remove-social-image"]': function(e) {
         $(e.currentTarget).hide();
         this.$('[data-action="set-social-image"]').show();
@@ -262,6 +266,7 @@ sp.views = sp.views || {};
       this.$('[data-action="set-social-image"]').hide();
       this.$('[data-action="remove-social-image"]').show();
       this.$img.val(media.url);
+      this.$thumb.data('media_id', media.id);
       this.setThumb(media.url);
     },
     setThumb: function(img_url) {
@@ -435,6 +440,17 @@ sp.views = sp.views || {};
       // Grab our attachment selection and construct a JSON representation of the model.
       var media_attachment = sp_media_frame.state().get('selection').first().toJSON();
       metabox.setImage(media_attachment);
+    });
+
+    sp_media_frame.on('open', function() {
+      var id = false;
+      if( id = metabox.$thumb.data('media_id') ) {
+        // set selection
+        var selection   =   sp_media_frame.state().get('selection'),
+            attachment  =   wp.media.attachment( id );
+        attachment.fetch();
+        selection.add( attachment );
+      }
     });
 
     // Now that everything has been set, let's open up the frame.

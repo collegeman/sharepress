@@ -9,10 +9,13 @@
   .shared_img_thumb {
     width:100%;
   }
+  .shared_img_thumb img{
+    max-width:100%;
+  }
 </style>
 <div class="social_meta">
   <label for="social_title">Title:</label>
-  <input placeholder="Social Title" type="text" data-value="social:title" name="socialmeta[title]" id="social_title" value="<?php echo esc_attr($socialmeta['title']) ?>">
+  <input placeholder="Social Title" type="text" data-value="social:title" name="social:title" id="social_title" value="<?php echo esc_attr($socialmeta['title']) ?>">
   <label for="social_image">Image:</label>
   <div class="shared_img_container">
     <div class="shared_img_thumb">
@@ -23,10 +26,10 @@
     </div>
     <a href="#" style="<?php echo (empty($socialmeta['image'])) ? 'display:none;' : null ?>" data-action="remove-social-image">Remove Social Image</a>
     <a href="#" style="<?php echo (empty($socialmeta['image'])) ? null : 'display:none;' ?>" data-action="set-social-image">Set Social Image</a>
-    <input type="hidden" id="social_image" data-value="social:image" name="socialmeta[image]" value="<?php echo esc_attr($socialmeta['image']) ?>">
+    <input type="hidden" id="social_image" data-value="social:image" name="social:image" value="<?php echo esc_attr($socialmeta['image']) ?>">
   </div>
   <label for="social_description">Description:</label>
-  <textarea placeholder="Social Description" data-value="social:description" name="socialmeta[description]" id="social_description" cols="30" rows="5"><?php echo esc_attr($socialmeta['description']) ?></textarea>
+  <textarea placeholder="Social Description" data-value="social:description" name="social:description" id="social_description" cols="30" rows="5"><?php echo esc_attr($socialmeta['description']) ?></textarea>
 </div>
 <script>
   jQuery(function($) {

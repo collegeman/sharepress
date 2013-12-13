@@ -29,7 +29,7 @@ function sp_init() {
 }
 
 function get_default_picture() {
-  return 'default_picture';
+  return get_option('sp_default_picture', '');
 }
 
 function sp_wp_head() {
@@ -40,8 +40,6 @@ function sp_wp_head() {
   $overrides = array();
 
   if (is_single() || ( is_page() && !is_front_page() )) {
-    $socialmeta = get_post_meta($post->ID, 'socialmeta', true);
-    
     $defaults = array(
       'og:type' => 'article',
       'og:url' => get_permalink(),
@@ -52,15 +50,7 @@ function sp_wp_head() {
       'og:description' => strip_shortcodes($excerpt),
       'og:locale' => sp_get_opt('og_locale', 'en_US')
     );
-    if ( !empty( $socialmeta['title']) ) {
-      $overrides['og:title'] = $socialmeta['title'];
-    }
-    if ( !empty( $socialmeta['image'] ) ) {
-      $overrides['og:image'] = $socialmeta['image'];
-    }
-    if ( !empty( $socialmeta['description'] ) ) {
-      $overrides['og:description'] = $socialmeta['description'];
-    }
+    
   } else {
     $defaults = array(
       'og:type' => sp_get_opt('page_og_type', 'blog'),
@@ -83,16 +73,16 @@ function sp_wp_head() {
   if ( $fb_author = get_the_author_meta( 'fb_author_url', $post->post_author ) ) {
     $og['article:author'] = $fb_author;
   }
-
   
+  /* THIS NEED TO BE UNCOMMENTED WHEN THE SETTINGS PAGE IS DONE
+  // Unset the meta tags that have be turned off globally.
   // old way:
-  if ($page_og_tags = sp_get_opt('page_og_tags')) {
+  if ($page_og_tags = get_option('page_og_tags')) {
     if ($page_og_tags == 'imageonly') {
       $og = array('og:image' => $og['og:image']);
     } else if ($page_og_tags == 'off') {
       $og = array();
     }
-
   // new way:
   } else {
     $allowable = array_merge(array(
@@ -104,7 +94,7 @@ function sp_wp_head() {
       'og:site_name' => false,
       'og:description' => false,
       'og:locale' => false
-    ), sp_get_opt('page_og_tag', array()));
+    ), get_option('page_og_tag', array()));
 
     foreach($allowable as $tag => $allowed) {
       if (!$allowed) {
@@ -112,7 +102,7 @@ function sp_wp_head() {
       }
     }
   }
-
+*/
   $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
 
   if ($og) {
@@ -120,9 +110,25 @@ function sp_wp_head() {
 
     foreach($og as $property => $content) {
       list($prefix, $tagName) = explode(':', $property);
+      //(backwards compatibility) filter overrides
       $og[$property] = apply_filters("sharepress_og_tag_{$tagName}", $content, $post, $meta);
-      // allow for overrides from custom field data
+      
+      //generic filter overrides
+      $og[$property] = apply_filters("sp_social_{$tagName}", $content, $post, $meta);
+      
+      //(backwards compatibility) allow for overrides from custom field data 
       if ($content = get_post_meta($post->ID, $property, true)) {
+        $og[$property] = $content;
+      }
+      
+      // generic field overrides
+      if ( $tagName == 'title' && $content = get_post_meta($post->ID, 'social:title', true) ) {
+        $og[$property] = $content;
+      }
+      if ( $tagName == 'image' && $content = get_post_meta($post->ID, 'social:image', true) ) {
+        $og[$property] = $content;
+      }
+      if ( $tagName == 'description' && $content = get_post_meta($post->ID, 'social:description', true) ) {
         $og[$property] = $content;
       }
     }
