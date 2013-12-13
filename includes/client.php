@@ -28,6 +28,10 @@ function sp_init() {
   do_action('sp_init');
 }
 
+function get_default_picture() {
+  return 'default_picture';
+}
+
 function sp_wp_head() {
   global $wpdb, $post;
 
@@ -37,6 +41,7 @@ function sp_wp_head() {
 
   if (is_single() || ( is_page() && !is_front_page() )) {
     $socialmeta = get_post_meta($post->ID, 'socialmeta', true);
+    
     $defaults = array(
       'og:type' => 'article',
       'og:url' => get_permalink(),
@@ -45,27 +50,33 @@ function sp_wp_head() {
       'og:site_name' => get_bloginfo('name'),
       'fb:app_id' => get_option(SP_OPTION_API_KEY),
       'og:description' => strip_shortcodes($excerpt),
-      'og:locale' => sp_setting('og_locale', 'en_US')
+      'og:locale' => sp_get_opt('og_locale', 'en_US')
     );
-    $overrides['og:title'] = $socialmeta['title'];
-    $overrides['og:image'] = $socialmeta['image'];
-    $overrides['og:description'] = $socialmeta['description'];
+    if ( !empty( $socialmeta['title']) ) {
+      $overrides['og:title'] = $socialmeta['title'];
+    }
+    if ( !empty( $socialmeta['image'] ) ) {
+      $overrides['og:image'] = $socialmeta['image'];
+    }
+    if ( !empty( $socialmeta['description'] ) ) {
+      $overrides['og:description'] = $socialmeta['description'];
+    }
   } else {
     $defaults = array(
-      'og:type' => self::setting('page_og_type', 'blog'),
-      'og:url' => is_front_page() ? get_bloginfo('siteurl') : $this->get_permalink(),
+      'og:type' => sp_get_opt('page_og_type', 'blog'),
+      'og:url' => is_front_page() ? get_bloginfo('siteurl') : get_permalink(),
       'og:title' => strip_tags(get_bloginfo('name')),
       'og:site_name' => get_bloginfo('name'),
-      'og:image' => $this->get_default_picture(),
+      'og:image' => get_default_picture(),
       'fb:app_id' => get_option(OPTION_API_KEY),
-      'og:description' => $this->strip_shortcodes(get_bloginfo('description')),
-      'og:locale' => sp_setting('og_locale', 'en_US')
+      'og:description' => strip_shortcodes(get_bloginfo('description')),
+      'og:locale' => sp_get_opt('og_locale', 'en_US')
     );
   }
    
   $og = array_merge($defaults, $overrides);
 
-  if ( $fb_publisher = sp_setting('fb_publisher_url') ) {
+  if ( $fb_publisher = sp_get_opt('fb_publisher_url') ) {
     $og['article:publisher'] = $fb_publisher;
   }
 
@@ -73,8 +84,9 @@ function sp_wp_head() {
     $og['article:author'] = $fb_author;
   }
 
+  
   // old way:
-  if ($page_og_tags = sp_setting('page_og_tags')) {
+  if ($page_og_tags = sp_get_opt('page_og_tags')) {
     if ($page_og_tags == 'imageonly') {
       $og = array('og:image' => $og['og:image']);
     } else if ($page_og_tags == 'off') {
@@ -92,7 +104,7 @@ function sp_wp_head() {
       'og:site_name' => false,
       'og:description' => false,
       'og:locale' => false
-    ), sp_setting('page_og_tag', array()));
+    ), sp_get_opt('page_og_tag', array()));
 
     foreach($allowable as $tag => $allowed) {
       if (!$allowed) {
@@ -104,6 +116,8 @@ function sp_wp_head() {
   $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
 
   if ($og) {
+    echo '<!-- sharepress social metatags -->';
+
     foreach($og as $property => $content) {
       list($prefix, $tagName) = explode(':', $property);
       $og[$property] = apply_filters("sharepress_og_tag_{$tagName}", $content, $post, $meta);
@@ -112,7 +126,7 @@ function sp_wp_head() {
         $og[$property] = $content;
       }
     }
-
+    
     foreach($og as $property => $content) {
       echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
         array('"', '<', '>'), 
@@ -120,6 +134,7 @@ function sp_wp_head() {
         strip_shortcodes($content)
       ));
     }
+    echo '<!-- /sharepress social metatags -->';
   } 
 }
 

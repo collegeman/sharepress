@@ -2,9 +2,6 @@
 add_action('admin_init', 'sp_admin_init');
 add_action('admin_menu', 'sp_admin_menu');
 
-function sp_setting($key, $default = false) {
-  return $default;
-}
 
 function sp_admin_init() {
   $option_group = 'sp-settings';
