@@ -229,8 +229,7 @@ p.submit.floating input { position: fixed; top: 40px; right: 20px; font-size: 18
           </td>
         </tr>
       </table>
-
-      <br />
+       <br />
       <h3 class="title">Post Link</h3>
       <p>Append post link to the end of Facebook messages?</p>
 

@@ -5,7 +5,7 @@ Plugin URI: https://getsharepress.com
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.24
+Version: 2.2.26
 License: GPL2
 */
 
@@ -41,7 +41,7 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 
 class Sharepress {
 
-  const VERSION = '2.2.23';
+  const VERSION = '2.2.26';
   
   const MISSED_SCHEDULE_DELAY = 5;
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
@@ -1499,11 +1499,13 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     
       try {
         // flush the fb cache
-        $poke = self::api('/', 'POST', array(
-          'id' => $meta['link'],
-          'scrape' => 'true'
-          )
-        );
+        if ( apply_filters('sp_auto_flush_fb', true) ) {
+          $poke = self::api('/', 'POST', array(
+            'id' => $meta['link'],
+            'scrape' => 'true'
+            )
+          );
+        }
         
         
         // no targets? error.
