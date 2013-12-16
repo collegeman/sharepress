@@ -4,7 +4,7 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.8
-Stable tag: 2.2.24
+Stable tag: 2.2.26
 
 Automatic posting and reposting to Facebook and Twitter.
 
@@ -120,6 +120,9 @@ Documentation and support for SharePress are available [here](http://fatpanda.ze
 E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.26 =
+* Add filter 'sp_auto_flush_fb' to bypass facebook cache flush
 
 = 2.2.24 =
 * Compatible with WordPress 3.8
