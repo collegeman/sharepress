@@ -458,6 +458,27 @@ class SpApi_v1 extends AbstractSpApi {
     }
   }
 
+  function metadata($post_id) {
+    $this->_assertLoggedIn();
+    if ( !get_post($post_id) ) {
+      return new WP_Error("No post with that ID");
+    }
+    if ( $this->_isGet() ) {
+      $socialmeta = get_post_meta($post_id, 'socialmeta', true);
+      if ( $socialmeta ) {
+        $post_thumbnail_id = get_post_thumbnail_id( $post_id );
+        $socialmeta['image'] = ( !empty($socialmeta['image']) ) ? $socialmeta['image'] : ( ( !empty($post_thumbnail_id) ) ? $this->media($post_thumbnail_id) : false );
+      }
+      return $socialmeta;
+    }
+    $socialmeta = array(
+      'title' => $_REQUEST['title'],
+      'image' => $_REQUEST['image'],
+      'description' => $_REQUEST['description']
+    );
+    return update_post_meta($post_id, 'socialmeta', $socialmeta);
+  }
+
 }
 
 abstract class AbstractSpApi {
