@@ -2,7 +2,7 @@
 add_action('add_meta_boxes', 'sp_add_meta_boxes');
 add_action('admin_enqueue_scripts', 'sp_meta_admin_enqueue_scripts');
 add_action('admin_notices', 'sp_admin_notices', 10, 10);
-add_action( 'save_post', 'sp_save_social_metadata' );
+add_action('save_post', 'sp_save_social_metadata');
 
 function sp_save_social_metadata($post_id) {
 
@@ -38,7 +38,7 @@ function sp_save_social_metadata($post_id) {
 
 function sp_add_meta_boxes() {
   add_meta_box('sp_metabox', 'SharePress', 'sp_metabox', 'post', 'side', 'high');
-  add_meta_box('sp_metabox_og', 'Social Metadata', 'sp_metabox_og', 'post', 'side', 'high');
+  add_meta_box('sp_metabox_og', 'Simple Social Metadata', 'sp_metabox_og', 'post', 'side', 'high');
 }
 
 function sp_meta_admin_enqueue_scripts($hook) {
@@ -56,13 +56,13 @@ function sp_metabox() {
 
 function sp_metabox_og($post) {
   add_thickbox();
-  wp_nonce_field( 'sp_metabox_og', 'sp_metabox_og_nonce' );
-  $socialmeta = array(
-    'title' => get_post_meta($post->ID, 'social:title', true),
-    'image' => get_post_meta($post->ID, 'social:image', true),
-    'description' => get_post_meta($post->ID, 'social:description', true)
-  );
-  require(SP_DIR.'/views/social_metabox.php');
+  sp_require_view('social-metabox', array(
+    'socialmeta' => array(
+      'title' => get_post_meta($post->ID, 'social:title', true),
+      'image' => get_post_meta($post->ID, 'social:image', true),
+      'description' => get_post_meta($post->ID, 'social:description', true)
+    )
+  ));
 }
 
 function sp_admin_notices() {

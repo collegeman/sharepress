@@ -41,3 +41,7 @@ transition: top 0.1s ease-in;
 #sp_metabox .dropdown .item { list-style-type: none; padding: 0; margin: 0; }
 #sp_metabox .dropdown .item > a { text-decoration: none; padding: 3px 8px; display: block; }
 #sp_metabox .dropdown .item > a:hover { background-color: #eee; }
+#sp_metabox_og .social_meta input[type="text"], .social_meta textarea { width:100%; margin-bottom:10px; }
+#sp_metabox_og .shared_img_container { margin: 10px 0px; }
+#sp_metabox_og .shared_img_thumb { width:100%; }
+#sp_metabox_og .shared_img_thumb img { max-width:100%; }
