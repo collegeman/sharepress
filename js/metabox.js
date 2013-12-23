@@ -24,7 +24,7 @@ sp.views = sp.views || {};
   
   'use strict';
 
-  var sp_media_frame;  
+  var profiles, updates, sp_media_frame;
 
   $(document).on('click', function() {
     $('.combo-button .dropdown:visible').each(function() {
@@ -111,7 +111,7 @@ sp.views = sp.views || {};
     save: function() {
       var schedule = {};
       schedule.when = this.$get('when').val();
-      schedule.repeat = this.$get('repeat').val();
+      schedule.repeat = this.$get('repeat').val() || 'never';
       schedule.until = this.$get('until').val();
       
       var date = moment();
@@ -124,15 +124,24 @@ sp.views = sp.views || {};
       schedule.date = date.utc().format('YYYY-MM-DD HH:mm');
       schedule.time = date.unix();
 
-      date = moment();
-      date.month(parseInt(this.$get('until_month').val()));
-      date.year(this.$get('until_year').val());
-      date.date(this.$get('until_date').val());
-      time = this.$get('until_time').val().split(':');
-      date.hours(time[0]);
-      date.minutes(time[1]);
-      schedule.until_date = date.utc().format('YYYY-MM-DD HH:mm');
-      schedule.until_time = date.unix();
+      if (schedule.repeat != 'never') {
+
+        date = moment();
+        date.month(parseInt(this.$get('until_month').val()));
+        date.year(this.$get('until_year').val());
+        date.date(this.$get('until_date').val());
+        time = this.$get('until_time').val().split(':');
+        date.hours(time[0]);
+        date.minutes(time[1]);
+        schedule.until_date = date.utc().format('YYYY-MM-DD HH:mm');
+        schedule.until_time = date.unix();
+
+      } else {
+
+        schedule.until_date = null;
+        schedule.until_time = null;
+
+      }
 
       this._update.set('schedule', schedule);
 
@@ -295,13 +304,13 @@ sp.views = sp.views || {};
         $combo.find('.dropdown').hide();
       },
       'click [data-action="create-update"]': function(e) {
-        var profile = this.profiles.get( parseInt( $(e.currentTarget).data('profile') ));
+        var profile = profiles.get( parseInt( $(e.currentTarget).data('profile') ));
         var update = new sp.models.Update({
           'profile_id': profile.get('id'),
           'post_id': $('#post_ID').val()
         });
         update.profile = profile;
-        this.updates.add( update );
+        updates.add( update );
         return false;
       },
       'click [data-open-in="modal"]': function(e) {
@@ -316,19 +325,14 @@ sp.views = sp.views || {};
         var check = setInterval(function() {
           if (popup.closed) {
             clearInterval(check);
-            that.ui.profiles.html('<li>Loading...</li>');
-            that.profiles.fetch({
+            that.ui.profiles.html('<li class="loading">Loading...</li>');
+            profiles.fetch({
               success: function(profiles) {
-                $(window).trigger('sp-profiles-loaded', [ profiles ]);
-                that.updates.each(function(update) {
-                  var profile = that.profiles.get(parseInt(update.get('profile_id')));
-                  if (!profile) {
-                    update.set({ hidden: true });
-                  } else {
-                    update.set({ hidden: false });
-                    update.profile = profile;
-                  }
-                });
+                that.ui.profiles.find('.loading').remove();
+              },
+              error: function() {
+                that.ui.profiles.find('.loading').remove();
+                // TODO: helpful error message...?
               }
             });
           }
@@ -338,34 +342,48 @@ sp.views = sp.views || {};
       }
     },
     initialize: function() {
-      var metabox = this;
+      // intialize global collections:
+      profiles = new sp.models.Profiles(),
+      updates = new sp.models.Updates([], { post_id: $('#post_ID').val() });
 
-      this.profiles = new sp.models.Profiles();
-      this.profiles.on('add', $.proxy(this.addProfile, this));
-      this.profiles.on('remove', $.proxy(this.removeProfile, this));
-      this.profiles.on('reset', $.proxy(this.resetProfiles, this));
-
-      this.updates = new sp.models.Updates([], { post_id: $('#post_ID').val() });
-      this.updates.on('add', $.proxy(this.addUpdate, this));
-      this.updates.on('remove', $.proxy(this.removeUpdate, this));
-      this.updates.on('reset', $.proxy(this.resetUpdates, this));
-
+      this.listenTo(profiles, 'add', this.addProfile);
+      this.listenTo(profiles, 'remove', this.removeProfile);
+      this.listenTo(profiles, 'sync', this.resetProfiles);
+      
+      this.listenTo(updates, 'add', this.addUpdate);
+      this.listenTo(updates, 'remove', this.removeUpdate);
+      this.listenTo(updates, 'sync', this.resetUpdates);
+      
       this.ui = {};
       this.ui.profiles = this.$('[data-ui="profiles"]');
       this.ui.updates = this.$('[data-ui="updates"]');
-      this.ui.calendar = new sp.views.Calendar({ 'metabox': metabox, el: this.$('[data-ui="calendar"]') });
+      this.ui.calendar = new sp.views.Calendar({ 
+        el: this.$('[data-ui="calendar"]'),
+        'metabox': this 
+      });
 
-      this.profiles.fetch({
-        success: function(profiles) {
-          metabox.updates.fetch({
-            success: function(updates) {
-              if (updates.length === 0) {
-                metabox.$('[data-ui="none"]').show();
-              }
-              $(window).trigger('sp-updates-loaded', [ updates ]);
+      // anytime profiles is updated, review the updates collection
+      // and revise each update to reflect whether or not profiles are present
+      profiles.on('sync', function() {
+        updates.each(function(update) {
+          var profile = profiles.get( parseInt(update.get('profile_id')) );
+          update.set({ hidden: !profile });
+          update.profile = profile ? profile : update.profile;
+        });
+      });
+
+      // initialize profiles...
+      profiles.fetch({
+        // and on success, initialize updates too
+        success: function() {
+          updates.fetch({
+            error: function() {
+              // TODO: helper error message...?
             }
           });
-          $(window).trigger('sp-profiles-loaded', [ profiles ]);
+        },
+        error: function() {
+          // TODO: helpful error message...?
         }
       });
     },
@@ -378,15 +396,15 @@ sp.views = sp.views || {};
       profile.$ui && profile.$ui.remove();
     },
     resetProfiles: function(profiles, result) {
-      var that = this;
       this.ui.profiles.html('');
-      profiles.each(function(profile) {
-        that.addProfile(profile);
-      });
+      profiles.each(_.bind(this.addProfile, this));
     },
     addUpdate: function(update) {
-      this.$('[data-ui="none"]').hide();
-      update.profile = this.profiles.get(parseInt(update.get('profile_id'))); 
+      // already drawn? remove and redraw!
+      update.view && update.view.remove();
+        
+
+      update.profile = profiles.get(parseInt(update.get('profile_id'))); 
       if (!update.profile) {
         update.set({ hidden: true });
       }
@@ -399,17 +417,12 @@ sp.views = sp.views || {};
       $update.find('textarea').focus();
     },
     removeUpdate: function(update) {
-      update.view.remove();
-      if (this.updates.length === 0) {
-        this.$('[data-ui="none"]').show();
-      }
+      update.view && update.view.remove();
+      this.$('[data-ui="none"]').toggle(!updates.length);
     },
     resetUpdates: function(updates, result) {
-      var that = this;
-      updates.each(function(update) {
-        update.view && update.view.remove();
-        that.addUpdate(update);
-      });
+      this.$('[data-ui="none"]').toggle(!updates.length);
+      updates.each(_.bind(this.addUpdate, this));
     }
   });
 

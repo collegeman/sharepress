@@ -489,7 +489,7 @@ function sp_update_update($update) {
  * @return If the SharePressUpdate does not exist, returns WP_Error object,
  * otherwise true.
  */
-function sp_set_error_status($update, $error) {
+function sp_set_error_status($update, $error = null) {
   if (!$update = sp_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }

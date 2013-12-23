@@ -35,40 +35,9 @@
           <option value="<?php echo $year ?>"><?php echo $year ?></option>
         <?php } ?>
       </select>
-      <input type="text" data-value="time" value="" maxlength="8" style="width:40px;">,
+      <input type="text" data-value="time" value="" maxlength="8" style="width:50px;">,
     </div>
-    <div>
-      and then <select data-value="repeat">
-        <option value="never">never repeat</option>
-        <option value="hourly">repeat hourly</option>
-        <option value="daily">repeat daily</option>
-        <option value="weekly">repeat weekly</option>
-        <option value="monthly">repeat monthly</option>
-        <option value="annually">repeat annually</option>
-      </select>
-      <div data-ui="until" style="display:none;">
-        until
-        <select data-value="until">
-          <option value="once">just once</option>
-          <option value="forever">forever</option>
-          <option value="future">a future date:</option>
-        </select>
-        <div data-ui="until_date" style="display:none;">
-          <select data-value="until_month">
-            <?php for($i = 0; $i < 12; $i++) { ?>
-              <option value="<?php echo $i ?>"><?php echo date('F', mktime(0, 0, 0, $i + 1, 10)) ?></option>
-            <?php } ?>
-          </select>
-          <input type="text" data-value="until_date" value="" maxlength="2" style="width:30px;">,
-          <select data-value="until_year">
-            <?php for($i = 0; $i < 10; $i++) { $year = date('Y') + $i; ?>
-              <option value="<?php echo $year ?>"><?php echo $year ?></option>
-            <?php } ?>
-          </select>
-          <input type="text" data-value="until_time" value="" maxlength="8" style="width:40px;">
-        </div>
-      </div>
-    </div>
+    <?php sp_require_view('calendar-repeat-options') ?>
   </div>
   <div class="submitbox">
     <div id="wp-link-update">

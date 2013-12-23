@@ -103,6 +103,11 @@ sp.models = sp.models || {};
   sp.models.Updates = Backbone.Collection.extend({
     initialize: function(models, options) {
       this.options = options;
+
+      // global notification
+      this.on('sync', function() {
+        $(window).trigger('sp.updates.sync', [ this ]);
+      });
     },
     url: function() {
       var url = sp.api + '/updates';
@@ -121,6 +126,11 @@ sp.models = sp.models || {};
   });
 
   sp.models.Profiles = Backbone.Collection.extend({
+    initialize: function() {
+      this.on('sync', function() {
+        $(window).trigger('sp.profiles.sync', [ this ]);      
+      });
+    },
     url: function() {
       return sp.api + '/profiles';
     },

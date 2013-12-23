@@ -10,7 +10,7 @@
 #sp_metabox .thumb.twitter { border-bottom: 4px solid #44CCF6; }
 #sp_metabox .thumb.googleplus { border-bottom: 4px solid #6EC41B; }
 #sp_metabox .thumb.linkedin { border-bottom: 4px solid #027EBC; }
-#sp_metabox .buttons { padding: 10px 10px 0px; }
+#sp_metabox .buttons { padding: 10px }
 #sp_metabox .updates { position: relative; }
 #sp_metabox .editor textarea { width: 99%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; min-height: 80px; }
 #sp_metabox .delete { display: inline-block; padding: 2px; color: red; }

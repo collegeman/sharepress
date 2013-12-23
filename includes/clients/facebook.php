@@ -63,7 +63,8 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
     
   function loginUrl($redirect_uri = false) {
     $config = array(
-      'scope' => 'email,read_stream,publish_stream,manage_pages,share_item'
+      'scope' => 'email,read_stream,publish_stream,manage_pages,share_item',
+      'display' => 'popup'
     );
     if ($redirect_uri) {
       $config['redirect_uri'] = $redirect_uri;

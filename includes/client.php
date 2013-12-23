@@ -2,6 +2,16 @@
 add_action('init', 'sp_init', 1, 12);
 add_action('wp_head', 'sp_wp_head');
 
+function sp_require_view($view) {
+  $paths = apply_filters('sp_view_paths', array(SP_DIR.'/views'));
+  foreach($paths as $path) {
+    if (file_exists($file = $path.'/'.$view.'.php')) {
+      require($file);
+      break;
+    }
+  }
+}
+
 function sp_activate() {
   do_action('sp_activated');
 }
@@ -28,7 +38,7 @@ function sp_init() {
   do_action('sp_init');
 }
 
-function get_default_picture() {
+function sp_get_default_picture() {
   return get_option('sp_default_picture', '');
 }
 
@@ -46,7 +56,7 @@ function sp_wp_head() {
       'og:title' => strip_tags(get_the_title()),
       'og:image' => $picture,
       'og:site_name' => get_bloginfo('name'),
-      'fb:app_id' => get_option(SP_OPTION_API_KEY),
+      'fb:app_id' => sp_get_opt('facebook_key'),
       'og:description' => strip_shortcodes($excerpt),
       'og:locale' => sp_get_opt('og_locale', 'en_US')
     );
@@ -57,8 +67,8 @@ function sp_wp_head() {
       'og:url' => is_front_page() ? get_bloginfo('siteurl') : get_permalink(),
       'og:title' => strip_tags(get_bloginfo('name')),
       'og:site_name' => get_bloginfo('name'),
-      'og:image' => get_default_picture(),
-      'fb:app_id' => get_option(OPTION_API_KEY),
+      'og:image' => sp_get_default_picture(),
+      'fb:app_id' => sp_get_opt('facebook_key'),
       'og:description' => strip_shortcodes(get_bloginfo('description')),
       'og:locale' => sp_get_opt('og_locale', 'en_US')
     );

@@ -1,11 +1,15 @@
 window.sp = window.sp || {};
 
 !function($) {
-  $(window).on('sp-profiles-loaded', function(e, profiles) {
-    if (profiles.size() === 0) {
-      sp.showPointer('sp_connect_btn');
-    } else {
-      sp.showPointer('sp_profiles');
-    }
+  var t = null;
+  $(window).on('sp.profiles.sync', function(e, profiles) {
+    clearTimeout(t);
+    t = setTimeout(function() {
+      if (profiles.size() === 0) {
+        sp.showPointer('sp_connect_btn');
+      } else {
+        sp.showPointer('sp_profiles');
+      }
+    }, 500);
   });
 }(jQuery);
