@@ -22,7 +22,9 @@ sp.views = sp.views || {};
 
 !function($, B) {
   
-  'use strict';  
+  'use strict';
+
+  var sp_media_frame;  
 
   $(document).on('click', function() {
     $('.combo-button .dropdown:visible').each(function() {
@@ -237,6 +239,42 @@ sp.views = sp.views || {};
     }
   });
 
+  sp.views.SocialMetabox = Backbone.View.extend({
+    events: {
+      'click [data-action="set-social-image"]': function(e) {
+        sp.media(this);
+        return false;
+      },
+      'click .shared_img_thumb': function(e) {
+        sp.media(this);
+        return false;
+      },
+      'click [data-action="remove-social-image"]': function(e) {
+        $(e.currentTarget).hide();
+        this.$('[data-action="set-social-image"]').show();
+        this.$img.val('');
+        this.$thumb.find('img').remove();
+        return false;
+      }
+    },
+    setImage: function(media) {
+      this.$('[data-action="set-social-image"]').hide();
+      this.$('[data-action="remove-social-image"]').show();
+      this.$img.val(media.url);
+      this.$thumb.data('media_id', media.id);
+      this.setThumb(media.url);
+    },
+    setThumb: function(img_url) {
+      this.$thumb.html($('<img>').attr('src', img_url));
+    },
+    initialize: function() {
+      var that = this;
+      this.$title = this.$('[data-value="social:title"]');
+      this.$img = this.$('[data-value="social:image"]');
+      this.$desc = this.$('[data-value="social:description"]');
+      this.$thumb = this.$('.shared_img_thumb');
+    }
+  });
 
   sp.views.Metabox = Backbone.View.extend({
     events: {
@@ -374,5 +412,45 @@ sp.views = sp.views || {};
       });
     }
   });
+
+  sp.media = function(metabox) {
+    // If the frame already exists, re-open it.
+    if ( sp_media_frame ) {
+        sp_media_frame.open();
+        return;
+    }
+    sp_media_frame = wp.media.frames.sp_media_frame = wp.media({
+      className: 'media-frame sp-media-frame',
+      frame: 'select',
+      multiple: false,
+      title: 'Choose a share image',
+      library: {
+          type: 'image'
+      },
+      button: {
+          text:  'Choose Share Image'
+      }
+    });
+ 
+    sp_media_frame.on('select', function(){
+      // Grab our attachment selection and construct a JSON representation of the model.
+      var media_attachment = sp_media_frame.state().get('selection').first().toJSON();
+      metabox.setImage(media_attachment);
+    });
+
+    sp_media_frame.on('open', function() {
+      var id = false;
+      if( id = metabox.$thumb.data('media_id') ) {
+        // set selection
+        var selection   =   sp_media_frame.state().get('selection'),
+            attachment  =   wp.media.attachment( id );
+        attachment.fetch();
+        selection.add( attachment );
+      }
+    });
+
+    // Now that everything has been set, let's open up the frame.
+    sp_media_frame.open();
+  }
 
 }(jQuery, Backbone);
