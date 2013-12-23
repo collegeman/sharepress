@@ -32,6 +32,7 @@ function sp_init() {
   require(SP_DIR.'/includes/metaboxes.php');
   require(SP_DIR.'/includes/metadata.php');
   require(SP_DIR.'/includes/settings.php');
+  require(SP_DIR.'/includes/addons.php');
   require(SP_DIR.'/includes/pointers.php');
 
   wp_register_script('sp_sharepress_script', SP_URL.'/js/sharepress.js', array('backbone'));
@@ -43,8 +44,6 @@ function sp_init() {
 
   do_action('sp_init');
 }
-
-
 
 /**
  * Seek out the public and private keys for the given service. Default sources

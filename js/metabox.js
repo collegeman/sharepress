@@ -237,10 +237,14 @@ sp.views = sp.views || {};
       if (this.model.get('status') === 'trash') {
         this.$el.html('');
       } else {
-        var $template = this._editing ? this.options.metabox.$('[data-template="editor"]') : this.options.metabox.$('[data-template="update"]');
+        var $template = this._editing ? this.options.metabox.$('[data-template="editor"]') : this.options.metabox.$('[data-template="update"]'),
+            profile = this.model.profile;
+
         this.$el.html( $template.html() );
         this.$('[data-value="schedule"]').text(this.model.getScheduleText());
-        this.$('[data-ui="avatar"]').attr('src', this.model.profile.get('avatar'));
+        this.$('[data-ui="avatar"]').attr('src', profile.get('avatar'))
+          .addClass(profile.get('service'))
+          .parent().attr('title', profile.get('service') + ': ' + profile.get('service_username'));
         this.$('[data-value="text"]').text(this.model.get('text'));
       }
       this.$el.toggle(!this.model.get('hidden'));

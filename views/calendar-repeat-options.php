@@ -6,8 +6,8 @@
   <div data-ui="until" style="display:none;">
     <p style="line-height:1.5; text-align:center; padding: 10px;">
       Get options for repeating:<br>
-      install the <b>Repeater</b> plugin</a>.<br>
-      <a href="<?php echo admin_url('options-general.php?page=sp-plugins') ?>" target="_blank">Learn more &rarr;</a>
+      install the <b>Repeater</b> add-on</a>.<br>
+      <a href="<?php echo admin_url('options-general.php?page=sp-addons') ?>" target="_blank">Learn more &rarr;</a>
     </p>
   </div>
 </div>

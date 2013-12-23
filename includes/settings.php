@@ -1,7 +1,6 @@
 <?php
 add_action('admin_init', 'sp_admin_init');
-add_action('admin_menu', 'sp_admin_menu');
-
+add_action('admin_menu', 'sp_settings_menu');
 
 function sp_admin_init() {
   $option_group = 'sp-settings';
@@ -14,9 +13,9 @@ function sp_admin_init() {
   }
 }
 
-function sp_admin_menu() {
+function sp_settings_menu() {
   if (apply_filters('sp_show_settings_screens', true)) {
-    add_options_page('SharePress', 'SharePress', 'manage_options', 'sp-settings', 'sp_settings_page');
+    add_menu_page('SharePress', 'SharePress', 'manage_options', 'sp-settings', 'sp_settings_page');
   }
 }
 
@@ -56,21 +55,32 @@ function sp_settings_page() {
     
     $service = strtolower($_REQUEST['sp_service']);
     $client = sp_get_client_for_settings_page($service);
-
     $option_group = "sp-settings-{$service}";
     $profiles = sp_get_profiles(array('service' => $service));
     $subprofiles = array();
     
     // profiles picker:
     if (!empty($profiles) && !$client->has_error && isset($_REQUEST['sp_profiles'])) {
-      require(SP_DIR.'/views/profiles.php');
+      sp_require_view('profiles', array(
+        'service' => $service,
+        'client' => $client,
+        'option_group' => $option_group,
+        'profiles' => $profiles,
+        'subprofiles' => $subprofiles
+      ));
     // service settings:
     } else {
-      require(SP_DIR.'/views/service-settings.php');
+      sp_require_view('service-settings', array(
+        'service' => $service,
+        'client' => $client,
+        'option_group' => $option_group,
+        'profiles' => $profiles,
+        'subprofiles' => $subprofiles
+      ));
     }
 
   // global configuration page:
   } else {
-    require(SP_DIR.'/views/global-settings.php');
+    sp_require_view('global-settings');
   }
 }
