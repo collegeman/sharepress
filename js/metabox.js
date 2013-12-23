@@ -406,8 +406,6 @@ sp.views = sp.views || {};
     addUpdate: function(update) {
       // already drawn? remove and redraw!
       update.view && update.view.remove();
-        
-
       update.profile = profiles.get(parseInt(update.get('profile_id'))); 
       if (!update.profile) {
         update.set({ hidden: true });
@@ -419,12 +417,13 @@ sp.views = sp.views || {};
       var $update = update.view.render().$el;
       this.ui.updates.append($update);
       $update.find('textarea').focus();
+      this.$('[data-ui="none"]').toggle(!updates.length);
     },
     removeUpdate: function(update) {
       update.view && update.view.remove();
       this.$('[data-ui="none"]').toggle(!updates.length);
     },
-    resetUpdates: function(updates, result) {
+    resetUpdates: function() {
       this.$('[data-ui="none"]').toggle(!updates.length);
       updates.each(_.bind(this.addUpdate, this));
     }

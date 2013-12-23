@@ -1,7 +1,7 @@
 <?php wp_nonce_field( 'sp_metabox_og', 'sp_metabox_og_nonce' ); ?>
 <div class="social_meta">
   <p class="howto">Influence how your posts appear in social media newsfeeds.
-    Want more control? Install the <b>Advanced Social Metadata</b> add-on. <a href="<?php echo admin_url('options-general.php?page=sp-addons') ?>" target="_blank">Learn more &rarr;</a></p>
+    Want more control? Install the <b>Advanced Social Metadata</b> add-on. <a href="<?php echo admin_url('admin.php?page=sp-addons') ?>" target="_blank">Learn more &rarr;</a></p>
   <div class="shared_img_container">
     <div class="shared_img_thumb">
       <?php if ( !empty($socialmeta['image']) ) { ?>

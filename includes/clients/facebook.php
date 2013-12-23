@@ -154,7 +154,7 @@ add_action('sp_add_new_account_menu', 'sp_add_new_account_menu_facebook');
 function sp_add_new_account_menu_facebook() {
   $target = '_self';
   if (!sp_service_has_keys('facebook')) {
-    $href = admin_url('options-general.php?page=sharepress');
+    $href = admin_url('admin.php?page=sharepress');
     $target = '_blank';
   }
   echo sprintf('<li><a tabindex="-1" href="%s" target="%s">Add Facebook Profile</a></li>', $href, $target);

@@ -1,6 +1,9 @@
 <?php
 add_action('init', 'sp_update_init');
 
+/**
+ * Add our custom post type for SharePress updates
+ */
 function sp_update_init() {
   register_post_type('sp_update', array(
     'public' => false,
@@ -15,8 +18,6 @@ function sp_update_init() {
     'menu_position' => null
   ));
 }
-
-
 
 /**
  * This class models content that is to be shared through

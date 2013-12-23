@@ -152,7 +152,7 @@ class SpApi_v1 extends AbstractSpApi {
 
     if ($config || isset($_POST['config'][$service])) {
       if (apply_filters('sp_show_settings_screens', true, $service)) {
-        return wp_redirect(admin_url('options-general.php?page=sp-settings&sp_service='.$service));
+        return wp_redirect(admin_url('admin.php?page=sp-settings&sp_service='.$service));
       } else {
         // TODO: redirect or display error?
       }
@@ -189,7 +189,7 @@ class SpApi_v1 extends AbstractSpApi {
     } 
 
     if ($profiles) {
-      return wp_redirect(admin_url('options-general.php?page=sp-settings&sp_service='.$service.'&sp_profiles=true'));
+      return wp_redirect(admin_url('admin.php?page=sp-settings&sp_service='.$service.'&sp_profiles=true'));
     }
 
     if (empty($_REQUEST['redirect_uri'])) {

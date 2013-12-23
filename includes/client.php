@@ -113,6 +113,21 @@ function sp_current_user_is_admin() {
 }
 
 /**
+ * Is a particular client installed?
+ * @param String the service name
+ * @return bool
+ */
+function sp_has_client($service) {
+  if (is_wp_error($client = sp_get_client($service))) {
+    // if the error code is not equal to "client", then
+    // the client is installed
+    return $client->get_error_code() !== 'client';
+  } else {
+    return true;
+  }
+}
+
+/**
  * Get a SharePressClient instance, optionally configured for accessing
  * the underlying network on behalf of the given SharePressProfile.
  * @param mixed $service Either a string uniquely naming a service, e.g., 'facebook',

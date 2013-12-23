@@ -69,7 +69,7 @@ function sp_admin_notices() {
   $user = wp_get_current_user();
   $all_dismissed = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
   $is_dismissed = in_array('try_sharepress_nag', $all_dismissed);
-  if ($is_dismissed || preg_match('/(options-general.php|post.php|post-new.php)$/i', $_SERVER['PHP_SELF'])) {
+  if ($is_dismissed || preg_match('/(admin.php|post.php|post-new.php)$/i', $_SERVER['PHP_SELF'])) {
     return;
   }
     
