@@ -446,9 +446,8 @@ function sp_update_update($update) {
     } else {
       $meta['due_at'] = $schedule['time'];
     }
-
   }
-
+  
   $post_ids = array();
 
   foreach($profiles as $profile) {

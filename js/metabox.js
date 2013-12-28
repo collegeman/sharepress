@@ -311,7 +311,10 @@ sp.views = sp.views || {};
         var profile = profiles.get( parseInt( $(e.currentTarget).data('profile') ));
         var update = new sp.models.Update({
           'profile_id': profile.get('id'),
-          'post_id': $('#post_ID').val()
+          'post_id': $('#post_ID').val(),
+          'schedule': {
+            'when': 'publish'
+          }
         });
         update.profile = profile;
         updates.add( update );
