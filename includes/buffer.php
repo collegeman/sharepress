@@ -117,7 +117,7 @@ function sp_update_buffer($profile, $order = null, $offset = null, $limit = 100)
     $update = array_shift($updates);
     
     // allow for updates whose publishing date/time is fixed
-    if (get_post_meta($update->ID, 'post_id', true) || get_post_meta($update->ID, 'due_fixed', true)) {
+    if (get_post_meta($update->ID, 'post_id', true) || get_post_meta($update->ID, 'schedule', true)) {
       $update->menu_order = -1;
       wp_insert_post($update); 
       continue;

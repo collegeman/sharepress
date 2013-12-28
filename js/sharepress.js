@@ -79,7 +79,9 @@ sp.models = sp.models || {};
     getScheduleText: function() {
       var schedule = this.get('schedule') || { when: 'publish' }, label = '';
 
-      if (schedule.when === 'publish') {
+      if (schedule.when === 'immediately') {
+        label = 'Post immediately';
+      } else if (schedule.when === 'publish') {
         label = 'Post on publish';
       } else {
         label = 'Post on ' + moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');

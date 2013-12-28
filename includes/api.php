@@ -65,11 +65,13 @@ class SpApi_v1 extends AbstractSpApi {
     if ( $doing_cron_transient != $doing_wp_cron )
       return;
 
-    sp_post_pending();
+    $result = sp_post_pending();
 
     if ( get_transient('sp_doing_cron') == $doing_wp_cron ) {
       delete_transient( 'sp_doing_cron' );
     }
+
+    return $result;
   }
 
   function shorten() {
@@ -565,6 +567,9 @@ function sp_parse_request($wp) {
       }
       $result = call_user_func_array($fx, array_filter(explode('/', $wp->query_vars['_args'])));
       header('Content-Type: application/json');
+      if (is_wp_error($result)) {
+        status_header(500);
+      }
       echo json_encode($result);
       exit(0);
     }  

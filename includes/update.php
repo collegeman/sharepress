@@ -127,8 +127,6 @@ class SharePressUpdateSorter {
  * @action post_sp_post_pending
  */
 function sp_post_pending($until = null) {
-  error_log('sp_post_pending');
-
   global $wpdb;
 
   if (is_null($until)) {
@@ -136,6 +134,9 @@ function sp_post_pending($until = null) {
     // look one minute into the future
     $until = time() + 60;
   }
+
+  // a little bit of var filtering
+  $until = (int) $until;
 
   do_action('pre_sp_post_pending');
 
@@ -150,16 +151,18 @@ function sp_post_pending($until = null) {
       AND meta_value <= {$until}
   ");
 
+  $results = array();
+
   foreach($posts as $post) {
     if ($update = sp_get_update($post->ID)) {
-      sp_post_update($post->ID);  
+      $results[] = sp_post_update($post->ID);  
     }
   }
 
   do_action('post_sp_post_pending');
+
+  return $results;
 }
-
-
 
 /**
  * Publishes the given update.
@@ -171,6 +174,14 @@ function sp_post_update($update) {
   if (!$update = sp_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }
+  // if this update is bound to a Post ID
+  if ($update->post_id) {
+    $post = get_post($update->post_id);
+    if ($post->post_status !== 'publish') {
+      // return an error, but only for information purposes--no need to log this
+      return new WP_Error('post', "Associated Post is not published yet [{$update->post_id}]");
+    }
+  }
   if (!$profile = sp_get_profile($update->profile_id)) {
     $error = WP_Error('profile', "Profile does not exist [{$update->profile_id}]"); 
     sp_set_error_status($update, $error);
@@ -180,19 +191,21 @@ function sp_post_update($update) {
     return $error;
   }
   if (is_wp_error($client = sp_get_client($profile))) {
-    $client->add_data(array(
+    $error = $client;
+    $error->add_data(array(
       'update' => $update->toJSON()
     ));
-    sp_set_error_status($update, $client);
-    return $client;
+    sp_set_error_status($update, $error);
+    return $error;
   }
   if (is_wp_error($result = $client->post($update->text_formatted))) {
-    $result->add_data(array(
+    $error = $result;
+    $error->add_data(array(
       'profile' => $profile->toJSON(),
       'update' => $update->toJSON()
     ));
-    sp_set_error_status($update, $result);
-    return $result;
+    sp_set_error_status($update, $error);
+    return $error;
   }
   $post = get_post($update->id);
   $post->post_status = 'sent';
@@ -200,6 +213,7 @@ function sp_post_update($update) {
   update_post_meta($update->id, 'sent_at', time());
   update_post_meta($update->id, 'service_update_id', $result->service_update_id);
   update_post_meta($update->id, 'sent_data', $result->data);
+  delete_post_meta($update->id, 'error');
   return (object) sp_get_update($update->id)->toJSON();
 }
 
@@ -422,6 +436,17 @@ function sp_update_update($update) {
 
   if (array_key_exists('schedule', $update)) {
     $meta['schedule'] = $update['schedule'];
+
+    // configure due_at based on schedule
+    $schedule = (array) $update['schedule'];
+    // easy case: on publish, set due_at to 0
+    if ($schedule['when'] == 'publish') {
+      $meta['due_at'] = 0;
+    // otherwise, it's schedule for future publication
+    } else {
+      $meta['due_at'] = $schedule['time'];
+    }
+
   }
 
   $post_ids = array();
@@ -491,6 +516,7 @@ function sp_update_update($update) {
  * otherwise true.
  */
 function sp_set_error_status($update, $error = null) {
+  @error_log(print_r($error, true));
   if (!$update = sp_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }

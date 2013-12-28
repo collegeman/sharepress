@@ -42,10 +42,14 @@
 </div>
 <div class="calendar" id="sp_calendar" data-ui="calendar">
   <div class="controls">
-    Post on 
+    Post  
     <select data-value="when">
-      <option value="publish">publish</option>
-      <option value="future">a future date:</option>
+      <?php if ($post->post_status === 'publish') { ?>
+        <option value="immediately">immediately</option>
+      <?php } else { ?>
+        <option value="publish">on publish</option>
+      <?php } ?>
+      <option value="future">on a future date:</option>
     </select>
     <div data-ui="date" style="display:none;">
       <select data-value="month">
@@ -101,6 +105,6 @@
 </div>
 <script>
   jQuery(function($) {
-    new sp.views.Metabox({ el: $('#sp_metabox') });
+    new sp.views.Metabox({ el: $('#sp_metabox'), post: <?php echo json_encode($post) ?> });
   });
 </script>

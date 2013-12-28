@@ -94,7 +94,7 @@ sp.views = sp.views || {};
       }
     },
     render: function() {
-      this.$('[data-ui="date"]').toggle( this.$('[data-value="when"]').val() !== 'publish' );
+      this.$('[data-ui="date"]').toggle( this.$('[data-value="when"]').val() !== 'publish' && this.$('[data-value="when"]').val() !== 'immediately' );
       this.$('[data-ui="until"]').toggle( this.$('[data-value="repeat"]').val() !== 'never' );
       this.$('[data-ui="until_date"]').toggle( this.$('[data-value="until"]').val() === 'future' );
       this.$el.dialog({
@@ -155,7 +155,7 @@ sp.views = sp.views || {};
       var schedule = this._update.get('schedule') || {};
       var date = schedule.date ? moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc();
       var untilDate = schedule.until_date ? moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc();
-      this.$get('when').val(schedule.when || 'publish');
+      this.$get('when').val(schedule.when || ( this.options.metabox.options.post.post_status === 'publish' ? 'immediately' : 'publish' ));
       this.$get('repeat').val(schedule.repeat || 'never');      
       this.$get('until').val(schedule.until || 'once');
       this.$get('month').val(date.month());
@@ -244,7 +244,7 @@ sp.views = sp.views || {};
         this.$('[data-value="schedule"]').text(this.model.getScheduleText());
         this.$('[data-ui="avatar"]').attr('src', profile.get('avatar'))
           .addClass(profile.get('service'))
-          .parent().attr('title', profile.get('service') + ': ' + profile.get('service_username'));
+          .parent().attr('title', profile.get('service') + ': ' + profile.get('formatted_username'));
         this.$('[data-value="text"]').text(this.model.get('text'));
       }
       this.$el.toggle(!this.model.get('hidden'));
