@@ -21,6 +21,10 @@ function sp_activate() {
   do_action('sp_activated');
 }
 
+function sp_deactivate() {
+  do_action('sp_deactivated');
+}
+
 /**
  * Is the given plugin activated?
  * @param String plugin-directory/plugin-file.php or simply plugin-directory

@@ -35,4 +35,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 @define('SP_TEST_URL', 'http://getsharepress.com');
 
 require(SP_DIR.'/includes/client.php');
-register_activation_hook(__FILE__, 'sp_activate');
+register_activation_hook('sharepress/plugin.php', 'sp_activate');
+register_deactivation_hook('sharepress/plugin.php', 'sp_deactivate');

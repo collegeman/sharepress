@@ -134,7 +134,7 @@ class TwitterSharePressClient implements SharePressClient {
 
     $_SESSION['twitter-request-token'] = $request_token;
       
-    return 'https://api.twitter.com/oauth/authorize?force_login=1&oauth_token='.$_SESSION['twitter-request-token']['oauth_token'];
+    return 'https://api.twitter.com/oauth/authorize?oauth_token='.$_SESSION['twitter-request-token']['oauth_token'];
   }
 
   function post($message, $config = '') {

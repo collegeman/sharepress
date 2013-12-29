@@ -418,7 +418,7 @@ class SpApi_v1 extends AbstractSpApi {
       return $result;
 
     } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
-      return array('success' => sp_set_error_status($id));
+      return array('success' => sp_set_update_status($id, 'trash'));
 
     } else if ($id === 'queue') {
       if (!empty($action)) {

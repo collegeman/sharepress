@@ -1,6 +1,6 @@
 <div class="updates" data-ui="updates">
   <div class="misc-pub-section" data-ui="none" style="display:none;">
-    This post has no scheduled publications.
+    This post has no pending updates.
   </div>
 </div>
 <div class="buttons">

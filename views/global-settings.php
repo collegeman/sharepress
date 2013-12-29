@@ -15,18 +15,16 @@
     <input type="hidden" name="sharepress_api_key" value="">
     <input type="hidden" name="sharepress_api_secret" value="">
 
-    <h3 class="title">Open Graph Tags</h3>
-    <p>
-      <a href="https://developers.facebook.com/docs/opengraph/property-types/" target="_blank">Open Graph</a> meta data tells Facebook what your content is all about.
-    </p>
     <table class="form-table">
       <tr>
         <th>Basic open graph metadata</th>
         <td>
-          <p>If your Theme or another Plugin (like Yoast SEO) is also inserting Open Graph tags into your pages, you may want to disable SharePress' influence
-            over certain tags by unchecking them below.
-            When you uncheck any of the boxes below, you are telling SharePress that it is <em>not</em> allowed to influence this
-            meta data, which may make some features of SharePress unreliable.</p>
+          <p>
+            <b>Open Graph</b> meta data affects how your content looks when it is posted on Facebook.
+            You should allow SharePress to control these tags, but in some cases you may want to
+            give control of these tags to another Plugin (like Yoast SEO) or your Theme. To give control
+            over a particular tag to some other feature of your site, just uncheck the box below.
+          </p>
           <br>
           <?php
             $og_tags = array_merge(array(
@@ -37,7 +35,9 @@
               'fb:app_id' => false,
               'og:site_name' => false,
               'og:description' => false,
-              'og:locale' => false
+              'og:locale' => false,
+              'article:publisher' => false,
+              'article:author' => false
             ), sp_get_allowed_og_tags());
           ?>
 
@@ -53,10 +53,10 @@
       </tr>
       <tr>
         <th>
-          <label>og:type</label>
+          <label for="sp_og_site_type">og:type</label>
         </th>
         <td>  
-          <select id="sharepress_home_og_type" name="<?php echo sp_get_opt_name('og_site_type') ?>">
+          <select id="sp_og_site_type" name="<?php echo sp_get_opt_name('og_site_type') ?>">
             <?php foreach(array('blog', 'website') as $type) { ?>
               <option value="<?php echo $type ?>" <?php
                 if ($type === sp_get_og_site_type()) {
@@ -73,20 +73,20 @@
       </tr>
       <tr>
         <th>
-          <label for="sharepress_og_locale">og:locale</label>
+          <label for="sp_og_locale">og:locale</label>
         </th>
         <td>
-          <input id="sharepress_og_locale" name="<?php echo sp_get_opt_name('og_locale') ?>" type="text" value="<?php echo esc_attr(sp_get_og_locale()) ?>" placeholder="en_US" style="width:7em;" />
+          <input id="sp_og_locale" name="<?php echo sp_get_opt_name('og_locale') ?>" type="text" value="<?php echo esc_attr(sp_get_og_locale()) ?>" placeholder="en_US" style="width:7em;" />
           &nbsp; &nbsp; <span class="description">Enter the proper locale for your site.
             &nbsp; <a href="https://developers.facebook.com/docs/internationalization/#locales" target="_blank">Learn more &rarr;</a></span>
         </td>
       </tr>    
       <tr>
         <th>
-          <label for="fb_publisher_url">article:publisher</label>
+          <label for="sp_og_article_publisher">article:publisher</label>
         </th>
         <td>
-          <input type="text" class="regular-text" name="<?php echo sp_get_opt_name('og_article_publisher') ?>" id="fb_publisher_url" value="<?php echo esc_attr(sp_get_og_article_publisher()) ?>" placeholder="http://www.facebook.com/your-facebook-page">
+          <input type="text" class="regular-text" name="<?php echo sp_get_opt_name('og_article_publisher') ?>" id="sp_og_article_publisher" value="<?php echo esc_attr(sp_get_og_article_publisher()) ?>" placeholder="http://www.facebook.com/your-facebook-page">
           &nbsp; &nbsp; <span class="description">
             Set this to the URL of your Facebook page. <a href="https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/" target="_blank">Learn more &rarr;</a>
           </span>

@@ -1,7 +1,9 @@
 <?php
 add_filter('cron_schedules', 'sp_cron_schedules');
-add_action('sp_activated', 'sp_init_cron');
 add_action('sp_twominute_cron', 'sp_twominute_cron');
+
+// XXX: this should be on activation, not on init:
+add_action('sp_init', 'sp_init_cron');
 
 function sp_cron_schedules($schedules) {
   $schedules['twominute'] = array(

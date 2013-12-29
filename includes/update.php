@@ -1,5 +1,6 @@
 <?php
 add_action('init', 'sp_update_init');
+add_filter('sp_update_text_format', 'sp_default_update_text_format', 10, 2);
 
 /**
  * Add our custom post type for SharePress updates
@@ -84,8 +85,7 @@ class SharePressUpdate {
 
   function __get($name) {
     if ($name === 'text_formatted') {
-      $this->text_formatted = apply_filters('sp_update_text_format', $this->text, $this);
-      return $this->text_formatted;
+      return apply_filters('sp_update_text_format', $this->text, $this);
     } else {
       return null;
     }
@@ -162,7 +162,7 @@ function sp_post_pending($until = null) {
 
 /**
  * Publishes the given update.
- * @param mixed $update SharePressUpdate instance of an integer
+ * @param mixed $update SharePressUpdate instance or an int
  * @return On error, a WP_Error object, otherwise a stdClass of data
  * representing the update and details of the transmission.
  */
@@ -170,46 +170,65 @@ function sp_post_update($update) {
   if (!$update = sp_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }
+
   // if this update is bound to a Post ID
   if ($update->post_id) {
     $post = get_post($update->post_id);
     if ($post->post_status !== 'publish') {
       // return an error, but only for information purposes--no need to log this
-      return new WP_Error('post', "Associated Post is not published yet [{$update->post_id}]");
+      $error = new WP_Error('post-not-published', "Associated Post is not published yet [{$update->post_id}]");
+      $error->add_data(array(
+        'update' => $update->toJSON()
+      ));
+      return $error;
     }
   }
+
   if (!$profile = sp_get_profile($update->profile_id)) {
-    $error = WP_Error('profile', "Profile does not exist [{$update->profile_id}]"); 
-    sp_set_error_status($update, $error);
+    $error = new WP_Error('profile-does-not-exist', "Profile does not exist [{$update->profile_id}]"); 
+    sp_set_update_error_status($update, $error);
     $error->add_data(array(
       'update' => $update->toJSON()
     ));
     return $error;
   }
+
   if (is_wp_error($client = sp_get_client($profile))) {
     $error = $client;
     $error->add_data(array(
       'update' => $update->toJSON()
     ));
-    sp_set_error_status($update, $error);
+    sp_set_update_error_status($update, $error);
     return $error;
   }
-  if (is_wp_error($result = $client->post($update->text_formatted))) {
+  
+  if (is_wp_error($message = $update->text_formatted)) {
+    $error = $message;
+    $error->add_data(array(
+      'profile' => $profile->toJSON(),
+      'update' => $update->toJSON()
+    ));
+    sp_set_update_error_status($update, $error);
+    return $error;
+  }
+
+  if (is_wp_error($result = $client->post($message))) {
     $error = $result;
     $error->add_data(array(
       'profile' => $profile->toJSON(),
       'update' => $update->toJSON()
     ));
-    sp_set_error_status($update, $error);
+    sp_set_update_error_status($update, $error);
     return $error;
   }
+
   $post = get_post($update->id);
   $post->post_status = 'sent';
   wp_insert_post($post);
   update_post_meta($update->id, 'sent_at', time());
   update_post_meta($update->id, 'service_update_id', $result->service_update_id);
   update_post_meta($update->id, 'sent_data', $result->data);
-  delete_post_meta($update->id, 'error');
+  
   return (object) sp_get_update($update->id)->toJSON();
 }
 
@@ -424,6 +443,12 @@ function sp_update_update($update) {
   }
 
   if (array_key_exists('text', $update)) {
+    if ($post['post_status'] === 'sent') {
+      if ($update['text'] != $post['post_content']) {
+        return new WP_Error("Cannot modify this Update: it has already been sent.");
+      }
+    }
+
     $post['post_content'] = trim($update['text']);
   }
 
@@ -437,7 +462,7 @@ function sp_update_update($update) {
     // configure due_at based on schedule
     $schedule = (array) $update['schedule'];
     // easy case: on publish, set due_at to 0
-    if ($schedule['when'] == 'publish') {
+    if ($schedule['when'] === 'publish' || $schedule['when'] === 'immediately') {
       $meta['due_at'] = 0;
     // otherwise, it's schedule for future publication
     } else {
@@ -511,14 +536,58 @@ function sp_update_update($update) {
  * @return If the SharePressUpdate does not exist, returns WP_Error object,
  * otherwise true.
  */
-function sp_set_error_status($update, $error = null) {
-  @error_log(print_r($error, true));
+function sp_set_update_error_status($update, $error = null) {
+  sp_log($error, 'ERROR');
   if (!$update = sp_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }
   $post = get_post($update->id);
   $post->post_status = 'error';
   wp_insert_post($post);
-  update_post_meta($update->id, 'error', $error);
+  add_post_meta($update->id, 'error', $error);
   return true;
+}
+
+/**
+ * Change the post status of the given Update
+ * @param mixed $update Either a SharePressUpdate instance or an integer
+ * @param String $status Defaults to "buffer" (resetting the post status)
+ * @return If the SharePressUpdate does not exist, returns WP_Error object,
+ * otherwise true.
+ */
+function sp_set_update_status($update, $status = 'buffer') {
+  if (!$update = sp_get_update($update_ref = $update)) {
+    return new WP_Error('update', "Update does not exist [{$update_ref}]");
+  }
+  $post = get_post($update->id);
+  $post->post_status = $status;
+  wp_insert_post($post);
+  return true;
+}
+
+/**
+ * Default filter for update text: replaces [title] and [link] placeholders
+ * Will return WP_Error if sp_shorten returns one
+ * @see sp_shorten
+ */
+function sp_default_update_text_format($text, $update) {
+  if ($update->post_id) {
+    $orig = $text;
+    $post = get_post($update->post_id);
+
+    // [title]
+    if (stripos($text, '[title]') !== false) {
+      $text = preg_replace('/\[title\]/', apply_filters('the_title', $post->post_title), $text);
+    }
+
+    // [link]
+    if (stripos($text, '[link]') !== false) {
+      if (is_wp_error($shortened = sp_shorten(get_permalink($post)))) {
+        return $shortened;
+      }
+      $text = preg_replace('/\[link\]/', $shortened, $text);
+    }
+  }
+
+  return $text;
 }

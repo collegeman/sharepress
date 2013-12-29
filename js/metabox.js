@@ -152,20 +152,24 @@ sp.views = sp.views || {};
     },
     _setUpdate: function(update) {
       this._update = update;
-      var schedule = this._update.get('schedule') || {};
-      var date = schedule.date ? moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc();
-      var untilDate = schedule.until_date ? moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc();
+      
+      var schedule = this._update.get('schedule') || {},
+          date = schedule.date ? moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc(),
+          localDate = date.local(),
+          untilDate = schedule.until_date ? moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc(),
+          localUntilDate = untilDate.local();
+
       this.$get('when').val(schedule.when || ( this.options.metabox.options.post.post_status === 'publish' ? 'immediately' : 'publish' ));
       this.$get('repeat').val(schedule.repeat || 'never');      
       this.$get('until').val(schedule.until || 'once');
-      this.$get('month').val(date.month());
-      this.$get('date').val(date.date() < 10 ? '0' + date.date() : date.date());
-      this.$get('year').val(date.year());
-      this.$get('time').val(date.local().format('HH:mm'));
-      this.$get('until_month').val(untilDate.month());
-      this.$get('until_date').val(untilDate.date() < 10 ? '0' + untilDate.date() : untilDate.date());
-      this.$get('until_year').val(untilDate.year());
-      this.$get('until_time').val(untilDate.local().format('HH:mm'));
+      this.$get('month').val(localDate.month());
+      this.$get('date').val(localDate.date() < 10 ? '0' + localDate.date() : localDate.date());
+      this.$get('year').val(localDate.year());
+      this.$get('time').val(localDate.format('HH:mm'));
+      this.$get('until_month').val(localUntilDate.month());
+      this.$get('until_date').val(localUntilDate.date() < 10 ? '0' + localUntilDate.date() : localUntilDate.date());
+      this.$get('until_year').val(localUntilDate.year());
+      this.$get('until_time').val(localUntilDate.format('HH:mm'));
     },
     _hide: function() {
       this.$el.dialog('destroy')
@@ -184,13 +188,12 @@ sp.views = sp.views || {};
           if (key === 13) {
             this.save();
             return false;
-          } else {
-            this.updateCharCount();
           }
         }
       },
       'keyup textarea': function(e) {
         if (this._editing) {
+          this.updateCharCount();
           this.model.set('text', $(e.currentTarget).val());
         }
       },
@@ -237,14 +240,9 @@ sp.views = sp.views || {};
           content = content.replace(/\[title\]/, $('#title').val());
         }
         if (content.indexOf('[link]') > -1) {
-          if (this.model.profile.service == 'twitter') {
-            content = content.replace(/\[link\]/, 't.co-url-is-20-chars');
-          } else {
-            content = content.replace(/\[link\]/, 'http://goo.gl/XXXXXX');
-          }
+          content = content.replace(/\[link\]/, 'http://goo.gl/XXXXXXXXXX');
         }
         this.$('.count').text(content.length);
-        console.log(this.model.profile);
         this.$('.count').toggleClass('error', content.length > this.model.profile.get('limit'))
       }
     },
@@ -340,7 +338,7 @@ sp.views = sp.views || {};
           'post_id': $('#post_ID').val(),
           'text': '[title] [link]',
           'schedule': {
-            'when': 'publish'
+            'when': this.options.post.post_status === 'publish' ? 'immediately' : 'publish'
           }
         });
         update.profile = profile;
