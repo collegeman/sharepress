@@ -89,6 +89,7 @@
 </div>
 <div data-template="editor" style="display:none;">
   <div data-ui="update" class="misc-pub-section media editor">
+    <span class="count">0</span>
     <div class="img">
       <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
     </div>

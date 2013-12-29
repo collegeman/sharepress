@@ -84,15 +84,11 @@ class SharePressUpdate {
 
   function __get($name) {
     if ($name === 'text_formatted') {
-      $this->text_formatted = self::format($this->text);
+      $this->text_formatted = apply_filters('sp_update_text_format', $this->text, $this);
       return $this->text_formatted;
     } else {
       return null;
     }
-  }
-
-  static function format($text) {
-    return $text;
   }
 
   function toJSON() {
@@ -404,8 +400,9 @@ function sp_update_update($update) {
       $meta['shorten'] = true;
     }
 
+    $update['text'] = apply_filters('sp_update_text', !empty($update['text']) ? $update['text'] : "", $update, $post, $profiles);
     if (!$text = trim($update['text'])) {
-      return new WP_Error('text', 'Cannot create empty Update');
+      return new WP_Error("Cannot create empty Update");
     }
 
   } else {

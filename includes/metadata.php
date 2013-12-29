@@ -5,6 +5,64 @@ function sp_get_default_picture() {
   return get_option('sp_default_picture', '');
 }
 
+function sp_get_allowed_og_tags() {
+  // backwards compat with SharePress 2.x
+  $old_settings = get_option('sharepress_settings');
+  if (!empty($old_settings['page_og_tag'])) {
+    $defaults = $old_settings['page_og_tag'];
+  } else {
+    // by default, all turned on
+    $defaults = array(
+      'og:title'        => true,
+      'og:type'         => true,
+      'og:image'        => true,
+      'og:url'          => true,
+      'fb:app_id'       => true,
+      'og:site_name'    => true,
+      'og:description'  => true,
+      'og:locale'       => true
+    );
+  }
+
+  // load saved from the database
+  $allowed = sp_get_opt('og_tag', $defaults);
+
+  return $allowed;
+}
+
+function sp_get_og_locale() {
+  // backwards compat with SharePress 2.x
+  $old_settings = get_option('sharepress_settings');
+  if (!empty($old_settings['og_locale'])) {
+    $default = $old_settings['og_locale'];
+  } else {
+    $default = get_locale();
+  }
+  return sp_get_opt('og_locale', $default);
+}
+
+function sp_get_og_site_type() {
+  // backwards compat with SharePress 2.x
+  $old_settings = get_option('sharepress_settings');
+  if (!empty($old_settings['page_og_type'])) {
+    $default = $old_settings['page_og_type'];
+  } else {
+    $default = 'website';
+  }
+  return sp_get_opt('og_site_type', $default);
+}
+
+function sp_get_og_article_publisher() {
+  // backwards compat with SharePress 2.x
+  $old_settings = get_option('sharepress_settings');
+  if (!empty($old_settings['fb_publisher_url'])) {
+    $default = $old_settings['fb_publisher_url'];
+  } else {
+    $default = '';
+  }
+  return sp_get_opt('og_article_publisher', $default);
+}
+
 function sp_wp_head() {
   global $wpdb, $post;
 
@@ -47,35 +105,13 @@ function sp_wp_head() {
     $og['article:author'] = $fb_author;
   }
   
-  /* THIS NEED TO BE UNCOMMENTED WHEN THE SETTINGS PAGE IS DONE
-  // Unset the meta tags that have be turned off globally.
-  // old way:
-  if ($page_og_tags = get_option('page_og_tags')) {
-    if ($page_og_tags == 'imageonly') {
-      $og = array('og:image' => $og['og:image']);
-    } else if ($page_og_tags == 'off') {
-      $og = array();
-    }
-  // new way:
-  } else {
-    $allowable = array_merge(array(
-      'og:title' => false,
-      'og:type' => false,
-      'og:image' => false,
-      'og:url' => false,
-      'fb:app_id' => false,
-      'og:site_name' => false,
-      'og:description' => false,
-      'og:locale' => false
-    ), get_option('page_og_tag', array()));
-
-    foreach($allowable as $tag => $allowed) {
-      if (!$allowed) {
-        unset($og[$tag]);
-      }
+  $allowed = sp_get_allowed_og_tags();
+  foreach($allowed as $tag => $allowed) {
+    if (!$allowed) {
+      unset($og[$tag]);
     }
   }
-*/
+
   $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
 
   if ($og) {
@@ -83,24 +119,27 @@ function sp_wp_head() {
 
     foreach($og as $property => $content) {
       list($prefix, $tagName) = explode(':', $property);
-      //(backwards compatibility) filter overrides
+
+      // TODO: make these three overrides part of the Advanced Metadata plugin:
+      // (backwards compatibility) filter overrides
       $og[$property] = apply_filters("sharepress_og_tag_{$tagName}", $content, $post, $meta);
       
-      //generic filter overrides
+      // generic filter overrides
       $og[$property] = apply_filters("sp_social_{$tagName}", $content, $post, $meta);
       
-      //(backwards compatibility) allow for overrides from custom field data 
+      // (backwards compatibility) allow for overrides from custom field data 
       if ($content = get_post_meta($post->ID, $property, true)) {
         $og[$property] = $content;
       }
       
-      // generic field overrides
       if ( $tagName == 'title' && $content = get_post_meta($post->ID, 'social:title', true) ) {
         $og[$property] = $content;
       }
+
       if ( $tagName == 'image' && $content = get_post_meta($post->ID, 'social:image', true) ) {
         $og[$property] = $content;
       }
+
       if ( $tagName == 'description' && $content = get_post_meta($post->ID, 'social:description', true) ) {
         $og[$property] = $content;
       }

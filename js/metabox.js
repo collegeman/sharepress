@@ -184,6 +184,8 @@ sp.views = sp.views || {};
           if (key === 13) {
             this.save();
             return false;
+          } else {
+            this.updateCharCount();
           }
         }
       },
@@ -222,6 +224,29 @@ sp.views = sp.views || {};
       this.model.on('change:hidden', function() {
         that.$el.toggle(!that.model.get('hidden'));
       });
+
+      $('body').find('#title').on('keyup', function() {
+        that.updateCharCount();
+      });
+    },
+    updateCharCount: function() {
+      var $textarea = this.$('textarea');
+      if ($textarea.length) {
+        var content = $textarea.val().toLowerCase();
+        if (content.indexOf('[title]') > -1) {
+          content = content.replace(/\[title\]/, $('#title').val());
+        }
+        if (content.indexOf('[link]') > -1) {
+          if (this.model.profile.service == 'twitter') {
+            content = content.replace(/\[link\]/, 't.co-url-is-20-chars');
+          } else {
+            content = content.replace(/\[link\]/, 'http://goo.gl/XXXXXX');
+          }
+        }
+        this.$('.count').text(content.length);
+        console.log(this.model.profile);
+        this.$('.count').toggleClass('error', content.length > this.model.profile.get('limit'))
+      }
     },
     save: function() {
       this._editing = false;
@@ -248,6 +273,7 @@ sp.views = sp.views || {};
         this.$('[data-value="text"]').text(this.model.get('text'));
       }
       this.$el.toggle(!this.model.get('hidden'));
+      this.updateCharCount();
       return this;
     }
   });
@@ -312,6 +338,7 @@ sp.views = sp.views || {};
         var update = new sp.models.Update({
           'profile_id': profile.get('id'),
           'post_id': $('#post_ID').val(),
+          'text': '[title] [link]',
           'schedule': {
             'when': 'publish'
           }
