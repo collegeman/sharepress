@@ -5,6 +5,7 @@ add_action('init', 'sp_init', 1, 12);
  * Load a view file, search for paths defined by the
  * filter "sp_view_paths".
  * @param String A view file name
+ * @param array Hashmap of variables that should be available to the view
  */
 function sp_require_view($view, $params = array()) {
   extract($params);
