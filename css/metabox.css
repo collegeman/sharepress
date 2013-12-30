@@ -5,14 +5,19 @@
 #sp_metabox .media .img_right { float: right; margin-left: 10px; margin-right: 0; }
 #sp_metabox .media_small .img { width: 50px; height: 50px; overflow: hidden; text-align: center; }
 #sp_metabox .inside { padding: 0; }
-#sp_metabox .thumb { width: 25px; height: 25px; border-bottom: 4px solid #333; }
-#sp_metabox .thumb.facebook { border-bottom: 4px solid #3B5999; }
-#sp_metabox .thumb.twitter { border-bottom: 4px solid #44CCF6; }
-#sp_metabox .thumb.googleplus { border-bottom: 4px solid #6EC41B; }
-#sp_metabox .thumb.linkedin { border-bottom: 4px solid #027EBC; }
+.sp-profile.thumb { width: 25px; height: 25px; border-bottom: 4px solid #333; }
+.sp-profile.thumb.facebook { border-bottom: 4px solid #3B5999; }
+.sp-profile.thumb.twitter { border-bottom: 4px solid #44CCF6; }
+.sp-profile.thumb.googleplus { border-bottom: 4px solid #6EC41B; }
+.sp-profile.thumb.linkedin { border-bottom: 4px solid #027EBC; }
 #sp_metabox .buttons { padding: 10px }
 #sp_metabox .updates { position: relative; }
+#sp_metabox .editor { position: relative; }
+#sp_metabox .editor .count { position: absolute; display: block; padding: 2px 6px; min-width: 20px; text-align: right; right: 18px; top: 60px; font-size: 13px; opacity: 0.50; background-color: #ccc; color: black; }
+#sp_metabox .editor .count.error { color: red; }
 #sp_metabox .editor textarea { width: 99%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; min-height: 80px; }
+#sp_metabox .editor textarea[readonly] { background-color: #efefef; color: #cccccc; }
+#sp_metabox .editor .count:hover { opacity: 0.15; }
 #sp_metabox .delete { display: inline-block; padding: 2px; color: red; }
 #sp_metabox .delete:hover { background-color: red; color: white; border: none; text-decoration: none; }
 #sp_metabox .editor .date { padding: 2px 0 5px 0; }

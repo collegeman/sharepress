@@ -10,6 +10,10 @@ class TwitterSharePressClient implements SharePressClient {
     }
   }
 
+  function filter_update_text($text) {
+    return '[title] [link]';
+  }
+
   function getName() {
     return "Twitter";
   }
@@ -67,7 +71,8 @@ class TwitterSharePressClient implements SharePressClient {
         'service_username' => $response['screen_name'],
         'link' => 'http://twitter.com/'.$response['screen_name'],
         'avatar' => $profile_data->profile_image_url_https,
-        'limit' => 140
+        'limit' => 140,
+        'readonly' => true
       );      
 
     } 
@@ -134,14 +139,10 @@ class TwitterSharePressClient implements SharePressClient {
 
     $_SESSION['twitter-request-token'] = $request_token;
       
-    return 'https://api.twitter.com/oauth/authorize?force_login=1&oauth_token='.$_SESSION['twitter-request-token']['oauth_token'];
+    return 'https://api.twitter.com/oauth/authorize?oauth_token='.$_SESSION['twitter-request-token']['oauth_token'];
   }
 
   function post($message, $config = '') {
-    if (!empty($config['url'])) {
-      $message .= ' '.$config['url'];
-    }
-
     $oauth = SpOAuthRequest::from_consumer_and_token(
       $this->consumer,
       $this->user,
@@ -189,12 +190,9 @@ class TwitterSharePressClient implements SharePressClient {
   }
 
   function test($message = false, $url = false) {
-    return $this->post(
-      $message ? $message : constant('SP_TEST_MESSAGE'),
-      array(
-        'url' => $url ? $url : constant('SP_TEST_URL')
-      ) 
-    );
+    $test = $message ? $message : constant('SP_TEST_MESSAGE');
+    $test .= ' ' . $url ? $url : constant('SP_TEST_URL');
+    return $this->post($test);
   }
 
   function settings_keys_section() {

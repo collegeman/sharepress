@@ -49,9 +49,9 @@ function sp_meta_admin_enqueue_scripts($hook) {
   }
 }
 
-function sp_metabox() {
+function sp_metabox($post) {
   add_thickbox();
-  sp_require_view('metabox');
+  sp_require_view('metabox', array('post' => $post));
 }
 
 function sp_metabox_og($post) {

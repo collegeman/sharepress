@@ -5,6 +5,7 @@ add_action('init', 'sp_init', 1, 12);
  * Load a view file, search for paths defined by the
  * filter "sp_view_paths".
  * @param String A view file name
+ * @param array Hashmap of variables that should be available to the view
  */
 function sp_require_view($view, $params = array()) {
   extract($params);
@@ -21,8 +22,60 @@ function sp_activate() {
   do_action('sp_activated');
 }
 
+function sp_deactivate() {
+  do_action('sp_deactivated');
+}
+
+/**
+ * Is the given plugin activated?
+ * @param String plugin-directory/plugin-file.php or simply plugin-directory
+ * @return bool
+ */
+function sp_is_plugin_active($plugin) {
+  include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+  return is_plugin_active( strpos($plugin, '/') ? $plugin : "$plugin/plugin.php" );
+}
+
+/**
+ * Log given message to a SharePress-specific log file. If the requested
+ * log level is not ERROR and not WARN and WP_DEBUG is not true, then log
+ * request will be ignored.
+ * @param mixed The message to print in the log
+ * @param String the logging level: ERROR, WARN, or DEBUG
+ */
+function sp_log($message, $level = 'DEBUG') {
+  global $sp_thread_id, $blog_id;
+  
+  // normalize $level argument
+  $level = strtoupper($level);
+  // if not in debugging mode, ignore non-critical messages
+  if (( !defined('WP_DEBUG') || !WP_DEBUG ) && !apply_filters('sp_is_debug_enabled', false)) {
+    if ($level !== 'ERROR' && $level !== 'WARN') {
+      return;
+    }
+  }
+
+  // establish uniq ID for this request
+  if (is_null($sp_thread_id)) {
+    $sp_thread_id = substr(md5(uniqid()), 0, 6);
+  }
+
+  // create an obscured log name
+  $filename = SP_DIR.'/sp-'.substr(md5('sharepress'.SECURE_AUTH_SALT), 0, 6).'-'.get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'Ymd').'.log';
+  if (is_wp_error($message)) {
+    $message = $message->get_error_message();
+  }
+  $blog_id = (string) $blog_id;
+  $message = sprintf("%-5s %s %s %-5s %s\n", $blog_id ? $blog_id : 0, $sp_thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), strtoupper($level), $message);
+  if (!@file_put_contents($filename, $message, FILE_APPEND)) {
+    error_log($message);
+  }
+}
+
 function sp_init() {
   // load remaining dependencies...
+  // TODO: try to only load the dependencies we need
+  require(SP_DIR.'/includes/settings.php');
   require(SP_DIR.'/includes/profile.php');
   require(SP_DIR.'/includes/update.php');
   require(SP_DIR.'/includes/buffer.php');
@@ -31,7 +84,6 @@ function sp_init() {
   require(SP_DIR.'/includes/ajax.php');
   require(SP_DIR.'/includes/metaboxes.php');
   require(SP_DIR.'/includes/metadata.php');
-  require(SP_DIR.'/includes/settings.php');
   require(SP_DIR.'/includes/addons.php');
   require(SP_DIR.'/includes/pointers.php');
 
@@ -79,12 +131,16 @@ function sp_service_has_keys($service) {
   return $keys;
 }
 
+function sp_get_opt_name($option) {
+  return 'sp_'.$option;
+}
+
 function sp_get_opt($option, $default = false) {
-  return apply_filters("sp_get_opt_{$option}", get_option('sp_'.$option, $default));
+  return apply_filters("sp_get_opt_{$option}", get_option(sp_get_opt_name($option), $default));
 }
 
 function sp_set_opt($option, $value) {
-  return update_option('sp_'.$option, apply_filters("sp_set_opt_{$option}", $value));
+  return update_option(sp_get_opt_name($option), apply_filters("sp_set_opt_{$option}", $value));
 }
 
 /**
@@ -318,6 +374,10 @@ abstract class AbstractSharePressClient implements SharePressClient {
     $this->key = $key;
     $this->secret = $secret;
     $this->profile = $profile;
+  }
+
+  function filter_update_text($text) {
+    return '[title] [link]';
   }
 
   function getName() {

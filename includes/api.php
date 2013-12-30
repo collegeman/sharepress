@@ -42,34 +42,29 @@ class SpApi_v1 extends AbstractSpApi {
   }
 
   function cron() {
+    sp_log('api/cron: starting');
+
     ignore_user_abort(true);
 
     $local_time = microtime( true );
 
-    $doing_cron_transient = get_transient( 'sp_doing_cron');
-
-    // Use global $doing_wp_cron lock otherwise use the GET lock. If no lock, trying grabbing a new lock.
-    if ( empty( $doing_wp_cron ) ) {
-      if ( empty( $_GET[ 'sp_doing_cron' ] ) ) {
-        // Called from external script/job. Try setting a lock.
-        if ( $doing_cron_transient && ( $doing_cron_transient + WP_CRON_LOCK_TIMEOUT > $local_time ) )
-          return;
-        $doing_cron_transient = $doing_wp_cron = sprintf( '%.22F', microtime( true ) );
-        set_transient( 'sp_doing_cron', $doing_wp_cron );
-      } else {
-        $doing_wp_cron = $_GET[ 'sp_doing_cron' ];
+    if ($cron_transient = get_transient('sp_doing_cron')) {
+      if (empty($_GET['sp_doing_cron']) || $_GET['sp_doing_cron'] != $cron_transient ) {
+        sp_log('api/cron: locked out');
+        return false;
       }
+    } else {
+      // TODO: create a namedspaced function that does this
+      set_transient('sp_doing_cron', sprintf( '%.22F', microtime(true) ));
     }
 
-    // Check lock
-    if ( $doing_cron_transient != $doing_wp_cron )
-      return;
+    $result = sp_post_pending();
 
-    sp_post_pending();
+    delete_transient( 'sp_doing_cron' );
+  
+    sp_log('api/cron: done');
 
-    if ( get_transient('sp_doing_cron') == $doing_wp_cron ) {
-      delete_transient( 'sp_doing_cron' );
-    }
+    return $result;
   }
 
   function shorten() {
@@ -209,6 +204,33 @@ class SpApi_v1 extends AbstractSpApi {
         'update' => site_url('/sp/1/updates/'.$update->id.'/update'),
         'delete' => site_url('/sp/1/updates/'.$update->id.'/destroy')
       );
+      if ($update->post_id && ($post = get_post($update->post_id))) {
+        $update->post = array(
+          'id' => $update->post_id,
+          'title' => apply_filters('the_title', $post->post_title),
+          'status' => $post->post_status
+        );
+      }
+      if (!empty($_REQUEST['fields'])) {
+        $fields = array_map('trim', explode(',', $_REQUEST['fields']));
+        if (in_array('profile', $fields)) {
+          if (!$profile = sp_get_profile($update->profile_id)) {
+            $profile = sp_get_profile_for_service_tag($update->profile_service_tag);
+          }
+          if ($profile) {
+            $update->profile = $profile->toJSON();    
+          } else {
+            $update->profile = false;
+          }
+        }
+        if (in_array('error', $fields)) {
+          if ($error = get_last_error_for_update($update->id)) {
+            $update->error = $error->get_error_message();
+          } else {
+            $update->error = false;
+          }
+        }
+      }
     }
   }
 
@@ -397,7 +419,10 @@ class SpApi_v1 extends AbstractSpApi {
       $id = null;
     }
 
-    if ($this->_isPost() || $action === 'create') {
+    if ($id === 'counts') {
+      return sp_count_updates();
+
+    } else if ($this->_isPost() || $action === 'create') {
       unset($_REQUEST['id']);
       if (is_wp_error($result = sp_update_update($_REQUEST))) {
         return $result;
@@ -416,22 +441,7 @@ class SpApi_v1 extends AbstractSpApi {
       return $result;
 
     } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
-      return array('success' => sp_set_error_status($id));
-
-    } else if ($id === 'queue') {
-      if (!empty($action)) {
-        $_REQUEST['post_id'] = $action;
-        if (is_wp_error($result = sp_get_updates($_REQUEST))) {
-          return $result;
-        }
-        array_map(array($this, '_addUpdateActions'), $result->updates);
-        return $result->updates;
-      }
-
-    } else if ($id === 'history') {
-      if (empty($action)) {
-        return new WP_Error("Request missing Post ID");
-      }
+      return array('success' => sp_set_update_status($id, 'trash'));
 
     } else if ($id) {
       if (is_wp_error($update = sp_get_update($id))) {
@@ -439,7 +449,16 @@ class SpApi_v1 extends AbstractSpApi {
       }
       $this->_addUpdateActions($update);
       return $update->toJSON();
+
+    } else if ($this->_isGet()) {
+      if (is_wp_error($result = sp_get_updates($_REQUEST))) {
+        return $result;
+      }
+      array_map(array($this, '_addUpdateActions'), $result->updates);
+      return $result;
     }
+
+    
   }
 
   function debug($fx) {
@@ -565,6 +584,9 @@ function sp_parse_request($wp) {
       }
       $result = call_user_func_array($fx, array_filter(explode('/', $wp->query_vars['_args'])));
       header('Content-Type: application/json');
+      if (is_wp_error($result)) {
+        status_header(500);
+      }
       echo json_encode($result);
       exit(0);
     }  

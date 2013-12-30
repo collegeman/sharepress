@@ -94,7 +94,7 @@ sp.views = sp.views || {};
       }
     },
     render: function() {
-      this.$('[data-ui="date"]').toggle( this.$('[data-value="when"]').val() !== 'publish' );
+      this.$('[data-ui="date"]').toggle( this.$('[data-value="when"]').val() !== 'publish' && this.$('[data-value="when"]').val() !== 'immediately' );
       this.$('[data-ui="until"]').toggle( this.$('[data-value="repeat"]').val() !== 'never' );
       this.$('[data-ui="until_date"]').toggle( this.$('[data-value="until"]').val() === 'future' );
       this.$el.dialog({
@@ -152,20 +152,24 @@ sp.views = sp.views || {};
     },
     _setUpdate: function(update) {
       this._update = update;
-      var schedule = this._update.get('schedule') || {};
-      var date = schedule.date ? moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc();
-      var untilDate = schedule.until_date ? moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc();
-      this.$get('when').val(schedule.when || 'publish');
+      
+      var schedule = this._update.get('schedule') || {},
+          date = schedule.date ? moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc(),
+          localDate = date.local(),
+          untilDate = schedule.until_date ? moment(schedule.until_date + '+0000', 'YYYY-MM-DD HH:mm Z') : moment().utc(),
+          localUntilDate = untilDate.local();
+
+      this.$get('when').val(schedule.when || ( this.options.metabox.options.post.post_status === 'publish' ? 'immediately' : 'publish' ));
       this.$get('repeat').val(schedule.repeat || 'never');      
       this.$get('until').val(schedule.until || 'once');
-      this.$get('month').val(date.month());
-      this.$get('date').val(date.date() < 10 ? '0' + date.date() : date.date());
-      this.$get('year').val(date.year());
-      this.$get('time').val(date.local().format('HH:mm'));
-      this.$get('until_month').val(untilDate.month());
-      this.$get('until_date').val(untilDate.date() < 10 ? '0' + untilDate.date() : untilDate.date());
-      this.$get('until_year').val(untilDate.year());
-      this.$get('until_time').val(untilDate.local().format('HH:mm'));
+      this.$get('month').val(localDate.month());
+      this.$get('date').val(localDate.date() < 10 ? '0' + localDate.date() : localDate.date());
+      this.$get('year').val(localDate.year());
+      this.$get('time').val(localDate.format('HH:mm'));
+      this.$get('until_month').val(localUntilDate.month());
+      this.$get('until_date').val(localUntilDate.date() < 10 ? '0' + localUntilDate.date() : localUntilDate.date());
+      this.$get('until_year').val(localUntilDate.year());
+      this.$get('until_time').val(localUntilDate.format('HH:mm'));
     },
     _hide: function() {
       this.$el.dialog('destroy')
@@ -189,6 +193,7 @@ sp.views = sp.views || {};
       },
       'keyup textarea': function(e) {
         if (this._editing) {
+          this.updateCharCount();
           this.model.set('text', $(e.currentTarget).val());
         }
       },
@@ -222,6 +227,24 @@ sp.views = sp.views || {};
       this.model.on('change:hidden', function() {
         that.$el.toggle(!that.model.get('hidden'));
       });
+
+      $('body').find('#title').on('keyup', function() {
+        that.updateCharCount();
+      });
+    },
+    updateCharCount: function() {
+      var $textarea = this.$('textarea');
+      if ($textarea.length) {
+        var content = $textarea.val().toLowerCase();
+        if (content.indexOf('[title]') > -1) {
+          content = content.replace(/\[title\]/, $('#title').val());
+        }
+        if (content.indexOf('[link]') > -1) {
+          content = content.replace(/\[link\]/, 'http://goo.gl/XXXXXXXXXX');
+        }
+        this.$('.count').text(content.length);
+        this.$('.count').toggleClass('error', content.length > this.model.profile.get('limit'))
+      }
     },
     save: function() {
       this._editing = false;
@@ -244,10 +267,13 @@ sp.views = sp.views || {};
         this.$('[data-value="schedule"]').text(this.model.getScheduleText());
         this.$('[data-ui="avatar"]').attr('src', profile.get('avatar'))
           .addClass(profile.get('service'))
-          .parent().attr('title', profile.get('service') + ': ' + profile.get('service_username'));
+          .parent().attr('title', profile.get('service') + ': ' + profile.get('formatted_username'));
         this.$('[data-value="text"]').text(this.model.get('text'));
       }
+      this.$('textarea').attr('readonly', profile.get('readonly'));
+      this.$('.promo').toggle(profile.get('readonly'));
       this.$el.toggle(!this.model.get('hidden'));
+      this.updateCharCount();
       return this;
     }
   });
@@ -311,7 +337,11 @@ sp.views = sp.views || {};
         var profile = profiles.get( parseInt( $(e.currentTarget).data('profile') ));
         var update = new sp.models.Update({
           'profile_id': profile.get('id'),
-          'post_id': $('#post_ID').val()
+          'post_id': $('#post_ID').val(),
+          'text': '[title] [link]',
+          'schedule': {
+            'when': this.options.post.post_status === 'publish' ? 'immediately' : 'publish'
+          }
         });
         update.profile = profile;
         updates.add( update );
@@ -348,7 +378,9 @@ sp.views = sp.views || {};
     initialize: function() {
       // intialize global collections:
       profiles = new sp.models.Profiles(),
-      updates = new sp.models.Updates([], { post_id: $('#post_ID').val() });
+      updates = new sp.models.Updates();
+      // initialize params silently--we call fetch manually below
+      updates.params.set({ 'post_id': parseInt( $('#post_ID').val() ) }, { silent: true });
 
       this.listenTo(profiles, 'add', this.addProfile);
       this.listenTo(profiles, 'remove', this.removeProfile);
@@ -392,7 +424,7 @@ sp.views = sp.views || {};
       });
     },
     addProfile: function(profile) {
-      var $ui = $('<li class="profile ' + profile.get('service') + '"><a href="#" data-action="create-update" data-profile="' + profile.get('id') + '" title="' + profile.get('service') + ': ' + profile.get('formatted_username') + '" data-default-text="' + profile.get('default_text') + '"><img class="thumb" src="' + profile.get('avatar') + '"></a></li>');
+      var $ui = $('<li class="profile ' + profile.get('service') + '"><a href="#" data-action="create-update" data-profile="' + profile.get('id') + '" title="' + profile.get('service') + ': ' + profile.get('formatted_username') + '" data-default-text="' + profile.get('default_text') + '"><img class="sp-profile thumb" src="' + profile.get('avatar') + '"></a></li>');
       this.ui.profiles.append($ui);
       profile.$ui = $ui;
     },
@@ -406,7 +438,7 @@ sp.views = sp.views || {};
     addUpdate: function(update) {
       // already drawn? remove and redraw!
       update.view && update.view.remove();
-      update.profile = profiles.get(parseInt(update.get('profile_id'))); 
+      update.profile = profiles.get( parseInt(update.get('profile_id') )); 
       if (!update.profile) {
         update.set({ hidden: true });
       }

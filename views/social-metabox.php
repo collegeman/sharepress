@@ -16,7 +16,7 @@
   <label for="social_title">Social Title:</label>
   <input placeholder="defaults to the title of your post" type="text" data-value="social:title" name="social:title" id="social_title" value="<?php echo esc_attr($socialmeta['title']) ?>">
   <label for="social_description">Social Description:</label>
-  <textarea placeholder="defaults to a snip of your content" data-value="social:description" name="social:description" id="social_description" cols="30" rows="5"><?php echo esc_attr($socialmeta['description']) ?></textarea>
+  <textarea placeholder="defaults to a snippet of your post" data-value="social:description" name="social:description" id="social_description" cols="30" rows="5"><?php echo esc_attr($socialmeta['description']) ?></textarea>
 </div>
 <script>
   jQuery(function($) {

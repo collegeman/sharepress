@@ -5,17 +5,34 @@ add_action('admin_menu', 'sp_settings_menu');
 function sp_admin_init() {
   $option_group = 'sp-settings';
 
+  // service specific settings initialization:
   if (isset($_REQUEST['sp_service'])) {
     wp_enqueue_style('sp-service-settings', SP_URL.'/css/service-settings.css');
     $service = strtolower($_REQUEST['sp_service']);
     $client = sp_get_client_for_settings_page($service);
     $client->settings('sp-settings', "sp-settings-{$service}", $service);
+
+  // global settings initialization:
+  } else {
+    // allow old settings to be deleted:
+    register_setting('sp-global-settings', 'sharepress_settings');
+    register_setting('sp-global-settings', 'sharepress_fb_a_state');
+    register_setting('sp-global-settings', 'sharepress_publishing_targets');
+    register_setting('sp-global-settings', 'sharepress_notifications');
+    register_setting('sp-global-settings', 'sharepress_api_key');
+    register_setting('sp-global-settings', 'sharepress_api_secret');
+
+    // allow new settings to be updated:
+    register_setting('sp-global-settings', sp_get_opt_name('og_tag'));
+    register_setting('sp-global-settings', sp_get_opt_name('og_site_type'));
+    register_setting('sp-global-settings', sp_get_opt_name('og_locale'));
+    register_setting('sp-global-settings', sp_get_opt_name('og_article_publisher'));
   }
 }
 
 function sp_settings_menu() {
   if (apply_filters('sp_show_settings_screens', true)) {
-    add_menu_page('SharePress', 'SharePress', 'manage_options', 'sp-settings', 'sp_settings_page', '', 80.100005);
+    add_menu_page('SharePress', 'SharePress', 'manage_options', 'sp-settings', 'sp_settings_page', '', 81);
   }
 }
 

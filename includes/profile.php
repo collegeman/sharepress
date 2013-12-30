@@ -1,6 +1,5 @@
 <?php
 add_action('init', 'sp_profile_init');
-add_action('wp_insert_post', 'sp_create_default_updates');
 
 function sp_profile_init() {
   register_post_type('sp_profile', array(
@@ -25,13 +24,41 @@ function sp_get_profile($profile) {
   if ($profile instanceof SharePressProfile) {
     return $profile;
   }
-  return SharePressProfile::forPost($profile);
+  if (!is_wp_error($profile = SharePressProfile::forPost($profile_ref = $profile))) {
+    return apply_filters('sp_get_profile', $profile);
+  } else {
+    return $profile;
+  }
 }
 
-function sp_create_default_updates($new_post) {
-  // TODO: finish implementing this hook
-  // if there are any updates that should be
-  // buffered by default, this is where we do it
+/**
+ * Try to find a Profile for the given service tag (service name and service unique ID).
+ * This is less efficient then calling sp_get_profile() directly, so use it only
+ * when a Profile cannot be found for a known ID.
+ * @param String Profile service tag of format {$service}:{$service_id}
+ * @return SharePressProfile or false if none exists
+ * @see sp_get_profile
+ */
+function sp_get_profile_for_service_tag($service_tag) {
+  global $wpdb;
+
+  if (!$service_tag) {
+    return false;
+  }
+  
+  $profile_id = $wpdb->get_var( $wpdb->prepare("
+    SELECT post_id 
+    FROM {$wpdb->postmeta} 
+    WHERE meta_key = 'service_tag' 
+      AND meta_value = %s
+    LIMIT 1
+  ", $service_tag) );
+
+  if ($profile_id) {
+    return sp_get_profile($profile_id);
+  } else {
+    return false;
+  }
 }
 
 
@@ -91,7 +118,7 @@ class SharePressProfile {
   }
 
   private function __construct($data) {
-    foreach(get_post_custom($data['id']) as $meta_key => $values) {
+    foreach(get_post_meta($data['id']) as $meta_key => $values) {
       $value = $values[count($values)-1];
       if ($meta_key == 'service_tag') {
         list($service, $service_id) = explode(':', $value);
@@ -132,6 +159,12 @@ class SharePressProfile {
 
   function __wakeup() {
     $this->_time = 0;
+  }
+
+  function __get($name) {
+    if ($name === 'service_tag') {
+      return "{$this->service}:{$this->service_id}";
+    }
   }
 
   /**
@@ -233,6 +266,7 @@ class SharePressProfile {
     }
     unset($data['user_token']);
     unset($data['user_secret']);
+    $data['id'] = (int) $data['id'];
     return $data;
   }
 

@@ -18,6 +18,10 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
     }
   }
 
+  function filter_update_text($text) {
+    return '[title] [link]';
+  }
+
   function getName() {
     return "Facebook";
   }
@@ -57,7 +61,8 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
       'service_username' => $user['username'],
       'avatar' => 'https://graph.facebook.com/'.$user['id'].'/picture',
       'link' => isset($user['link']) ? $user['link'] : 'http://www.facebook.com/'.$user['username'],
-      'user_token' => $result['access_token']
+      'user_token' => $result['access_token'],
+      'readonly' => true
     );
   }
     
@@ -78,7 +83,14 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
 
   function post($message, $config = '') {
     try {
+      
       if (!empty($config['url'])) {
+        if ( apply_filters('sp_auto_flush_fb', true) ) {
+          self::api('/', 'POST', array(
+            'id' => $config['url'],
+            'scrape' => 'true'
+          ));
+        }
         $response = $this->postLink($message, $config);
       } else {
         $response = $this->postFeed($message, $config);

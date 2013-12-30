@@ -1,6 +1,6 @@
 <div class="updates" data-ui="updates">
   <div class="misc-pub-section" data-ui="none" style="display:none;">
-    This post has no scheduled publications.
+    This post has no pending updates.
   </div>
 </div>
 <div class="buttons">
@@ -38,14 +38,18 @@
       ?>>LinkedIn</a></li>
     </ul>
   </div>
-  <button href="#" class="button pull-right" disabled>History</button>
+  <a href="<?php echo admin_url('admin.php?page=sp-updates&post_id=' . $post->ID); ?>" class="button pull-right">History</a>
 </div>
 <div class="calendar" id="sp_calendar" data-ui="calendar">
   <div class="controls">
-    Post on 
+    Post  
     <select data-value="when">
-      <option value="publish">publish</option>
-      <option value="future">a future date:</option>
+      <?php if ($post->post_status === 'publish') { ?>
+        <option value="immediately">immediately</option>
+      <?php } else { ?>
+        <option value="publish">on publish</option>
+      <?php } ?>
+      <option value="future">on a future date:</option>
     </select>
     <div data-ui="date" style="display:none;">
       <select data-value="month">
@@ -75,7 +79,7 @@
 <div data-template="update" style="display:none;">
   <div class="misc-pub-section media update">
     <div class="img">
-      <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
+      <a href="#" title="/* service: name */"><img data-ui="avatar" class="sp-profile thumb /* service */" src=""></a>
     </div>
     <div class="bd">
      <span data-value="text"></span><br>
@@ -85,11 +89,13 @@
 </div>
 <div data-template="editor" style="display:none;">
   <div data-ui="update" class="misc-pub-section media editor">
+    <span class="count">0</span>
     <div class="img">
-      <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
+      <a href="#" title="/* service: name */"><img data-ui="avatar" class="sp-profile thumb /* service */" src=""></a>
     </div>
     <div class="bd">
-      <textarea data-value="text"></textarea>
+      <textarea data-value="text" readonly></textarea>
+      <p class="promo howto" style="display:none;">You should be writing custom messages for each social media network. <a href="<?php echo admin_url('admin.php?page=sp-addons') ?>" target="_blank">Learn&nbsp;more&nbsp;&rarr;</a></p>
       <div class="date">
         <b data-value="schedule"></b>
         &nbsp;<a href="#" data-action="change-schedule">Change</a>
@@ -101,6 +107,6 @@
 </div>
 <script>
   jQuery(function($) {
-    new sp.views.Metabox({ el: $('#sp_metabox') });
+    new sp.views.Metabox({ el: $('#sp_metabox'), post: <?php echo json_encode($post) ?> });
   });
 </script>

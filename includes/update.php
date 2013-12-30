@@ -1,5 +1,20 @@
 <?php
 add_action('init', 'sp_update_init');
+add_filter('sp_update_text_format', 'sp_default_update_text_format', 10, 2);
+add_filter('sp_permalink', 'sp_default_permalink', 10, 3);
+add_action('wp_insert_post', 'sp_create_default_updates', 10, 3);
+add_action('admin_menu', 'sp_updates_menu');
+
+function sp_updates_menu() {
+  // TODO: manage_options is the wrong perm--all authors should be able to see this screen
+  add_submenu_page('sp-settings', 'Update History', 'Update History', 'manage_options', 'sp-updates', 'sp_updates_page');
+}
+
+function sp_updates_page() {
+  wp_enqueue_script('sp_metabox_script', SP_URL.'/js/updates.js', array('sp_sharepress_script'));
+  wp_enqueue_style('sp-updates', SP_URL.'/css/updates.css');
+  sp_require_view('updates');
+}
 
 /**
  * Add our custom post type for SharePress updates
@@ -49,11 +64,7 @@ class SharePressUpdate {
       'id' => $post->ID,
       'user_id' => $post->post_author,
       'status' => $post->post_status,
-      'text' => $post->post_content,
-      'schedule' => get_post_meta($update->ID, 'schedule', true),
-      'due_at' => get_post_meta($update->ID, 'due_at', true),
-      'due_time' => get_post_meta($update->ID, 'due_time', true),
-      'post_id' => get_post_meta($update->ID, 'post_id', true)
+      'text' => $post->post_content
     );
 
     return new SharePressUpdate($data);
@@ -64,35 +75,35 @@ class SharePressUpdate {
   }
 
   function __construct($data) {
-    foreach(get_post_custom($data['id']) as $meta_key => $values) {
-      $value = array_pop($values);
-      $data[$meta_key] = maybe_unserialize($value);
+    foreach(get_post_meta($data['id']) as $meta_key => $values) {
+      if ($meta_key !== 'error') {
+        $value = array_pop($values);
+        $data[$meta_key] = maybe_unserialize($value);
+      }
     }
    
+    if ($data['status'] !== 'sent') {
+      $data['sent_at'] = false;
+      $data['service_update_id'] = false;
+    }
+
     foreach((array) $data as $key => $value) {
       $this->{$key} = $value;
     }
 
-    if (!$this->status !== 'sent') {
-      $this->sent_at = false;
-      $this->service_update_id = false;
+    if (!$profile = sp_get_profile($this->profile_id)) {
+      // try service tag
+      $profile = sp_get_profile_for_service_tag($this->profile_service_tag);
     }
-
-    $profile = sp_get_profile($this->profile_id);
     $this->profile_service = $profile !== false ? $profile->service : false;
   }
 
   function __get($name) {
     if ($name === 'text_formatted') {
-      $this->text_formatted = self::format($this->text);
-      return $this->text_formatted;
+      return apply_filters('sp_update_text_format', $this->text, $this);
     } else {
       return null;
     }
-  }
-
-  static function format($text) {
-    return $text;
   }
 
   function toJSON() {
@@ -100,6 +111,8 @@ class SharePressUpdate {
     unset($data['shorten']);
     unset($data['sent_data']);
     $data['text_formatted'] = $this->text_formatted;
+    $data['id'] = (int) $data['id'];
+    $data['profile_id'] = (int) $data['profile_id'];
     return $data;
   }
 
@@ -118,6 +131,41 @@ class SharePressUpdateSorter {
 }
 
 /**
+ * @param int The ID of an update
+ * @return mixed If the update exists and has an error, return WP_Error;
+ * otherwise returns false.
+ */
+function get_last_error_for_update($id) {
+  if ($errors = get_post_meta($id, 'error')) {
+    return array_pop($errors);
+  } else {
+    return false;
+  }
+}
+
+/**
+ * @return Count of Updates, indexed by status. 
+ */
+function sp_count_updates() {
+  global $wpdb;
+
+  $data = $wpdb->get_results("
+    SELECT COUNT(*) AS cnt, post_status 
+    FROM {$wpdb->posts} 
+    WHERE post_type = 'sp_update' 
+    GROUP BY post_status
+  ");
+
+  $counts = array();
+  foreach($data as $r) {
+    $counts[$r->post_status] = $r->cnt;
+  }
+  @$counts['all'] = array_sum(array_values($counts)) - $counts['trash'];
+
+  return $counts;
+}
+
+/**
  * Trigger the publishing of all scheduled updates up until
  * some given timestamp. 
  * @param int $until All updates whose publishing due date is
@@ -127,8 +175,6 @@ class SharePressUpdateSorter {
  * @action post_sp_post_pending
  */
 function sp_post_pending($until = null) {
-  error_log('sp_post_pending');
-
   global $wpdb;
 
   if (is_null($until)) {
@@ -136,6 +182,9 @@ function sp_post_pending($until = null) {
     // look one minute into the future
     $until = time() + 60;
   }
+
+  // a little bit of var filtering
+  $until = (int) $until;
 
   do_action('pre_sp_post_pending');
 
@@ -150,56 +199,108 @@ function sp_post_pending($until = null) {
       AND meta_value <= {$until}
   ");
 
+  $results = array();
+
   foreach($posts as $post) {
     if ($update = sp_get_update($post->ID)) {
-      sp_post_update($post->ID);  
+      $results[] = sp_post_update($post->ID);  
     }
   }
 
   do_action('post_sp_post_pending');
+
+  return $results;
 }
-
-
 
 /**
  * Publishes the given update.
- * @param mixed $update SharePressUpdate instance of an integer
+ * @param mixed $update SharePressUpdate instance or an int
  * @return On error, a WP_Error object, otherwise a stdClass of data
  * representing the update and details of the transmission.
  */
 function sp_post_update($update) {
   if (!$update = sp_get_update($update_ref = $update)) {
+    sp_log("sp_post_update #{$update_ref} does not exist", 'ERROR');
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }
+
+  sp_log("sp_post_update #{$update->id}");
+  
+  // if this update is bound to a Post ID
+  $post = false;
+  if ($update->post_id) {
+    $post = get_post($update->post_id);
+    if ($post->post_status === 'trash') {
+      // return an error, but only for information purposes--no need to log this
+      $error = new WP_Error('post-trashed', "Associated Post has been trashed [{$update->post_id}]");
+      $error->add_data(array(
+        'update' => $update->toJSON()
+      ));
+      return $error;
+    } else if ($post->post_status !== 'publish') {
+      // return an error, but only for information purposes--no need to log this
+      $error = new WP_Error('post-not-published', "Associated Post is not published [{$update->post_id}]");
+      $error->add_data(array(
+        'update' => $update->toJSON()
+      ));
+      return $error;
+    }
+  }
+
   if (!$profile = sp_get_profile($update->profile_id)) {
-    $error = WP_Error('profile', "Profile does not exist [{$update->profile_id}]"); 
-    sp_set_error_status($update, $error);
+    $error = new WP_Error('profile-does-not-exist', "Profile does not exist [{$update->profile_id}]"); 
+    sp_set_update_error_status($update, $error);
     $error->add_data(array(
       'update' => $update->toJSON()
     ));
     return $error;
   }
+
   if (is_wp_error($client = sp_get_client($profile))) {
-    $client->add_data(array(
+    $error = $client;
+    $error->add_data(array(
       'update' => $update->toJSON()
     ));
-    sp_set_error_status($update, $client);
-    return $client;
+    sp_set_update_error_status($update, $error);
+    return $error;
   }
-  if (is_wp_error($result = $client->post($update->text_formatted))) {
-    $result->add_data(array(
+  
+  $message = apply_filters('sp_update_text_format', $client->filter_update_text($update->text), $update);
+
+  if (is_wp_error($message)) {
+    $error = $message;
+    $error->add_data(array(
       'profile' => $profile->toJSON(),
       'update' => $update->toJSON()
     ));
-    sp_set_error_status($update, $result);
-    return $result;
+    sp_set_update_error_status($update, $error);
+    return $error;
   }
+
+  // prepare update configuration
+  $config = array();
+  // if there is a related wordpress post, attach a URL
+  if ($post) {
+    $config['url'] = apply_filters('sp_permalink', get_permalink($post), $post, $update);
+  }
+
+  if (is_wp_error($result = $client->post($message, $config))) {
+    $error = $result;
+    $error->add_data(array(
+      'profile' => $profile->toJSON(),
+      'update' => $update->toJSON()
+    ));
+    sp_set_update_error_status($update, $error);
+    return $error;
+  }
+
   $post = get_post($update->id);
   $post->post_status = 'sent';
   wp_insert_post($post);
   update_post_meta($update->id, 'sent_at', time());
   update_post_meta($update->id, 'service_update_id', $result->service_update_id);
   update_post_meta($update->id, 'sent_data', $result->data);
+  
   return (object) sp_get_update($update->id)->toJSON();
 }
 
@@ -241,8 +342,6 @@ function sp_get_updates($args = '') {
   if (!empty($args['status'])) {
     $args['post_status'] = $args['status'];
     unset($args['status']);
-  } else {
-    $args['post_status'] = 'buffer';
   }
 
   $args['numberposts'] = ($limit = (int) $args['count']) ? $limit : 100;
@@ -253,19 +352,31 @@ function sp_get_updates($args = '') {
   }
 
   $args['orderby'] = 'post_date_gmt';
-  $args['order'] = 'ASC';
+  $args['order'] = 'DESC';
 
   $params = array(
-    $args['post_type'],
-    $args['post_status']
+    $args['post_type']
   );
 
-  $sql = "
-    JOIN {$wpdb->postmeta} ON (post_ID = ID)
+  $sql = '';
+
+  if (!empty($args['post_id']) || !empty($profile)) {
+    $sql .= " JOIN {$wpdb->postmeta} ON (post_ID = ID) ";
+  }
+
+  $sql .= "
     WHERE 
       post_type = %s
-      AND post_status = %s
   ";
+
+  if (!empty($args['post_status'])) {
+    $params[] = $args['post_status'];
+    $sql .= ' AND post_status = %s ';
+  } else if (!empty($args['post_id'])) {
+    $sql .= " AND post_status = 'buffer' ";
+  } else {
+    $sql .= " AND post_status <> 'trash' ";
+  }
 
   if (!empty($args['post_id'])) {
     $sql .= "
@@ -290,8 +401,8 @@ function sp_get_updates($args = '') {
   $params[] = $args['numberposts'];
   $params[] = $args['offset'];
 
-  $countSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT COUNT(post_ID) FROM {$wpdb->posts}" . $sql . $orderAndLimit), $params));
-  $postsSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT * FROM {$wpdb->posts}" . $sql), $params));
+  $countSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT COUNT({$wpdb->posts}.ID) FROM {$wpdb->posts}" . $sql), $params));
+  $postsSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT * FROM {$wpdb->posts}" . $sql . $orderAndLimit), $params));
 
   $count = $wpdb->get_var($countSql);
   $posts = $wpdb->get_results($postsSql);
@@ -390,8 +501,9 @@ function sp_update_update($update) {
       $meta['shorten'] = true;
     }
 
+    $update['text'] = apply_filters('sp_update_text', !empty($update['text']) ? $update['text'] : "", $update, $post, $profiles);
     if (!$text = trim($update['text'])) {
-      return new WP_Error('text', 'Cannot create empty Update');
+      return new WP_Error("Cannot create empty Update");
     }
 
   } else {
@@ -413,6 +525,12 @@ function sp_update_update($update) {
   }
 
   if (array_key_exists('text', $update)) {
+    if ($post['post_status'] === 'sent') {
+      if ($update['text'] != $post['post_content']) {
+        return new WP_Error("Cannot modify this Update: it has already been sent.");
+      }
+    }
+
     $post['post_content'] = trim($update['text']);
   }
 
@@ -422,12 +540,23 @@ function sp_update_update($update) {
 
   if (array_key_exists('schedule', $update)) {
     $meta['schedule'] = $update['schedule'];
-  }
 
+    // configure due_at based on schedule
+    $schedule = (array) $update['schedule'];
+    // easy case: on publish, set due_at to 0
+    if ($schedule['when'] === 'publish' || $schedule['when'] === 'immediately') {
+      $meta['due_at'] = 0;
+    // otherwise, it's schedule for future publication
+    } else {
+      $meta['due_at'] = $schedule['time'];
+    }
+  }
+  
   $post_ids = array();
 
   foreach($profiles as $profile) {
     $meta['profile_id'] = $profile->id;
+    $meta['profile_service_tag'] = $profile->service_tag;
 
     if (is_wp_error($post_id = wp_insert_post($post))) {
       return $post_id;
@@ -490,13 +619,74 @@ function sp_update_update($update) {
  * @return If the SharePressUpdate does not exist, returns WP_Error object,
  * otherwise true.
  */
-function sp_set_error_status($update, $error = null) {
+function sp_set_update_error_status($update, $error = null) {
+  sp_log($error, 'ERROR');
   if (!$update = sp_get_update($update_ref = $update)) {
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }
   $post = get_post($update->id);
   $post->post_status = 'error';
   wp_insert_post($post);
-  update_post_meta($update->id, 'error', $error);
+  add_post_meta($update->id, 'error', $error);
   return true;
+}
+
+/**
+ * Change the post status of the given Update
+ * @param mixed $update Either a SharePressUpdate instance or an integer
+ * @param String $status Defaults to "buffer" (resetting the post status)
+ * @return If the SharePressUpdate does not exist, returns WP_Error object,
+ * otherwise true.
+ */
+function sp_set_update_status($update, $status = 'buffer') {
+  if (!$update = sp_get_update($update_ref = $update)) {
+    return new WP_Error('update', "Update does not exist [{$update_ref}]");
+  }
+  $post = get_post($update->id);
+  $post->post_status = $status;
+  wp_insert_post($post);
+  return true;
+}
+
+/**
+ * Default filter for update text: replaces [title] and [link] placeholders
+ * Will return WP_Error if sp_shorten returns one
+ * @see sp_shorten
+ */
+function sp_default_update_text_format($text, $update) {
+  if ($update->post_id) {
+    $orig = $text;
+    $post = get_post($update->post_id);
+
+    // [title]
+    if (stripos($text, '[title]') !== false) {
+      $text = preg_replace('/\[title\]/', apply_filters('the_title', $post->post_title), $text);
+    }
+
+    // [link]
+    if (stripos($text, '[link]') !== false) {
+      $filtered_permalink = apply_filters('sp_permalink', get_permalink($post), $post, $update);
+      if (is_wp_error($shortened = sp_shorten($filtered_permalink))) {
+        return $shortened;
+      }
+      $text = preg_replace('/\[link\]/', $shortened, $text);
+    }
+  }
+
+  return $text;
+}
+
+/**
+ * Default filter for post permalinks
+ */
+function sp_default_permalink($permalink, $post, $update) {
+  return $permalink;
+}
+
+/**
+ * Create any default updates configured for newly created Posts
+ * @param int The Post ID of the post created
+ */
+function sp_create_default_updates($post_ID, $post, $updated) {
+
 }
