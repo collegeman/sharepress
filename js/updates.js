@@ -59,13 +59,11 @@
     className: 'type-sp_update',
     events: {
       'click [data-action="delete"]': function() {
-        if (confirm('Are you sure you want to delete this Update?')) {
-          this.model.destroy({
-            success: function() {
-              counts.fetch();
-            }
-          });        
-        }
+        this.model.destroy({
+          success: function() {
+            counts.fetch();
+          }
+        });        
         return false;
       }
     },
