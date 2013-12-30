@@ -437,11 +437,13 @@ class SpApi_v1 extends AbstractSpApi {
       if (is_wp_error($result = sp_update_update($_REQUEST))) {
         return $result;
       }
-      $this->_addUpdateActions($result->update);
+      if ($result->updates) {
+        array_map(array($this, '_addUpdateActions'), $result->updates);
+      }
       return $result;
 
     } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
-      return array('success' => sp_set_update_status($id, 'trash'));
+      return array('success' => sp_trash_update($id));
 
     } else if ($id) {
       if (is_wp_error($update = sp_get_update($id))) {

@@ -40,6 +40,19 @@ sp.models = sp.models || {};
     }));
   };
 
+  /**
+   * Link any short URLs in text to their stats pages
+   * e.g., http://goo.gl/XXXXX will be linked to http://goog.gl/XXXXX.info
+   * and http://bit.ly/XXXXX will be linked to http://bit.ly/XXXXX+
+   * @param String
+   * @param String
+   */
+  sp.linkShortUrls = function(text) {
+    var filt = text.replace(/(https?:\/\/goo.gl\/[^\s]+)/, '<a href="$1.info" target="_blank">$1</a>'),
+        filt = filt.replace(/(https?:\/\/bit.ly\/[^\s]+)/, '<a href="$1+" target="_blank">$1</a>');
+    return filt;
+  };
+
   sp.getPointerById = function(id) {
     if (!window.spTour || !window.spTour.pointers || spTour.pointers.length === 0) {
       return false;
@@ -106,7 +119,7 @@ sp.models = sp.models || {};
 
   sp.models.Update = B.Model.extend({
     url: function() {
-      return sp.api + '/update' + ( this.get('id') ? '/' + this.get('id') : '' );
+      return sp.api + '/update' + ( this.get('id') ? '/' + this.get('id') : '' ) + ( this.get('restore') ? '/restore' : '' );
     },
     sync: sp.sync,
     getScheduleText: function() {
@@ -117,7 +130,8 @@ sp.models = sp.models || {};
       } else if (schedule.when === 'publish') {
         label = 'Post on publish';
       } else {
-        label = 'Post on ' + moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A');
+        label = 'Post on ' + moment(schedule.date + '+0000', 'YYYY-MM-DD HH:mm Z').local().format('ddd MMM D [at] h:mm A')
+         + '<br>(' + moment(schedule.date + '+0000').local().fromNow() + ')';
       }
 
       if (schedule.repeat && schedule.repeat !== 'never') {
@@ -132,6 +146,9 @@ sp.models = sp.models || {};
       }
 
       return label;
+    },
+    restore: function(options) {
+      this.save({ 'restore': true }, options);
     }
   });
 
@@ -179,7 +196,7 @@ sp.models = sp.models || {};
       return this.count || 0;
     },
     getCurrentPage: function() {
-      return parseInt(this.params.get('offset')) > 0 ? Math.ceil ( parseInt(this.params.get('offset')) / this.getCount() * this.getTotalPages() ) + 1 : 1;
+      return parseInt(this.params.get('offset')) > 0 ? Math.floor ( parseInt(this.params.get('offset')) / this.getCount() * this.getTotalPages() ) + 1 : 1;
     },
     getTotalPages: function() {
       return Math.ceil( this.getCount() / parseInt(this.params.get('limit')) );

@@ -77,12 +77,24 @@
     tagName: 'tr',
     className: 'type-sp_update',
     events: {
-      'click [data-action="delete"]': function() {
+      'click [data-action="trash"]': function() {
         this.model.destroy({
           success: function() {
-            counts.fetch();
+            updates.fetch();
           }
         });        
+        return false;
+      },
+      // 'click [data-action="delete"]': function() {
+      //   return false;
+      // },
+      'click [data-action="restore"]': function() {
+        var update = this.model;
+        update.restore({
+          success: function() {
+            updates.fetch();
+          }
+        }); 
         return false;
       }
     },
@@ -129,6 +141,34 @@
         params.offset = updates.getLastOffset();
         router.navigate('admin.php?' + toQueryString(params), { trigger: true });
         return false;
+      },
+      'submit .bulkactions form': function(e) {
+        var $form = $(e.currentTarget),
+            action = $form.find('select').val();
+        // reset the select field
+        $form.find('select').val(-1);
+        if (action === 'trash') {
+          var update = null, done = _.debounce(function() {
+            updates.fetch();
+          }, 100);
+          this.$('.cb-select:checked').each(function(i, el) {
+            if (update = updates.get(parseInt($(el).val()))) {
+              update.destroy({ success: done });
+            }
+          });
+        } else if (action === 'restore') {
+          var update = null, done = _.debounce(function() {
+            updates.fetch();
+          }, 100);
+          this.$('.cb-select:checked').each(function(i, el) {
+            if (update = updates.get(parseInt($(el).val()))) {
+              update.restore({ success: done });
+              updates.remove(update);
+            }
+          });
+        }
+        this.$('.cb-select-all').attr('checked', false);
+        return false;
       }
     },
     initialize: function(options) {
@@ -145,18 +185,28 @@
     },
     reset: function() {
       var cnt = updates.getCount();
+      
+      // remove current table rows:
+      this.$table.find('tr.update').remove();
+      
+      // update empty set placeholder:
+      this.$table.find('.no-items').toggle(!updates.length);
+      
+      // update pagination:
       this.$nav.find('.displaying-num').text(cnt + ( cnt != 1 ? ' items' : ' item' ));
       this.$nav.find('.tablenav-pages').toggleClass('one-page', updates.getCount() <= parseInt(updates.params.get('limit')));
-      this.$table.find('.no-items').toggle(!updates.length);
-      this.$table.find('tr.update').remove();
+      this.$nav.find('.current-page').text(updates.getCurrentPage());
+      this.$nav.find('.total-pages').text(updates.getTotalPages());
       this.$nav.find('[data-action="first"], [data-action="prev"]').toggleClass('disabled', updates.hasLess());
       this.$nav.find('[data-action="last"]').toggleClass('disabled', updates.isLastPage());
       this.$nav.find('[data-action="next"]').toggleClass('disabled', updates.hasMore());
-      this.$nav.find('.current-page').text(updates.getCurrentPage());
-      this.$nav.find('.total-pages').text(updates.getTotalPages());
 
+      // update bulk actions:
+      this.$('option[value="trash"]').attr( 'disabled', updates.params.get('post_status') === 'trash' );
+      this.$('option[value="restore"]').attr( 'disabled', updates.params.get('post_status') !== 'trash' );
+      
+      // redraw table rows:
       updates.each(_.bind(this.addUpdate, this));
-      this.render();
     },
     addUpdate: function(update) {
       this.$table.append( new TableRow({ model: update }).render().$el );

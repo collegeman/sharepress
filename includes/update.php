@@ -156,13 +156,52 @@ function sp_count_updates() {
     GROUP BY post_status
   ");
 
-  $counts = array();
+  $counts = array(
+    'all' => 0,
+    'trash' => 0,
+    'buffer' => 0,
+    'sent' => 0,
+    'error' => 0
+  );
   foreach($data as $r) {
     $counts[$r->post_status] = $r->cnt;
   }
   @$counts['all'] = array_sum(array_values($counts)) - $counts['trash'];
 
   return $counts;
+}
+
+/**
+ * Put the given update in the trash
+ * @return WP_Error on failure
+ */
+function sp_trash_update($update) {
+  if (!$update = sp_get_update($update_ref = $update)) {
+    return new WP_Error('update', "Update does not exist [{$update_ref}]");
+  }
+
+  if ($update->status !== 'trash') {
+    update_post_meta($update->id, 'old_post_status', $update->status);
+  }
+
+  return sp_set_update_status($update, 'trash');
+}
+
+/**
+ * Restore the previous status of the given update
+ * @return WP_Error on failure
+ */
+function sp_restore_update($update) {
+  if (!$update = sp_get_update($update_ref = $update)) {
+    return new WP_Error('update', "Update does not exist [{$update_ref}]");
+  }
+
+  if (!$old_post_status = get_post_meta($update->id, 'old_post_status', true)) {
+    return new WP_Error('update-missing-old-post-status', "Update cannot be restored: missing previous status");
+  }
+
+  delete_post_meta($update->id, 'old_post_status');
+  return sp_set_update_status($update, $old_post_status);
 }
 
 /**
@@ -451,6 +490,10 @@ function sp_update_update($update) {
 
   if (!is_user_logged_in()) {
     return new WP_Error('auth', 'You must be logged in');
+  }
+
+  if (!empty($update['id']) && !empty($update['restore'])) {
+    return sp_restore_update($update['id']);
   }
 
   if ($post_id === false) {

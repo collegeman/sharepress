@@ -1,6 +1,13 @@
 <div id="sp-updates-screen" class="wrap">
 
-  <div id="message" class="updated fade" style="display:none;"></div> 
+  <div id="filter_message" class="updated fade" style="display:none;">
+    <p>Showing only Updates for </p>
+  </div> 
+
+  <div id="undo_message" class="updated fade" style="display:none;">
+    <p>1 update moved to Trash. <a href="#" data-action="undo">Undo</a></p>
+  </div> 
+
 
   <!--   <p>You are reviewing the social publication history of <a href="#">Some post title...</a> &nbsp; &nbsp; <a class="button" href="#">remove filter</a></p>
    -->
@@ -13,11 +20,14 @@
   <div class="tablenav top">
 
     <div class="alignleft actions bulkactions">
-      <select name="action">
-        <option value="-1" selected="selected">Bulk Actions</option>
-        <option value="trash">Move to Trash</option>
-      </select>
-      <input type="submit" name="" id="doaction" class="button action" value="Apply">
+      <form>
+        <select>
+          <option value="-1" selected="selected">Bulk Actions</option>
+          <option value="trash">Move to Trash</option>
+          <option value="restore">Restore</option>
+        </select>
+        <input type="submit" class="button action" value="Apply">
+      </form>
     </div>
     <div class="alignleft actions">
       <!-- <select name="m">
@@ -51,9 +61,9 @@
   <table class="wp-list-table widefat fixed posts" cellspacing="0">
     <thead>
       <tr>
-        <th scope="col" id="cb" class="manage-column column-cb check-column" style="">
-          <label class="screen-reader-text" for="cb-select-all-1">Select All</label>
-          <input id="cb-select-all-1" type="checkbox">
+        <th scope="col" id="cb" class="manage-column column-cb check-column">
+          <label class="screen-reader-text" for="cb-select-all-head">Select All</label>
+          <input class="cb-select-all" id="cb-select-all-head" type="checkbox">
         </th>
         <th scope="col" class="manage-column column-profile">
           <label class="screen-reader-text">Profile</label>
@@ -74,9 +84,9 @@
     </thead>
 
     <tfoot>
-      <th scope="col" id="cb" class="manage-column column-cb check-column" style="">
-        <label class="screen-reader-text" for="cb-select-all-1">Select All</label>
-        <input id="cb-select-all-1" type="checkbox">
+      <th scope="col" id="cb" class="manage-column column-cb check-column">
+        <label class="screen-reader-text" for="cb-select-all-foot">Select All</label>
+        <input class="cb-select-all" id="cb-select-all-foot" type="checkbox">
       </th>
       <th scope="col" class="manage-column column-profile">
         <label class="screen-reader-text">Profile</label>
@@ -105,11 +115,14 @@
   <div class="tablenav bottom">
 
     <div class="alignleft actions bulkactions">
-      <select name="action2">
-        <option value="-1" selected="selected">Bulk Actions</option>
-        <option value="trash">Move to Trash</option>
-      </select>
-      <input type="submit" name="" id="doaction2" class="button action" value="Apply">
+      <form>
+        <select>
+          <option value="-1" selected="selected">Bulk Actions</option>
+          <option value="trash">Move to Trash</option>
+          <option value="restore">Restore</option>
+        </select>
+        <input type="submit" class="button action" value="Apply">
+      </form>
     </div>
     <div class="alignleft actions"></div>
 
@@ -138,7 +151,7 @@
 <script id="sp-tablerow-template" type="text/x-template">
   <th scope="row" class="check-column">
     <label class="screen-reader-text" for="cb-select-#">Select Update <%= id %></label>
-    <input id="cb-select-<%= id %>" type="checkbox" name="post[]" value="<%= id %>">
+    <input class="cb-select" id="cb-select-<%= id %>" type="checkbox" name="post[]" value="<%= id %>">
     <div class="locked-indicator"></div>
   </th>
   <td class="column-profile">
@@ -147,29 +160,34 @@
     <% } %>
   </td>
   <td class="column-update">
-    <span class="text"><%= text_formatted ? text_formatted : text %></span>
+    <span class="text"><%= sp.linkShortUrls(text_formatted ? text_formatted : text) %></span>
     <div class="row-actions">
       <% if (status === 'buffer') { %>
-        <span class="edit hide-if-no-js">
+        <span class="edit">
           <a href="<?php echo admin_url('post.php?action=edit') ?>&post=<%= post.id %>" title="Edit this Update">Edit</a> |
         </span>
       <% } %>
       <% if (status === 'error') { %>
-        <span class="edit hide-if-no-js">
+        <span class="edit">
           <a href="#" data-action="retry" title="Retry publishing this Update">Retry</a> |
         </span>
       <% } else if (status === 'sent' && post.status !== 'trash') { %>
-        <span class="edit hide-if-no-js">
+        <span class="edit">
           <a href="<?php echo admin_url('post.php?action=edit') ?>&post=<%= post.id %>" title="Repost this Update">Repost</a> |
         </span>
       <% } %>
       <% if (status === 'trash') { %>
-        <span class="edit hide-if-no-js">
-          <a data-action="restore" title="Restore this Update" href="#">Restore</a>
+        <span class="edit">
+          <a data-action="restore" data-action="restore" title="Restore this Update" href="#">Restore</a>
         </span>
+        <!--
+        <span class="trash">
+          <a data-action="delete" title="Restore this Update" href="#">Delete Permanently</a>
+        </span>
+        -->
       <% } else { %>
         <span class="trash">
-          <a class="submitdelete" data-action="delete" title="Move this Update to the Trash" href="#">Trash</a>
+          <a data-action="trash" title="Move this Update to the Trash" href="#">Trash</a>
         </span>
       <% } %>
     </div>

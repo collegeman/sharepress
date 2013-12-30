@@ -38,7 +38,7 @@
       ?>>LinkedIn</a></li>
     </ul>
   </div>
-  <a href="<?php echo admin_url('admin.php?page=sp-updates&post_id=' . $post->ID); ?>" class="button pull-right">History</a>
+  <!-- <a href="<?php echo admin_url('admin.php?page=sp-updates&post_id=' . $post->ID); ?>" class="button pull-right">History</a> -->
 </div>
 <div class="calendar" id="sp_calendar" data-ui="calendar">
   <div class="controls">

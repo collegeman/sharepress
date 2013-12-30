@@ -221,7 +221,7 @@ sp.views = sp.views || {};
       this._editing = !this.model.get('id');
 
       this.model.on('change:schedule', function() {
-        that.$el.find('[data-value="schedule"]').text(this.getScheduleText());
+        that.$el.find('[data-value="schedule"]').html(this.getScheduleText());
       });
 
       this.model.on('change:hidden', function() {
@@ -264,7 +264,7 @@ sp.views = sp.views || {};
             profile = this.model.profile;
 
         this.$el.html( $template.html() );
-        this.$('[data-value="schedule"]').text(this.model.getScheduleText());
+        this.$('[data-value="schedule"]').html(this.model.getScheduleText());
         this.$('[data-ui="avatar"]').attr('src', profile.get('avatar'))
           .addClass(profile.get('service'))
           .parent().attr('title', profile.get('service') + ': ' + profile.get('formatted_username'));
