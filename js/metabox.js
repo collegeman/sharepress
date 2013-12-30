@@ -270,6 +270,8 @@ sp.views = sp.views || {};
           .parent().attr('title', profile.get('service') + ': ' + profile.get('formatted_username'));
         this.$('[data-value="text"]').text(this.model.get('text'));
       }
+      this.$('textarea').attr('readonly', profile.get('readonly'));
+      this.$('.promo').toggle(profile.get('readonly'));
       this.$el.toggle(!this.model.get('hidden'));
       this.updateCharCount();
       return this;
@@ -378,7 +380,7 @@ sp.views = sp.views || {};
       profiles = new sp.models.Profiles(),
       updates = new sp.models.Updates();
       // initialize params silently--we call fetch manually below
-      updates.params.set('post_id', parseInt( $('#post_ID').val(), { silent: true }));
+      updates.params.set({ 'post_id': parseInt( $('#post_ID').val() ) }, { silent: true });
 
       this.listenTo(profiles, 'add', this.addProfile);
       this.listenTo(profiles, 'remove', this.removeProfile);
@@ -436,7 +438,7 @@ sp.views = sp.views || {};
     addUpdate: function(update) {
       // already drawn? remove and redraw!
       update.view && update.view.remove();
-      update.profile = profiles.get(parseInt(update.get('profile_id'))); 
+      update.profile = profiles.get( parseInt(update.get('profile_id') )); 
       if (!update.profile) {
         update.set({ hidden: true });
       }

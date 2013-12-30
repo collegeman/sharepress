@@ -21,10 +21,11 @@ function sp_profile_init() {
  * @return SharePressProfile or false if none exists
  */
 function sp_get_profile($profile) {
-  if ($profile instanceof SharePressProfile) {
-    return $profile;
+  if (!$profile instanceof SharePressProfile) {
+    $profile = SharePressProfile::forPost($profile);
   }
-  return SharePressProfile::forPost($profile);
+  $profile->readonly = true;
+  return apply_filters('sp_get_profile', $profile);
 }
 
 
@@ -226,6 +227,7 @@ class SharePressProfile {
     }
     unset($data['user_token']);
     unset($data['user_secret']);
+    $data['id'] = (int) $data['id'];
     return $data;
   }
 

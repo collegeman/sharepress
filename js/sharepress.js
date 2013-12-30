@@ -105,7 +105,9 @@ sp.models = sp.models || {};
   sp.models.Updates = B.Collection.extend({
     params: new B.Model({
       status: '',
-      post_id: null
+      post_id: null,
+      limit: 10,
+      offset: 0
     }),
     initialize: function(models, options) {
       this.options = options;
@@ -128,6 +130,13 @@ sp.models = sp.models || {};
         }
       });
       return url;
+    },
+    getCount: function() {
+      return this.count || 0;
+    },
+    parse: function(res) {
+      this.count = res.count;
+      return res.updates;
     },
     model: sp.models.Update
   });

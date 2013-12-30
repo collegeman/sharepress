@@ -16,6 +16,7 @@
 #sp_metabox .editor .count { position: absolute; display: block; padding: 2px 6px; min-width: 20px; text-align: right; right: 18px; top: 60px; font-size: 13px; opacity: 0.50; background-color: #ccc; color: black; }
 #sp_metabox .editor .count.error { color: red; }
 #sp_metabox .editor textarea { width: 99%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; min-height: 80px; }
+#sp_metabox .editor textarea[readonly] { background-color: #efefef; color: #cccccc; }
 #sp_metabox .editor .count:hover { opacity: 0.15; }
 #sp_metabox .delete { display: inline-block; padding: 2px; color: red; }
 #sp_metabox .delete:hover { background-color: red; color: white; border: none; text-decoration: none; }

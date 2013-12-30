@@ -26,6 +26,16 @@
     }
   });
 
+  var Router = Backbone.Router.extend({
+    routes: {
+      '': 'updates',
+      '?*qs': 'updates'
+    },
+    updates: function() {
+      alert('here');
+    }
+  });
+
   SubSubSub.template = _.template( $('#sp-subsubsub').html() );
 
   var TableRow = B.View.extend({
@@ -46,17 +56,25 @@
   TableRow.template = _.template( $('#sp-tablerow-template').html() ); 
 
   sp.views.UpdatesScreen = B.View.extend({
-    initialize: function() {
+    initialize: function(options) {
       this.$table = this.$('table');
+      this.$nav = this.$('.tablenav');
       this.filters = new SubSubSub({ el: this.$('.subsubsub') }).render().el;
       this.listenTo(updates, 'add', this.addUpdate);
       this.listenTo(updates, 'remove', this.removeUpdate);
       this.listenTo(updates, 'sync', this.reset);
+      this.router = new Router();
 
       counts.fetch();
       updates.params.set({ fields: 'profile,error' });
+
+      $(function() {
+        B.history.start({ pushState: true, root: options.root });
+      });
     },
     reset: function() {
+      var cnt = updates.getCount();
+      this.$nav.find('.displaying-num').text(cnt + ( cnt != 1 ? ' items' : ' item' ));
       this.$table.find('.no-items').toggle(!updates.length);
       this.$table.find('tr.update').remove();
       updates.each(_.bind(this.addUpdate, this));

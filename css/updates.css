@@ -5,7 +5,21 @@
     display: none;
   }
 }
-table .post.status-trash {
-  text-decoration: line-through;
-  color: #555555;
+table .column-profile {
+  width: 20px !important;
 }
+table .column-error .error {
+  color: red;
+}
+table .status {
+  text-transform: capitalize;
+}
+table .update.status.status-error {
+  color: red;
+  font-weight: bold;
+}
+.sp-profile.thumb { width: 25px; height: 25px; border-bottom: 4px solid #333; }
+.sp-profile.thumb.facebook { border-bottom: 4px solid #3B5999; }
+.sp-profile.thumb.twitter { border-bottom: 4px solid #44CCF6; }
+.sp-profile.thumb.googleplus { border-bottom: 4px solid #6EC41B; }
+.sp-profile.thumb.linkedin { border-bottom: 4px solid #027EBC; }

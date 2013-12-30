@@ -67,7 +67,8 @@ class TwitterSharePressClient implements SharePressClient {
         'service_username' => $response['screen_name'],
         'link' => 'http://twitter.com/'.$response['screen_name'],
         'avatar' => $profile_data->profile_image_url_https,
-        'limit' => 140
+        'limit' => 140,
+        'readonly' => true
       );      
 
     } 

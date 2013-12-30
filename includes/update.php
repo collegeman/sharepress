@@ -7,7 +7,7 @@ add_action('admin_menu', 'sp_updates_menu');
 
 function sp_updates_menu() {
   // TODO: manage_options is the wrong perm--all authors should be able to see this screen
-  add_submenu_page('sp-settings', 'Updates', 'Updates', 'manage_options', 'sp-updates', 'sp_updates_page');
+  add_submenu_page('sp-settings', 'Update History', 'Update History', 'manage_options', 'sp-updates', 'sp_updates_page');
 }
 
 function sp_updates_page() {
@@ -108,6 +108,8 @@ class SharePressUpdate {
     unset($data['shorten']);
     unset($data['sent_data']);
     $data['text_formatted'] = $this->text_formatted;
+    $data['id'] = (int) $data['id'];
+    $data['profile_id'] = (int) $data['profile_id'];
     return $data;
   }
 
@@ -126,15 +128,12 @@ class SharePressUpdateSorter {
 }
 
 /**
+ * @param int The ID of an update
  * @return mixed If the update exists and has an error, return WP_Error;
  * otherwise returns false.
  */
-function get_last_error_for_update($update) {
-  if (!$update = sp_get_update($update_ref = $update)) {
-    return false;
-  }
-
-  if ($errors = get_post_meta($update->ID, 'error')) {
+function get_last_error_for_update($id) {
+  if ($errors = get_post_meta($id, 'error')) {
     return array_pop($errors);
   } else {
     return false;
@@ -394,7 +393,7 @@ function sp_get_updates($args = '') {
   $params[] = $args['numberposts'];
   $params[] = $args['offset'];
 
-  $countSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT COUNT(post_ID) FROM {$wpdb->posts}" . $sql), $params));
+  $countSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT COUNT({$wpdb->posts}.ID) FROM {$wpdb->posts}" . $sql), $params));
   $postsSql = call_user_func_array(array($wpdb, 'prepare'), array_merge(array("SELECT * FROM {$wpdb->posts}" . $sql . $orderAndLimit), $params));
 
   $count = $wpdb->get_var($countSql);

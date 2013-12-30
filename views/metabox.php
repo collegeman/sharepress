@@ -38,7 +38,7 @@
       ?>>LinkedIn</a></li>
     </ul>
   </div>
-  <a href="<?php echo admin_url('admin.php?page=sp-updates&post_id=' . $post->ID); ?>" class="button pull-right" target="_blank">History</a>
+  <a href="<?php echo admin_url('admin.php?page=sp-updates&post_id=' . $post->ID); ?>" class="button pull-right">History</a>
 </div>
 <div class="calendar" id="sp_calendar" data-ui="calendar">
   <div class="controls">
@@ -94,7 +94,8 @@
       <a href="#" title="/* service: name */"><img data-ui="avatar" class="sp-profile thumb /* service */" src=""></a>
     </div>
     <div class="bd">
-      <textarea data-value="text"></textarea>
+      <textarea data-value="text" readonly></textarea>
+      <p class="promo howto" style="display:none;">You should be writing custom messages for each social media network. <a href="<?php echo admin_url('admin.php?page=sp-addons') ?>" target="_blank">Learn&nbsp;more&nbsp;&rarr;</a></p>
       <div class="date">
         <b data-value="schedule"></b>
         &nbsp;<a href="#" data-action="change-schedule">Change</a>
