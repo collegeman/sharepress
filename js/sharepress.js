@@ -89,9 +89,15 @@ sp.models = sp.models || {};
   };
 
   sp.dismissPointer = function(id) {
-    var pointer = sp.getPointerById('sp_connect_btn');
+    var pointer = sp.getPointerById(id);
     if (pointer) {
       $(pointer.target).pointer(pointer.options).pointer('close');
+      $.post(ajaxurl, {
+        pointer: pointer.pointer_id,
+        action: 'dismiss-wp-pointer'
+      }).success(function() {
+        sp.deletePointerById(id);
+      });
       return true;
     } else {
       return false;

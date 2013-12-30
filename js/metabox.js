@@ -436,6 +436,9 @@ sp.views = sp.views || {};
       profiles.each(_.bind(this.addProfile, this));
     },
     addUpdate: function(update) {
+      sp.dismissPointer('sp_connect_btn');
+      sp.dismissPointer('sp_profiles');
+      
       // already drawn? remove and redraw!
       update.view && update.view.remove();
       update.profile = profiles.get( parseInt(update.get('profile_id') )); 
