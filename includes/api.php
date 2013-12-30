@@ -42,34 +42,27 @@ class SpApi_v1 extends AbstractSpApi {
   }
 
   function cron() {
+    sp_log('api/cron: starting');
+
     ignore_user_abort(true);
 
     $local_time = microtime( true );
 
-    $doing_cron_transient = get_transient( 'sp_doing_cron');
-
-    // Use global $doing_wp_cron lock otherwise use the GET lock. If no lock, trying grabbing a new lock.
-    if ( empty( $doing_wp_cron ) ) {
-      if ( empty( $_GET[ 'sp_doing_cron' ] ) ) {
-        // Called from external script/job. Try setting a lock.
-        if ( $doing_cron_transient && ( $doing_cron_transient + WP_CRON_LOCK_TIMEOUT > $local_time ) )
-          return;
-        $doing_cron_transient = $doing_wp_cron = sprintf( '%.22F', microtime( true ) );
-        set_transient( 'sp_doing_cron', $doing_wp_cron );
-      } else {
-        $doing_wp_cron = $_GET[ 'sp_doing_cron' ];
+    if ($cron_transient = get_transient('sp_doing_cron')) {
+      if (empty($_GET['sp_doing_cron']) || $_GET['sp_doing_cron'] != $cron_transient ) {
+        sp_log('api/cron: locked out');
+        return false;
       }
+    } else {
+      // TODO: create a namedspaced function that does this
+      set_transient('sp_doing_cron', sprintf( '%.22F', microtime(true) ));
     }
-
-    // Check lock
-    if ( $doing_cron_transient != $doing_wp_cron )
-      return;
 
     $result = sp_post_pending();
 
-    if ( get_transient('sp_doing_cron') == $doing_wp_cron ) {
-      delete_transient( 'sp_doing_cron' );
-    }
+    delete_transient( 'sp_doing_cron' );
+  
+    sp_log('api/cron: done');
 
     return $result;
   }

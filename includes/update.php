@@ -217,9 +217,12 @@ function sp_post_pending($until = null) {
  */
 function sp_post_update($update) {
   if (!$update = sp_get_update($update_ref = $update)) {
+    sp_log("sp_post_update #{$update_ref} does not exist", 'ERROR');
     return new WP_Error('update', "Update does not exist [{$update_ref}]");
   }
 
+  sp_log("sp_post_update #{$update->id}");
+  
   // if this update is bound to a Post ID
   $post = false;
   if ($update->post_id) {
@@ -259,7 +262,9 @@ function sp_post_update($update) {
     return $error;
   }
   
-  if (is_wp_error($message = $update->text_formatted)) {
+  $message = apply_filters('sp_update_text_format', $client->filter_update_text($update->text), $update);
+
+  if (is_wp_error($message)) {
     $error = $message;
     $error->add_data(array(
       'profile' => $profile->toJSON(),

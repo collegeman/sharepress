@@ -18,6 +18,10 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
     }
   }
 
+  function filter_update_text($text) {
+    return '[title] [link]';
+  }
+
   function getName() {
     return "Facebook";
   }

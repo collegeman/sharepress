@@ -48,7 +48,7 @@ function sp_log($message, $level = 'DEBUG') {
   // normalize $level argument
   $level = strtoupper($level);
   // if not in debugging mode, ignore non-critical messages
-  if (( !defined('WP_DEBUG') || !WP_DEBUG ) && !sp_get_opt('debug')) {
+  if (( !defined('WP_DEBUG') || !WP_DEBUG ) && !apply_filters('sp_is_debug_enabled', false)) {
     if ($level !== 'ERROR' && $level !== 'WARN') {
       return;
     }
@@ -64,7 +64,8 @@ function sp_log($message, $level = 'DEBUG') {
   if (is_wp_error($message)) {
     $message = $message->get_error_message();
   }
-  $message = sprintf("%-2s-%s %s %-5s %s\n", (string) $blog_id, $sp_thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), strtoupper($level), $message);
+  $blog_id = (string) $blog_id;
+  $message = sprintf("%-5s %s %s %-5s %s\n", $blog_id ? $blog_id : 0, $sp_thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), strtoupper($level), $message);
   if (!@file_put_contents($filename, $message, FILE_APPEND)) {
     error_log($message);
   }
@@ -93,8 +94,6 @@ function sp_init() {
   ));
 
   do_action('sp_init');
-
-  sp_log('sp_init');
 }
 
 /**
@@ -374,6 +373,10 @@ abstract class AbstractSharePressClient implements SharePressClient {
     $this->key = $key;
     $this->secret = $secret;
     $this->profile = $profile;
+  }
+
+  function filter_update_text($text) {
+    return '[title] [link]';
   }
 
   function getName() {

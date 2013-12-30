@@ -21,11 +21,14 @@ function sp_profile_init() {
  * @return SharePressProfile or false if none exists
  */
 function sp_get_profile($profile) {
-  if (!$profile instanceof SharePressProfile) {
-    $profile = SharePressProfile::forPost($profile);
+  if ($profile instanceof SharePressProfile) {
+    return $profile;
   }
-  $profile->readonly = true;
-  return apply_filters('sp_get_profile', $profile);
+  if (!is_wp_error($profile = SharePressProfile::forPost($profile_ref = $profile))) {
+    return apply_filters('sp_get_profile', $profile);
+  } else {
+    return $profile;
+  }
 }
 
 
