@@ -24,16 +24,16 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Support',
-    'description' => 'Technical support from SharePress developers, and advanced access to new features: $25/year',
+    'description' => 'Technical support from SharePress developers, and advanced access to new features',
     'icon' => 'fa-wrench',
     'icon-color' => '',
     'bg' => '#FFA000',
-    'active' => sp_is_plugin_active('support')
+    'active' => sp_is_plugin_active('sharepress-support')
   );
 
   $premium[] = array(
     'title' => 'Twitter',
-    'description' => 'customize your Tweets: $19/year',
+    'description' => 'Customize your Tweets',
     'icon' => 'fa-twitter',
     'icon-color' => '',
     'bg' => '#6EB4F9',
@@ -42,7 +42,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Facebook Pages',
-    'description' => 'post to Facebook Pages: $19/year',
+    'description' => 'Post to Facebook Pages',
     'icon' => 'fa-facebook',
     'icon-color' => '',
     'bg' => '#3B5B93',
@@ -51,7 +51,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Google+',
-    'description' => 'post to Google+ Profiles: $9/year',
+    'description' => 'Post to Google+ Profiles',
     'icon' => 'fa-google-plus',
     'icon-color' => '',
     'bg' => '#E15B52',
@@ -60,7 +60,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'LinkedIn',
-    'description' => 'post to LinkedIn Profiles: $9/year',
+    'description' => 'Post to LinkedIn Profiles',
     'icon' => 'fa-linkedin',
     'icon-color' => '',
     'bg' => '#57A9CB',
@@ -69,7 +69,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Repeater',
-    'description' => 'automatically repeat posts: $25/year',
+    'description' => 'Automatically repeat posts',
     'icon' => 'fa-refresh',
     'icon-color' => '',
     'bg' => '#FFC46A',
@@ -78,7 +78,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Buffer',
-    'description' => 'stop scheduling and start buffering posts: feed the beast!: $25/year',
+    'description' => 'Stop scheduling and start buffering posts: feed the beast!',
     'icon' => 'fa-th-list',
     'icon-color' => '',
     'bg' => '#18944B',
@@ -87,7 +87,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Authors',
-    'description' => 'post to your Authors\' social media profiles, too: $25/year',
+    'description' => 'Post to your Authors\' social media profiles, too',
     'icon' => 'fa-pencil',
     'icon-color' => '',
     'bg' => '#819197',
@@ -96,7 +96,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Advanced Social Metadata',
-    'description' => 'Twitter Cards, and custom meta data on a service-by-service basis: $25/year',
+    'description' => 'Twitter Cards, and custom meta data on a service-by-service basis',
     'icon' => 'fa-bullhorn',
     'icon-color' => '',
     'bg' => '#2675B2',
@@ -105,7 +105,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Calendar',
-    'description' => 'see what you have scheduled, and manage your editorial cycle: $25/year',
+    'description' => 'See what you have scheduled, and manage your editorial cycle',
     'icon' => 'fa-calendar',
     'icon-color' => '',
     'bg' => '#945A56',
@@ -114,7 +114,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Meme',
-    'description' => 'add text to any image in your library: $15/year',
+    'description' => 'Add text to any image in your library',
     'icon' => 'fa-fighter-jet',
     'icon-color' => '',
     'bg' => '#50B2FE',
@@ -123,7 +123,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Convo',
-    'description' => 'bring the conversation home: comments and forums, mobile-ready: $99/year',
+    'description' => 'Bring the conversation home: comments and forums, mobile-ready',
     'icon' => 'fa-beer',
     'icon-color' => '',
     'bg' => '#4A3E31',
@@ -132,7 +132,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'iPhone App',
-    'description' => 'wrap your responsive WordPress site for the App Store, announce new content with push notifications: starts at $299/year',
+    'description' => 'Wrap your responsive WordPress site for the App Store, announce new content with push notifications',
     'icon' => 'fa-apple',
     'icon-color' => '',
     'bg' => '#FE9343',
@@ -141,7 +141,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Android App',
-    'description' => 'wrap your responsive WordPress site for Google Play: starts at $299/year',
+    'description' => 'Wrap your responsive WordPress site for Google Play',
     'icon' => 'fa-android',
     'icon-color' => '',
     'bg' => '#4CB238',
@@ -150,10 +150,10 @@ function sp_addons_page() {
 
   $free[] = array(
     'title' => 'Social Login',
-    'description' => 'allow your users to login for commenting: free',
-    'icon' => '',
+    'description' => 'Allow your users to login for commenting',
+    'icon' => 'fa-key',
     'icon-color' => '',
-    'bg' => '',
+    'bg' => '#B23892',
     'active' => sp_is_plugin_active('sharepress-social-login')
   );
 

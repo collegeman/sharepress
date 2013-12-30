@@ -29,7 +29,24 @@
     </div>
     
     <div class="add-on-group clearfix">
-        
+      <?php foreach( $free as $add_on ) { ?>
+        <div class="add-on wp-box add-on-active" >
+          <a target="_blank" href="<?php echo $add_on['url'] ?>" style="display:block; padding:15px; text-align:center; font-size:10em; background-color:<?php echo $add_on['bg'] ?>; color:#fff"><i class="fa <?php echo $add_on['icon'] ?>"></i></a>
+          <div class="inner">
+            <h3><a target="_blank" href="<?php echo $add_on['url'] ?>"><?php echo $add_on['title'] ?></a></h3>
+            <p><?php echo $add_on['description'] ?></p>
+          </div>
+          <div class="footer">
+            <div style="padding: 10px;">
+              <?php if ( $add_on['active'] ) { ?>
+                <a class="button button-disabled"><span class="acf-sprite-tick"></span>Installed</a>
+              <?php } else { ?>
+                <a target="_blank" href="<?php echo $add_on['url'] ?>" class="button"><span class="acf-sprite-tick"></span>Download &amp; Install</a>
+              <?php } ?>
+            </div>
+          </div>
+        </div>
+      <?php } ?>
     </div>
       
   </div>
