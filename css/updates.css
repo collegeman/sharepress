@@ -1,0 +1,11 @@
+@media screen and (max-width: 782px) {
+  #sp-updates-screen .column-post, 
+  #sp-updates-screen .column-error,
+  #sp-updates-screen .column-date {
+    display: none;
+  }
+}
+table .post.status-trash {
+  text-decoration: line-through;
+  color: #555555;
+}

@@ -211,6 +211,26 @@ class SpApi_v1 extends AbstractSpApi {
         'update' => site_url('/sp/1/updates/'.$update->id.'/update'),
         'delete' => site_url('/sp/1/updates/'.$update->id.'/destroy')
       );
+      if ($update->post_id && ($post = get_post($update->post_id))) {
+        $update->post = array(
+          'id' => $update->post_id,
+          'title' => apply_filters('the_title', $post->post_title),
+          'status' => $post->post_status
+        );
+      }
+      if (!empty($_REQUEST['fields'])) {
+        $fields = array_map('trim', explode(',', $_REQUEST['fields']));
+        if (in_array('profile', $fields)) {
+          $update->profile = sp_get_profile($update->profile_id)->toJSON();    
+        }
+        if (in_array('error', $fields)) {
+          if ($error = get_last_error_for_update($update)) {
+            $update->error = $error->get_error_message();
+          } else {
+            $update->error = false;
+          }
+        }
+      }
     }
   }
 
@@ -399,7 +419,10 @@ class SpApi_v1 extends AbstractSpApi {
       $id = null;
     }
 
-    if ($this->_isPost() || $action === 'create') {
+    if ($id === 'counts') {
+      return sp_count_updates();
+
+    } else if ($this->_isPost() || $action === 'create') {
       unset($_REQUEST['id']);
       if (is_wp_error($result = sp_update_update($_REQUEST))) {
         return $result;
@@ -420,28 +443,22 @@ class SpApi_v1 extends AbstractSpApi {
     } else if ($id && ( $this->_isDelete() || $action === 'destroy' )) {
       return array('success' => sp_set_update_status($id, 'trash'));
 
-    } else if ($id === 'queue') {
-      if (!empty($action)) {
-        $_REQUEST['post_id'] = $action;
-        if (is_wp_error($result = sp_get_updates($_REQUEST))) {
-          return $result;
-        }
-        array_map(array($this, '_addUpdateActions'), $result->updates);
-        return $result->updates;
-      }
-
-    } else if ($id === 'history') {
-      if (empty($action)) {
-        return new WP_Error("Request missing Post ID");
-      }
-
     } else if ($id) {
       if (is_wp_error($update = sp_get_update($id))) {
         return $update;
       }
       $this->_addUpdateActions($update);
       return $update->toJSON();
+
+    } else if ($this->_isGet()) {
+      if (is_wp_error($result = sp_get_updates($_REQUEST))) {
+        return $result;
+      }
+      array_map(array($this, '_addUpdateActions'), $result->updates);
+      return $result->updates;
     }
+
+    
   }
 
   function debug($fx) {

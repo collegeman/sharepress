@@ -67,7 +67,7 @@ sp.models = sp.models || {};
     }  
   };
 
-  sp.models.Update = Backbone.Model.extend({
+  sp.models.Update = B.Model.extend({
     initialize: function() {
       this.on('change:text', function() {
         
@@ -102,7 +102,11 @@ sp.models = sp.models || {};
     }
   });
 
-  sp.models.Updates = Backbone.Collection.extend({
+  sp.models.Updates = B.Collection.extend({
+    params: new B.Model({
+      status: '',
+      post_id: null
+    }),
     initialize: function(models, options) {
       this.options = options;
 
@@ -110,24 +114,31 @@ sp.models = sp.models || {};
       this.on('sync', function() {
         $(window).trigger('sp.updates.sync', [ this ]);
       });
+
+      this.listenTo(this.params, 'change', function() {
+        this.fetch();
+      })
     },
     url: function() {
-      var url = sp.api + '/updates';
-      if (this.options.post_id) {
-        url += '/queue/' + this.options.post_id;
-      }
+      var params = this.params,
+          url = sp.api + '/updates?1=1';
+      _.each(params.attributes, function(val, name) {
+        if (val) {
+          url += '&' + encodeURIComponent(name) + '=' + encodeURIComponent(val);
+        }
+      });
       return url;
     },
     model: sp.models.Update
   });
 
-  sp.models.Profile = Backbone.Model.extend({
+  sp.models.Profile = B.Model.extend({
     url: function() {
       return sp.api + '/profile' + ( this.get('id') ? '/' + this.get('id') : '' );
     }
   });
 
-  sp.models.Profiles = Backbone.Collection.extend({
+  sp.models.Profiles = B.Collection.extend({
     initialize: function() {
       this.on('sync', function() {
         $(window).trigger('sp.profiles.sync', [ this ]);      

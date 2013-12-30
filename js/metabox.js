@@ -376,7 +376,9 @@ sp.views = sp.views || {};
     initialize: function() {
       // intialize global collections:
       profiles = new sp.models.Profiles(),
-      updates = new sp.models.Updates([], { post_id: $('#post_ID').val() });
+      updates = new sp.models.Updates();
+      // initialize params silently--we call fetch manually below
+      updates.params.set('post_id', parseInt( $('#post_ID').val(), { silent: true }));
 
       this.listenTo(profiles, 'add', this.addProfile);
       this.listenTo(profiles, 'remove', this.removeProfile);
@@ -420,7 +422,7 @@ sp.views = sp.views || {};
       });
     },
     addProfile: function(profile) {
-      var $ui = $('<li class="profile ' + profile.get('service') + '"><a href="#" data-action="create-update" data-profile="' + profile.get('id') + '" title="' + profile.get('service') + ': ' + profile.get('formatted_username') + '" data-default-text="' + profile.get('default_text') + '"><img class="thumb" src="' + profile.get('avatar') + '"></a></li>');
+      var $ui = $('<li class="profile ' + profile.get('service') + '"><a href="#" data-action="create-update" data-profile="' + profile.get('id') + '" title="' + profile.get('service') + ': ' + profile.get('formatted_username') + '" data-default-text="' + profile.get('default_text') + '"><img class="sp-profile thumb" src="' + profile.get('avatar') + '"></a></li>');
       this.ui.profiles.append($ui);
       profile.$ui = $ui;
     },

@@ -38,7 +38,7 @@
       ?>>LinkedIn</a></li>
     </ul>
   </div>
-  <button href="#" class="button pull-right" disabled>History</button>
+  <a href="<?php echo admin_url('admin.php?page=sp-updates&post_id=' . $post->ID); ?>" class="button pull-right" target="_blank">History</a>
 </div>
 <div class="calendar" id="sp_calendar" data-ui="calendar">
   <div class="controls">
@@ -79,7 +79,7 @@
 <div data-template="update" style="display:none;">
   <div class="misc-pub-section media update">
     <div class="img">
-      <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
+      <a href="#" title="/* service: name */"><img data-ui="avatar" class="sp-profile thumb /* service */" src=""></a>
     </div>
     <div class="bd">
      <span data-value="text"></span><br>
@@ -91,7 +91,7 @@
   <div data-ui="update" class="misc-pub-section media editor">
     <span class="count">0</span>
     <div class="img">
-      <a href="#" title="/* service: name */"><img data-ui="avatar" class="thumb /* service */" src=""></a>
+      <a href="#" title="/* service: name */"><img data-ui="avatar" class="sp-profile thumb /* service */" src=""></a>
     </div>
     <div class="bd">
       <textarea data-value="text"></textarea>

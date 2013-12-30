@@ -78,7 +78,14 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
 
   function post($message, $config = '') {
     try {
+      
       if (!empty($config['url'])) {
+        if ( apply_filters('sp_auto_flush_fb', true) ) {
+          self::api('/', 'POST', array(
+            'id' => $config['url'],
+            'scrape' => 'true'
+          ));
+        }
         $response = $this->postLink($message, $config);
       } else {
         $response = $this->postFeed($message, $config);

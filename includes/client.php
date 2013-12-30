@@ -61,6 +61,9 @@ function sp_log($message, $level = 'DEBUG') {
 
   // create an obscured log name
   $filename = SP_DIR.'/sp-'.substr(md5('sharepress'.SECURE_AUTH_SALT), 0, 6).'-'.get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'Ymd').'.log';
+  if (is_wp_error($message)) {
+    $message = $message->get_error_message();
+  }
   $message = sprintf("%-2s-%s %s %-5s %s\n", (string) $blog_id, $sp_thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), strtoupper($level), $message);
   if (!@file_put_contents($filename, $message, FILE_APPEND)) {
     error_log($message);
@@ -69,6 +72,8 @@ function sp_log($message, $level = 'DEBUG') {
 
 function sp_init() {
   // load remaining dependencies...
+  // TODO: try to only load the dependencies we need
+  require(SP_DIR.'/includes/settings.php');
   require(SP_DIR.'/includes/profile.php');
   require(SP_DIR.'/includes/update.php');
   require(SP_DIR.'/includes/buffer.php');
@@ -77,7 +82,6 @@ function sp_init() {
   require(SP_DIR.'/includes/ajax.php');
   require(SP_DIR.'/includes/metaboxes.php');
   require(SP_DIR.'/includes/metadata.php');
-  require(SP_DIR.'/includes/settings.php');
   require(SP_DIR.'/includes/addons.php');
   require(SP_DIR.'/includes/pointers.php');
 

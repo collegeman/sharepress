@@ -1,6 +1,5 @@
 <?php
 add_action('init', 'sp_profile_init');
-add_action('wp_insert_post', 'sp_create_default_updates');
 
 function sp_profile_init() {
   register_post_type('sp_profile', array(
@@ -26,12 +25,6 @@ function sp_get_profile($profile) {
     return $profile;
   }
   return SharePressProfile::forPost($profile);
-}
-
-function sp_create_default_updates($new_post) {
-  // TODO: finish implementing this hook
-  // if there are any updates that should be
-  // buffered by default, this is where we do it
 }
 
 
@@ -91,7 +84,7 @@ class SharePressProfile {
   }
 
   private function __construct($data) {
-    foreach(get_post_custom($data['id']) as $meta_key => $values) {
+    foreach(get_post_meta($data['id']) as $meta_key => $values) {
       $value = $values[count($values)-1];
       if ($meta_key == 'service_tag') {
         list($service, $service_id) = explode(':', $value);

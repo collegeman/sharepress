@@ -138,10 +138,6 @@ class TwitterSharePressClient implements SharePressClient {
   }
 
   function post($message, $config = '') {
-    if (!empty($config['url'])) {
-      $message .= ' '.$config['url'];
-    }
-
     $oauth = SpOAuthRequest::from_consumer_and_token(
       $this->consumer,
       $this->user,
@@ -189,12 +185,9 @@ class TwitterSharePressClient implements SharePressClient {
   }
 
   function test($message = false, $url = false) {
-    return $this->post(
-      $message ? $message : constant('SP_TEST_MESSAGE'),
-      array(
-        'url' => $url ? $url : constant('SP_TEST_URL')
-      ) 
-    );
+    $test = $message ? $message : constant('SP_TEST_MESSAGE');
+    $test .= ' ' . $url ? $url : constant('SP_TEST_URL');
+    return $this->post($test);
   }
 
   function settings_keys_section() {

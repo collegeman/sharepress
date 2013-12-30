@@ -5,11 +5,11 @@
 #sp_metabox .media .img_right { float: right; margin-left: 10px; margin-right: 0; }
 #sp_metabox .media_small .img { width: 50px; height: 50px; overflow: hidden; text-align: center; }
 #sp_metabox .inside { padding: 0; }
-#sp_metabox .thumb { width: 25px; height: 25px; border-bottom: 4px solid #333; }
-#sp_metabox .thumb.facebook { border-bottom: 4px solid #3B5999; }
-#sp_metabox .thumb.twitter { border-bottom: 4px solid #44CCF6; }
-#sp_metabox .thumb.googleplus { border-bottom: 4px solid #6EC41B; }
-#sp_metabox .thumb.linkedin { border-bottom: 4px solid #027EBC; }
+.sp-profile.thumb { width: 25px; height: 25px; border-bottom: 4px solid #333; }
+.sp-profile.thumb.facebook { border-bottom: 4px solid #3B5999; }
+.sp-profile.thumb.twitter { border-bottom: 4px solid #44CCF6; }
+.sp-profile.thumb.googleplus { border-bottom: 4px solid #6EC41B; }
+.sp-profile.thumb.linkedin { border-bottom: 4px solid #027EBC; }
 #sp_metabox .buttons { padding: 10px }
 #sp_metabox .updates { position: relative; }
 #sp_metabox .editor { position: relative; }
