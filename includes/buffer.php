@@ -50,11 +50,13 @@ function sp_buf_admin_bar_menu() {
     return;
   }
 
+  /*
   $wp_admin_bar->add_menu(array(
     'id' => 'sp-buf-schedule',
     'title' => sprintf('<img src="%s">', plugins_url('img/admin-bar-wait.gif', SHAREPRESS)),
     'href' => '#',
   ));
+  */
 }
 
 /** 

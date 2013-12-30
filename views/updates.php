@@ -129,11 +129,11 @@
 </div>
 
 <script id="sp-subsubsub" type="text/x-template">
-  <li class="all"><a href="<?php echo admin_url('admin.php?page=sp-updates') ?>" <% if (selected == 'all') { %> class="current" <% } %> >All <span class="count">(<%= all %>)</span></a> |</li>
-  <li class="sent"><a href="<?php echo admin_url('admin.php?page=sp-updates&post_status=sent') ?>"<% if (selected == 'sent') { %> class="current" <% } %> >Sent <span class="count">(<%= sent %>)</span></a> |</li>
-  <li class="pending"><a href="<?php echo admin_url('admin.php?page=sp-updates&post_status=buffer') ?>"<% if (selected == 'buffer') { %> class="current" <% } %> >Pending <span class="count">(<%= buffer %>)</span></a> |</li>
-  <li class="errors"><a href="<?php echo admin_url('admin.php?page=sp-updates&post_status=error') ?>"<% if (selected == 'error') { %> class="current" <% } %> >Errors <span class="count">(<%= error %>)</span></a> |</li>
-  <li class="trash"><a href="<?php echo admin_url('admin.php?page=sp-updates&post_status=trash') ?>"<% if (selected == 'trash') { %> class="current" <% } %> >Trash <span class="count">(<%= trash %>)</span></a></li>
+  <li class="all"><a href="admin.php?page=sp-updates" <% if (selected == 'all') { %> class="current" <% } %> >All <span class="count">(<%= all %>)</span></a> |</li>
+  <li class="sent"><a href="admin.php?page=sp-updates&post_status=sent" <% if (selected == 'sent') { %> class="current" <% } %> >Sent <span class="count">(<%= sent %>)</span></a> |</li>
+  <li class="pending"><a href="admin.php?page=sp-updates&post_status=buffer" <% if (selected == 'buffer') { %> class="current" <% } %> >Pending <span class="count">(<%= buffer %>)</span></a> |</li>
+  <li class="errors"><a href="admin.php?page=sp-updates&post_status=error" <% if (selected == 'error') { %> class="current" <% } %> >Errors <span class="count">(<%= error %>)</span></a> |</li>
+  <li class="trash"><a href="admin.php?page=sp-updates&post_status=trash" <% if (selected == 'trash') { %> class="current" <% } %> >Trash <span class="count">(<%= trash %>)</span></a></li>
 </script>
 
 <script id="sp-tablerow-template" type="text/x-template">
@@ -164,9 +164,15 @@
           <a href="<?php echo admin_url('post.php?action=edit') ?>&post=<%= post.id %>" title="Repost this Update">Repost</a> |
         </span>
       <% } %>
-      <span class="trash">
-        <a class="submitdelete" data-action="delete" title="Move this Update to the Trash" href="#">Trash</a>
-      </span>
+      <% if (status === 'trash') { %>
+        <span class="edit hide-if-no-js">
+          <a data-action="restore" title="Restore this Update" href="#">Restore</a>
+        </span>
+      <% } else { %>
+        <span class="trash">
+          <a class="submitdelete" data-action="delete" title="Move this Update to the Trash" href="#">Trash</a>
+        </span>
+      <% } %>
     </div>
   </td>
   <td class="column-post">
@@ -196,7 +202,7 @@
 jQuery(function($) {
   new sp.views.UpdatesScreen({ 
     el: $('#sp-updates-screen'),
-    root: '<?php echo admin_url('admin.php') ?>' 
+    root: '<?php echo parse_url(admin_url(''), PHP_URL_PATH) ?>' 
   });
 });
 </script>

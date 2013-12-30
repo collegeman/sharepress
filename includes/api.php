@@ -587,7 +587,7 @@ function sp_parse_request($wp) {
       if (is_wp_error($result)) {
         status_header(500);
       }
-      echo json_encode($result);
+      echo 'for(;;);'.json_encode($result);
       exit(0);
     }  
   }

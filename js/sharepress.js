@@ -25,6 +25,14 @@ sp.models = sp.models || {};
 
   'use strict';
 
+  sp.sync = function(method, model, options) {
+    return Backbone.sync(method, model, _.extend(options, {
+      dataFilter: function(data, type) {
+        return data.substring(8);
+      }
+    }));
+  };
+
   sp.getPointerById = function(id) {
     if (!window.spTour || !window.spTour.pointers || spTour.pointers.length === 0) {
       return false;
@@ -76,6 +84,7 @@ sp.models = sp.models || {};
     url: function() {
       return sp.api + '/update' + ( this.get('id') ? '/' + this.get('id') : '' );
     },
+    sync: sp.sync,
     getScheduleText: function() {
       var schedule = this.get('schedule') || { when: 'publish' }, label = '';
 
@@ -121,6 +130,7 @@ sp.models = sp.models || {};
         this.fetch();
       })
     },
+    sync: sp.sync,
     url: function() {
       var params = this.params,
           url = sp.api + '/updates?1=1';
@@ -144,7 +154,8 @@ sp.models = sp.models || {};
   sp.models.Profile = B.Model.extend({
     url: function() {
       return sp.api + '/profile' + ( this.get('id') ? '/' + this.get('id') : '' );
-    }
+    },
+    sync: sp.sync
   });
 
   sp.models.Profiles = B.Collection.extend({
@@ -156,6 +167,7 @@ sp.models = sp.models || {};
     url: function() {
       return sp.api + '/profiles';
     },
+    sync: sp.sync,
     model: sp.models.Profile
   });
 
