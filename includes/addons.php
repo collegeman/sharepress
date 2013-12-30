@@ -18,10 +18,6 @@ function sp_addons_menu() {
   }
 }
 
-function sp_is_plugin_active() {
-  return false;
-}
-
 function sp_addons_page() {
   $premium = array();
   $free = array();
