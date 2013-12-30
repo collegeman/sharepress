@@ -284,7 +284,7 @@ function sp_get_profiles($args = '') {
   $args = wp_parse_args($args);
 
   $args['post_type'] = 'sp_profile';
-  $args['numberposts'] = !empty($args['limit']) ? $args['limit'] : 0;
+  $args['numberposts'] = !empty($args['limit']) ? (int) $args['limit'] : 0;
 
   if (!empty($args['user_id'])) {
     $args['author'] = $args['user_id'];

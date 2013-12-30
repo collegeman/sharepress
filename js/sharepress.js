@@ -25,6 +25,13 @@ sp.models = sp.models || {};
 
   'use strict';
 
+  /**
+   * Pass for Model.sync and Collection.sync to automatically strip
+   * for(;;); form the beginning of API responses.
+   * @param String HTTP method
+   * @param mixed Backbone.Model or Backbone.Collection
+   * @param Hashmap options
+   */
   sp.sync = function(method, model, options) {
     return Backbone.sync(method, model, _.extend(options, {
       dataFilter: function(data, type) {
@@ -37,9 +44,23 @@ sp.models = sp.models || {};
     if (!window.spTour || !window.spTour.pointers || spTour.pointers.length === 0) {
       return false;
     }
+    for (var i in spTour.pointers) {
+      var pointer = spTour.pointers[i];
+      if (pointer.pointer_id === id) {
+        return pointer;
+      }
+    }
+    return false;
+  };
+
+  sp.deletePointerById = function(id) {
+    if (!window.spTour || !window.spTour.pointers || spTour.pointers.length === 0) {
+      return false;
+    }
     for (var i = 0; i < spTour.pointers.length; i++) {
       if (spTour.pointers[i].pointer_id === id) {
-        return spTour.pointers[i];
+        delete spTour.pointers[i];
+        return true;
       }
     }
     return false;
@@ -56,6 +77,8 @@ sp.models = sp.models || {};
           $.post(ajaxurl, {
             pointer: pointer.pointer_id,
             action: 'dismiss-wp-pointer'
+          }).success(function() {
+            sp.deletePointerById(id);
           });
         }
       })).pointer('open');
@@ -76,11 +99,6 @@ sp.models = sp.models || {};
   };
 
   sp.models.Update = B.Model.extend({
-    initialize: function() {
-      this.on('change:text', function() {
-        
-      });
-    },
     url: function() {
       return sp.api + '/update' + ( this.get('id') ? '/' + this.get('id') : '' );
     },
@@ -113,8 +131,8 @@ sp.models = sp.models || {};
 
   sp.models.Updates = B.Collection.extend({
     params: new B.Model({
-      status: '',
-      post_id: null,
+      post_status: '',
+      post_id: '',
       limit: 10,
       offset: 0
     }),

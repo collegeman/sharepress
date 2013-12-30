@@ -1,5 +1,25 @@
 !function($, B) {
 
+  var fromQueryString = function(qs) {
+    var result = {};
+    _.each( (qs || '').replace(/^.*?\?/, '').split('&'), function(p) {
+      var split = p.split('=');
+      if (split.length !== 2) {
+        return;
+      }
+      result[split[0]] = decodeURIComponent(split[1]);
+    });
+    return result;
+  };
+
+  var toQueryString = function(obj) {
+    var encoded = [];
+    _.each(obj, function(val, name) {
+      encoded.push(encodeURIComponent(name) + '=' + encodeURIComponent(val));
+    });
+    return encoded.join('&');
+  };
+
   var updates = new sp.models.Updates();
 
   var counts = new (B.Model.extend({
@@ -36,19 +56,18 @@
       '?*:qs': 'updates'
     },
     updates: function() {
-      var result = {};
-      _.each( (document.location.search || '').replace(/^.*?\?/, '').split('&'), function(p) {
-        var split = p.split('=');
-        if (split.length !== 2) {
-          return;
-        }
-        result[split[0]] = decodeURIComponent(split[1]);
-      });
+      var req = fromQueryString(document.location.search);
       
       updates.params.set({
+        page: 'sp-updates',
         fields: 'profile,error',
-        post_status: result.post_status
+        post_status: req.post_status || '',
+        order: req.order || 'desc',
+        offset: parseInt(req.offset) || 0,
+        limit: parseInt(req.limit) || 10
       });
+
+      $(window).scrollTop(0);
     }
   }));
 
@@ -83,8 +102,47 @@
 
   sp.views.UpdatesScreen = B.View.extend({
     events: {
-      "click [href^='admin.php?page=sp-updates']": function(e) {
+      'click [href^="admin.php?page=sp-updates"]': function(e) {
         router.navigate($(e.currentTarget).attr('href'), { trigger: true });
+        return false;
+      },
+      'click [data-action="next"]': function(e) {
+        var params = updates.params.attributes,
+            newOffset = parseInt(params.offset) + parseInt(params.limit);
+        if (newOffset > updates.getCount()) {
+          newOffset = updates.getCount() - parseInt(params.limit);
+          if (newOffset < 0) {
+            newOffset = 0;
+          }
+        }
+        params.offset = newOffset;
+        router.navigate('admin.php?' + toQueryString(params), { trigger: true });
+        return false;
+      },
+      'click [data-action="prev"]': function(e) {
+        var params = updates.params.attributes,
+            newOffset = parseInt(params.offset) - parseInt(params.limit);
+        if (newOffset < 0) {
+          newOffset = 0;
+        }
+        params.offset = newOffset;
+        router.navigate('admin.php?' + toQueryString(params), { trigger: true });
+        return false;
+      },
+      'click [data-action="first"]': function(e) {
+        var params = updates.params.attributes;
+        params.offset = 0;
+        router.navigate('admin.php?' + toQueryString(params), { trigger: true });
+        return false;
+      },
+      'click [data-action="last"]': function(e) {
+        var params = updates.params.attributes,
+            newOffset = updates.getCount() - parseInt(params.limit);
+        if (newOffset < 0) {
+          newOffset = 0;
+        }
+        params.offset = newOffset;
+        router.navigate('admin.php?' + toQueryString(params), { trigger: true });
         return false;
       }
     },

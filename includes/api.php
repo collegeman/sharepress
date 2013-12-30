@@ -587,6 +587,7 @@ function sp_parse_request($wp) {
       if (is_wp_error($result)) {
         status_header(500);
       }
+      // prepend for(;;); to prevent CSRF by <script> tag
       echo 'for(;;);'.json_encode($result);
       exit(0);
     }  

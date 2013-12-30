@@ -344,15 +344,11 @@ function sp_get_updates($args = '') {
     unset($args['status']);
   }
 
-  $args['numberposts'] = ($limit = (int) $args['count']) ? $limit : 100;
-  $args['offset'] = ((($offset = (int) $args['page']) ? $offset : 1) - 1) * $args['numberposts'];
-  
-  if ($args['offset'] + $args['numberposts'] > 100) {
-    $args['numberposts'] = 100 - $args['offset'];
-  }
+  $args['numberposts'] = ($limit = (int) $args['limit']) ? $limit : 100;
+  $args['offset'] = ($offset = (int) $args['offset']) ? $offset : 0;
 
   $args['orderby'] = 'post_date_gmt';
-  $args['order'] = 'DESC';
+  $args['order'] = !empty($args['order']) && strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
 
   $params = array(
     $args['post_type']

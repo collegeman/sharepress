@@ -8,7 +8,7 @@ function sp_admin_pointers_post($p) {
   $p['sp_connect_btn'] = array(
     'target' => '#sp_metabox .button.button-sp-connect',
     'options' => array(
-      'content' => '<h3>Welcome to SharePress</h3> <p>You haven\'t connected any social media profiles yet. Click <b>Connect...</b> to get started.</p>',
+      'content' => '<h3>Your Profiles</h3> <p>You haven\'t connected any social media profiles yet. Click <b>Connect...</b> to get started.</p>',
       'position' => array(
         'edge' => 'right', 
         'align' => 'center'
@@ -19,7 +19,7 @@ function sp_admin_pointers_post($p) {
   $p['sp_profiles'] = array(
     'target' => '#sp_metabox .profiles',
     'options' => array(
-      'content' => '<h3>Your Profiles</h3> <p>These are the social media profiles you\'ve connected. Just click one to create a new update to publicize this Post, or click <b>Connect...</b> below to add more profiles.</p>',
+      'content' => '<h3>Your Profiles</h3> <p>Just click one of your profiles to create a new update to publicize this Post. Have more profiles to connect? Just click <b>Connect...</b> below.</p>',
       'position' => array(
         'edge' => 'right', 
         'align' => 'center'

@@ -31,15 +31,14 @@
       <input type="submit" name="" id="post-query-submit" class="button" value="Filter">  -->   
     </div>
 
-    <div class="tablenav-pages one-page">
+    <div class="tablenav-pages">
       <span class="displaying-num"></span>
-      <span class="pagination-links"><a class="first-page" title="Go to the first page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php">&laquo;</a>
-      <a class="prev-page" title="Go to the previous page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php?paged=1">&lsaquo;</a>
+      <span class="pagination-links"><a class="first-page" data-action="first" title="Go to the first page" href="#">&laquo;</a>
+      <a class="prev-page" title="Go to the previous page" data-action="prev" href="#">&lsaquo;</a>
       <span class="paging-input">1 of <span class="total-pages">1</span></span>
-      <a class="next-page" title="Go to the next page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php?paged=1">&rsaquo;</a>
-      <a class="last-page" title="Go to the last page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php?paged=1">&raquo;</a></span>
+      <a class="next-page" data-action="next" title="Go to the next page" href="#">&rsaquo;</a>
+      <a class="last-page" data-action="last" title="Go to the last page" href="#">&raquo;</a></span>
     </div>
-    
     
     <!-- <div class="view-switch">
       <a href="/wp-admin/edit.php?mode=list" class="current"><img id="view-switch-list" src="http://www.dev.wp.fatpandadev.com/wp-includes/images/blank.gif" width="20" height="20" title="List View" alt="List View"></a>
@@ -114,13 +113,13 @@
     </div>
     <div class="alignleft actions"></div>
 
-    <div class="tablenav-pages one-page">
+    <div class="tablenav-pages">
       <span class="displaying-num"></span>
-      <span class="pagination-links"><a class="first-page" title="Go to the first page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php">&laquo;</a>
-      <a class="prev-page" title="Go to the previous page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php?paged=1">&lsaquo;</a>
+      <span class="pagination-links"><a class="first-page" data-action="first" title="Go to the first page" href="#">&laquo;</a>
+      <a class="prev-page" title="Go to the previous page" data-action="prev" href="#">&lsaquo;</a>
       <span class="paging-input">1 of <span class="total-pages">1</span></span>
-      <a class="next-page" title="Go to the next page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php?paged=1">&rsaquo;</a>
-      <a class="last-page" title="Go to the last page" href="http://www.dev.wp.fatpandadev.com/wp-admin/edit.php?paged=1">&raquo;</a></span>
+      <a class="next-page" data-action="next" title="Go to the next page" href="#">&rsaquo;</a>
+      <a class="last-page" data-action="last" title="Go to the last page" href="#">&raquo;</a></span>
     </div>
     
     <br class="clear">
