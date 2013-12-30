@@ -31,6 +31,36 @@ function sp_get_profile($profile) {
   }
 }
 
+/**
+ * Try to find a Profile for the given service tag (service name and service unique ID).
+ * This is less efficient then calling sp_get_profile() directly, so use it only
+ * when a Profile cannot be found for a known ID.
+ * @param String Profile service tag of format {$service}:{$service_id}
+ * @return SharePressProfile or false if none exists
+ * @see sp_get_profile
+ */
+function sp_get_profile_for_service_tag($service_tag) {
+  global $wpdb;
+
+  if (!$service_tag) {
+    return false;
+  }
+  
+  $profile_id = $wpdb->get_var( $wpdb->prepare("
+    SELECT post_id 
+    FROM {$wpdb->postmeta} 
+    WHERE meta_key = 'service_tag' 
+      AND meta_value = %s
+    LIMIT 1
+  ", $service_tag) );
+
+  if ($profile_id) {
+    return sp_get_profile($profile_id);
+  } else {
+    return false;
+  }
+}
+
 
 /**
  * This class models a user's account on a third-party
@@ -129,6 +159,12 @@ class SharePressProfile {
 
   function __wakeup() {
     $this->_time = 0;
+  }
+
+  function __get($name) {
+    if ($name === 'service_tag') {
+      return "{$this->service}:{$this->service_id}";
+    }
   }
 
   /**

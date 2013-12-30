@@ -214,7 +214,14 @@ class SpApi_v1 extends AbstractSpApi {
       if (!empty($_REQUEST['fields'])) {
         $fields = array_map('trim', explode(',', $_REQUEST['fields']));
         if (in_array('profile', $fields)) {
-          $update->profile = sp_get_profile($update->profile_id)->toJSON();    
+          if (!$profile = sp_get_profile($update->profile_id)) {
+            $profile = sp_get_profile_for_service_tag($update->profile_service_tag);
+          }
+          if ($profile) {
+            $update->profile = $profile->toJSON();    
+          } else {
+            $update->profile = false;
+          }
         }
         if (in_array('error', $fields)) {
           if ($error = get_last_error_for_update($update->id)) {

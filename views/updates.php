@@ -143,7 +143,9 @@
     <div class="locked-indicator"></div>
   </th>
   <td class="column-profile">
-    <img src="<%= profile.avatar %>" class="sp-profile thumb <%= profile.service %>" title="<%= profile.service %>: <%= profile.formatted_username %>">
+    <% if (profile) { %>
+      <img src="<%= profile.avatar %>" class="sp-profile thumb <%= profile.service %>" title="<%= profile.service %>: <%= profile.formatted_username %>">
+    <% } %>
   </td>
   <td class="column-update">
     <span class="text"><%= text_formatted ? text_formatted : text %></span>

@@ -91,7 +91,10 @@ class SharePressUpdate {
       $this->{$key} = $value;
     }
 
-    $profile = sp_get_profile($this->profile_id);
+    if (!$profile = sp_get_profile($this->profile_id)) {
+      // try service tag
+      $profile = sp_get_profile_for_service_tag($this->profile_service_tag);
+    }
     $this->profile_service = $profile !== false ? $profile->service : false;
   }
 
@@ -553,6 +556,7 @@ function sp_update_update($update) {
 
   foreach($profiles as $profile) {
     $meta['profile_id'] = $profile->id;
+    $meta['profile_service_tag'] = $profile->service_tag;
 
     if (is_wp_error($post_id = wp_insert_post($post))) {
       return $post_id;
