@@ -57,7 +57,7 @@
     },
     updates: function() {
       var req = fromQueryString(document.location.search);
-      
+
       updates.params.set({
         page: 'sp-updates',
         fields: 'profile,error',
@@ -107,41 +107,26 @@
         return false;
       },
       'click [data-action="next"]': function(e) {
-        var params = updates.params.attributes,
-            newOffset = parseInt(params.offset) + parseInt(params.limit);
-        if (newOffset > updates.getCount()) {
-          newOffset = updates.getCount() - parseInt(params.limit);
-          if (newOffset < 0) {
-            newOffset = 0;
-          }
-        }
-        params.offset = newOffset;
+        var params = _.clone(updates.params.attributes);
+        params.offset = Math.min(updates.getLastOffset(), parseInt(params.offset) + parseInt(params.limit));
         router.navigate('admin.php?' + toQueryString(params), { trigger: true });
         return false;
       },
       'click [data-action="prev"]': function(e) {
-        var params = updates.params.attributes,
-            newOffset = parseInt(params.offset) - parseInt(params.limit);
-        if (newOffset < 0) {
-          newOffset = 0;
-        }
-        params.offset = newOffset;
+        var params = _.clone(updates.params.attributes);
+        params.offset = Math.max(0, parseInt(params.offset - params.limit));
         router.navigate('admin.php?' + toQueryString(params), { trigger: true });
         return false;
       },
       'click [data-action="first"]': function(e) {
-        var params = updates.params.attributes;
+        var params = _.clone(updates.params.attributes);
         params.offset = 0;
         router.navigate('admin.php?' + toQueryString(params), { trigger: true });
         return false;
       },
       'click [data-action="last"]': function(e) {
-        var params = updates.params.attributes,
-            newOffset = updates.getCount() - parseInt(params.limit);
-        if (newOffset < 0) {
-          newOffset = 0;
-        }
-        params.offset = newOffset;
+        var params = _.clone(updates.params.attributes);
+        params.offset = updates.getLastOffset();
         router.navigate('admin.php?' + toQueryString(params), { trigger: true });
         return false;
       }
@@ -161,8 +146,15 @@
     reset: function() {
       var cnt = updates.getCount();
       this.$nav.find('.displaying-num').text(cnt + ( cnt != 1 ? ' items' : ' item' ));
+      this.$nav.find('.tablenav-pages').toggleClass('one-page', updates.getCount() <= parseInt(updates.params.get('limit')));
       this.$table.find('.no-items').toggle(!updates.length);
       this.$table.find('tr.update').remove();
+      this.$nav.find('[data-action="first"], [data-action="prev"]').toggleClass('disabled', updates.hasLess());
+      this.$nav.find('[data-action="last"]').toggleClass('disabled', updates.isLastPage());
+      this.$nav.find('[data-action="next"]').toggleClass('disabled', updates.hasMore());
+      this.$nav.find('.current-page').text(updates.getCurrentPage());
+      this.$nav.find('.total-pages').text(updates.getTotalPages());
+
       updates.each(_.bind(this.addUpdate, this));
       this.render();
     },

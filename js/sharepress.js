@@ -136,13 +136,14 @@ sp.models = sp.models || {};
   });
 
   sp.models.Updates = B.Collection.extend({
-    params: new B.Model({
-      post_status: '',
-      post_id: '',
-      limit: 10,
-      offset: 0
-    }),
     initialize: function(models, options) {
+      this.params = new B.Model({
+        post_status: '',
+        post_id: '',
+        limit: 10,
+        offset: 0
+      });
+      
       this.options = options;
 
       // global notification
@@ -165,8 +166,27 @@ sp.models = sp.models || {};
       });
       return url;
     },
+    hasLess: function() {
+      return parseInt(this.params.get('offset')) <= 0;
+    },
+    hasMore: function() {
+      return parseInt(this.params.get('offset')) + parseInt(this.params.get('limit')) > this.getLastOffset();
+    },
+    isLastPage: function() {
+      return parseInt(this.params.get('offset')) >= this.getLastOffset();
+    },
     getCount: function() {
       return this.count || 0;
+    },
+    getCurrentPage: function() {
+      return parseInt(this.params.get('offset')) > 0 ? Math.ceil ( parseInt(this.params.get('offset')) / this.getCount() * this.getTotalPages() ) + 1 : 1;
+    },
+    getTotalPages: function() {
+      return Math.ceil( this.getCount() / parseInt(this.params.get('limit')) );
+    },
+    getLastOffset: function() {
+      var lastPage = Math.ceil(this.getCount() / parseInt(this.params.get('limit')));
+      return ( lastPage - 1 ) * parseInt(this.params.get('limit'));
     },
     parse: function(res) {
       this.count = res.count;

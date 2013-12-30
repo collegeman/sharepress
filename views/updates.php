@@ -31,11 +31,11 @@
       <input type="submit" name="" id="post-query-submit" class="button" value="Filter">  -->   
     </div>
 
-    <div class="tablenav-pages">
+    <div class="tablenav-pages one-page">
       <span class="displaying-num"></span>
       <span class="pagination-links"><a class="first-page" data-action="first" title="Go to the first page" href="#">&laquo;</a>
       <a class="prev-page" title="Go to the previous page" data-action="prev" href="#">&lsaquo;</a>
-      <span class="paging-input">1 of <span class="total-pages">1</span></span>
+      <span class="paging-input"><span class="current-page"></span> of <span class="total-pages"></span></span>
       <a class="next-page" data-action="next" title="Go to the next page" href="#">&rsaquo;</a>
       <a class="last-page" data-action="last" title="Go to the last page" href="#">&raquo;</a></span>
     </div>
@@ -113,11 +113,11 @@
     </div>
     <div class="alignleft actions"></div>
 
-    <div class="tablenav-pages">
+    <div class="tablenav-pages one-page">
       <span class="displaying-num"></span>
       <span class="pagination-links"><a class="first-page" data-action="first" title="Go to the first page" href="#">&laquo;</a>
       <a class="prev-page" title="Go to the previous page" data-action="prev" href="#">&lsaquo;</a>
-      <span class="paging-input">1 of <span class="total-pages">1</span></span>
+      <span class="paging-input"><span class="current-page"></span> of <span class="total-pages"></span></span>
       <a class="next-page" data-action="next" title="Go to the next page" href="#">&rsaquo;</a>
       <a class="last-page" data-action="last" title="Go to the last page" href="#">&raquo;</a></span>
     </div>
