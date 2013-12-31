@@ -434,6 +434,12 @@ interface SharePressClient {
   function profiles();
 
   /**
+   * @return String All clients get to filter the text of the updates 
+   * they send. Some will shorten the text, others may modify it.
+   */
+  function filter_update_text($text);
+
+  /**
    * @return The URL to which a user should be redirected for authentication.
    * @param String The URL to which the user should be redirected after logging in;
    *   set to false for no redirection
