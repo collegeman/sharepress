@@ -165,6 +165,7 @@ class SpApi_v1 extends AbstractSpApi {
 
     if ($profile === false) {
       if (is_wp_error($login_url = $client->loginUrl($redirect_uri))) {
+        sp_log($login_url);
         if ($profiles) {
           sp_flash('error', $login_url);
         } else {
@@ -174,6 +175,7 @@ class SpApi_v1 extends AbstractSpApi {
         return wp_redirect( $login_url );
       }
     } else if (is_wp_error($profile = sp_update_profile($profile))) {
+      sp_log($profile);
       // did use request profiles screen? if so, display error message
       if ($profiles) {
         sp_flash('error', $profile);

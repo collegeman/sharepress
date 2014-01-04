@@ -40,14 +40,19 @@ function sp_is_plugin_active($plugin) {
  * Log given message to a SharePress-specific log file. If the requested
  * log level is not ERROR and not WARN and WP_DEBUG is not true, then log
  * request will be ignored.
- * @param mixed The message to print in the log
+ * @param mixed The message to print in the log; if this argument is a WP_Error
+ * object, the level will automatically be set to ERROR
  * @param String the logging level: ERROR, WARN, or DEBUG
  */
 function sp_log($message, $level = 'DEBUG') {
   global $sp_thread_id, $blog_id;
   
   // normalize $level argument
-  $level = strtoupper($level);
+  if (is_wp_error($message)) {
+    $level = 'ERROR';
+  } else {
+    $level = strtoupper($level);
+  }
   // if not in debugging mode, ignore non-critical messages
   if (( !defined('WP_DEBUG') || !WP_DEBUG ) && !apply_filters('sp_is_debug_enabled', false)) {
     if ($level !== 'ERROR' && $level !== 'WARN') {
@@ -66,8 +71,15 @@ function sp_log($message, $level = 'DEBUG') {
     $message = $message->get_error_message();
   }
   $blog_id = (string) $blog_id;
-  $message = sprintf("%-5s %s %s %-5s %s\n", $blog_id ? $blog_id : 0, $sp_thread_id, get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), strtoupper($level), $message);
-  if (!@file_put_contents($filename, $message, FILE_APPEND)) {
+  
+  $message = sprintf("%-5s %s %s %-5s %s\n", 
+    $blog_id ? $blog_id : 0, 
+    $sp_thread_id, 
+    get_date_from_gmt(gmdate('Y-m-d H:i:s'), 'H:i:s'), 
+    strtoupper($level), 
+    $message);
+
+  if (!@file_put_contents($filename, $message, FILE_APPEND) || $level === 'ERROR') {
     error_log($message);
   }
 }
