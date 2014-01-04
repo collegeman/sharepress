@@ -71,7 +71,7 @@ sp.models = sp.models || {};
       return false;
     }
     for (var i = 0; i < spTour.pointers.length; i++) {
-      if (spTour.pointers[i].pointer_id === id) {
+      if (spTour.pointers[i] && spTour.pointers[i].pointer_id === id) {
         delete spTour.pointers[i];
         return true;
       }
