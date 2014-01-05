@@ -225,8 +225,8 @@ class SpApi_v1 extends AbstractSpApi {
             $update->profile = false;
           }
         }
-        if ($update->status === 'error' && in_array('error', $fields)) {
-          if ($error = get_last_error_for_update($update->id)) {
+        if (in_array('error', $fields)) {
+          if ($update->status === 'error' && ( $error = get_last_error_for_update($update->id) )) {
             $update->error = $error->get_error_message();
           } else {
             $update->error = false;
