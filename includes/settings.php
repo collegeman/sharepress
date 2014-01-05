@@ -32,7 +32,7 @@ function sp_admin_init() {
 
 function sp_settings_menu() {
   if (apply_filters('sp_show_settings_screens', true)) {
-    add_menu_page('SharePress', 'SharePress', 'manage_options', 'sp-settings', 'sp_settings_page', '', 81);
+    add_menu_page('SharePress Settings', 'SharePress', 'manage_options', 'sp-settings', 'sp_settings_page', '', 81);
   }
 }
 

@@ -7,7 +7,7 @@ add_action('admin_menu', 'sp_updates_menu');
 
 function sp_updates_menu() {
   // TODO: manage_options is the wrong perm--all authors should be able to see this screen
-  add_submenu_page('sp-settings', 'Update History', 'Update History', 'manage_options', 'sp-updates', 'sp_updates_page');
+  add_submenu_page('sp-settings', 'SharePress Update History', 'Update History', 'manage_options', 'sp-updates', 'sp_updates_page');
 }
 
 function sp_updates_page() {
