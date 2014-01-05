@@ -4,6 +4,7 @@ add_filter('sp_update_text_format', 'sp_default_update_text_format', 10, 2);
 add_filter('sp_permalink', 'sp_default_permalink', 10, 3);
 add_action('wp_insert_post', 'sp_create_default_updates', 10, 3);
 add_action('admin_menu', 'sp_updates_menu');
+add_action('publish_post', 'sp_post_pending');
 
 function sp_updates_menu() {
   // TODO: manage_options is the wrong perm--all authors should be able to see this screen
@@ -215,6 +216,18 @@ function sp_restore_update($update) {
  */
 function sp_post_pending($until = null) {
   global $wpdb;
+
+  // TODO: put this cron lock check in a function and reuse it
+  // here as well as in includes/cron.php
+  $local_time = microtime( true );
+  $lock = get_transient('sp_doing_cron');
+  if ( $lock > $local_time + 10*60 ) {
+    $lock = 0;
+  }
+  if ( $lock + WP_CRON_LOCK_TIMEOUT > $local_time ) {
+    sp_log('sp_post_pending: locked out by cron');
+    return;
+  }
 
   if (is_null($until)) {
     // default cron job is on a 2-min interval, so we
