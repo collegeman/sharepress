@@ -98,6 +98,7 @@ function sp_init() {
   require(SP_DIR.'/includes/metadata.php');
   require(SP_DIR.'/includes/addons.php');
   require(SP_DIR.'/includes/pointers.php');
+  require(SP_DIR.'/includes/notices.php');
 
   wp_register_script('sp_sharepress_script', SP_URL.'/js/sharepress.js', array('backbone'));
   wp_localize_script('sp_sharepress_script', 'sp', array(
