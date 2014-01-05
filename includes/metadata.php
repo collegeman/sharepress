@@ -182,12 +182,15 @@ function sp_wp_head() {
     }
     
     foreach($og as $property => $content) {
-      echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
-        array('"', '<', '>'), 
-        array('&quot;', '&lt;', '&gt;'), 
-        strip_shortcodes($content)
-      ));
+      if ($stripped = strip_shortcodes($content)) {
+        echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
+          array('"', '<', '>'), 
+          array('&quot;', '&lt;', '&gt;'), 
+          $stripped
+        ));
+      }
     }
+    
     echo '<!-- /sharepress social metatags -->';
   } 
 }
