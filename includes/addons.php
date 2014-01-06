@@ -14,7 +14,7 @@ function sp_addon_installed($addon) {
 
 function sp_addons_menu() {
   if (apply_filters('sp_show_settings_screens', true)) {
-    add_submenu_page('sp-settings', 'Add-ons', 'Add-ons', 'manage_options', 'sp-addons', 'sp_addons_page');
+    add_submenu_page('sp-settings', 'SharePress Add-ons', 'Add-ons', 'manage_options', 'sp-addons', 'sp_addons_page');
   }
 }
 
@@ -24,56 +24,56 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Support',
-    'description' => 'Technical support from SharePress developers, and advanced access to new features',
+    'description' => 'Technical support from SharePress developers, and advanced access to new features.',
     'icon' => 'fa-wrench',
     'icon-color' => '',
     'bg' => '#FFA000',
-    'active' => sp_is_plugin_active('sharepress-support')
+    'name' => 'sharepress-support'
   );
 
   $premium[] = array(
     'title' => 'Twitter',
-    'description' => 'Customize your Tweets',
+    'description' => 'Custom messages for Twitter.',
     'icon' => 'fa-twitter',
     'icon-color' => '',
     'bg' => '#6EB4F9',
-    'active' => sp_is_plugin_active('sharepress-twitter')
+    'name' => 'sharepress-twitter'
   );
 
   $premium[] = array(
     'title' => 'Facebook Pages',
-    'description' => 'Post to Facebook Pages',
+    'description' => 'Custom messages for Facebook, and access to Facebook Pages.',
     'icon' => 'fa-facebook',
     'icon-color' => '',
     'bg' => '#3B5B93',
-    'active' => sp_is_plugin_active('sharepress-facebook-pages')
+    'name' => 'sharepress-facebook'
   );
 
   $premium[] = array(
     'title' => 'Google+',
-    'description' => 'Post to Google+ Profiles',
+    'description' => 'Post to Google+ Profiles.',
     'icon' => 'fa-google-plus',
     'icon-color' => '',
     'bg' => '#E15B52',
-    'active' => sp_is_plugin_active('sharepress-googleplus')
+    'name' => 'sharepress-googleplus'
   );
 
   $premium[] = array(
     'title' => 'LinkedIn',
-    'description' => 'Post to LinkedIn Profiles',
+    'description' => 'Post to LinkedIn Profiles.',
     'icon' => 'fa-linkedin',
     'icon-color' => '',
     'bg' => '#57A9CB',
-    'active' => sp_is_plugin_active('sharepress-linkedin')
+    'name' => 'sharepress-linkedin'
   );
 
   $premium[] = array(
     'title' => 'Repeater',
-    'description' => 'Automatically repeat posts',
+    'description' => 'Automatically schedule and repeat social media updates.',
     'icon' => 'fa-refresh',
     'icon-color' => '',
     'bg' => '#FFC46A',
-    'active' => sp_is_plugin_active('sharepress-repeater')
+    'name' => 'sharepress-repeater'
   );
 
   $premium[] = array(
@@ -82,80 +82,88 @@ function sp_addons_page() {
     'icon' => 'fa-th-list',
     'icon-color' => '',
     'bg' => '#18944B',
-    'active' => sp_is_plugin_active('sharepress-buffer')
+    'name' => 'sharepress-buffer'
   );
 
   $premium[] = array(
     'title' => 'Authors',
-    'description' => 'Post to your Authors\' social media profiles, too',
-    'icon' => 'fa-pencil',
+    'description' => 'Post to your Authors\' social media profiles, too.',
+    'icon' => 'fa-user',
     'icon-color' => '',
     'bg' => '#819197',
-    'active' => sp_is_plugin_active('sharepress-authors')
+    'name' => 'sharepress-authors'
   );
 
   $premium[] = array(
-    'title' => 'Advanced Social Metadata',
-    'description' => 'Twitter Cards, and custom meta data on a service-by-service basis',
-    'icon' => 'fa-bullhorn',
+    'title' => 'More Social Metadata',
+    'description' => 'Twitter Cards and other custom metadata options for each social media channel.',
+    'icon' => 'fa-cogs',
     'icon-color' => '',
     'bg' => '#2675B2',
-    'active' => sp_is_plugin_active('sharepress-advanced-metadata')
+    'name' => 'sharepress-advanced-metadata'
   );
 
   $premium[] = array(
     'title' => 'Calendar',
-    'description' => 'See what you have scheduled, and manage your editorial cycle',
+    'description' => 'See what you have scheduled, and manage your editorial cycle.',
     'icon' => 'fa-calendar',
     'icon-color' => '',
     'bg' => '#945A56',
-    'active' => sp_is_plugin_active('sharepress-calendar')
+    'name' => 'sharepress-calendar'
   );
 
   $premium[] = array(
     'title' => 'Meme',
-    'description' => 'Add text to any image in your library',
-    'icon' => 'fa-fighter-jet',
+    'description' => 'Add text to any image in your library.',
+    'icon' => 'fa-share',
     'icon-color' => '',
     'bg' => '#50B2FE',
-    'active' => sp_is_plugin_active('sharepress-meme')
+    'name' => 'sharepress-meme'
   );
 
   $premium[] = array(
     'title' => 'Convo',
-    'description' => 'Bring the conversation home: comments and forums, mobile-ready',
-    'icon' => 'fa-beer',
+    'description' => 'Bring the conversation home: comments and forums, no styling needed, mobile-ready.',
+    'icon' => 'fa-comments',
     'icon-color' => '',
-    'bg' => '#4A3E31',
-    'active' => sp_is_plugin_active('sharepress-convo')
+    'bg' => '#222222',
+    'name' => 'sharepress-convo'
   );
 
   $premium[] = array(
     'title' => 'iPhone App',
-    'description' => 'Wrap your responsive WordPress site for the App Store, announce new content with push notifications',
+    'description' => 'Wrap your responsive site for the App Store, announce new content with push notifications.',
     'icon' => 'fa-apple',
     'icon-color' => '',
     'bg' => '#FE9343',
-    'active' => sp_is_plugin_active('sharepress-iphone-app')
+    'name' => 'sharepress-apple-app'
   );
 
   $premium[] = array(
     'title' => 'Android App',
-    'description' => 'Wrap your responsive WordPress site for Google Play',
+    'description' => 'Wrap your responsive site for Google Play, announce new content with push notifications.',
     'icon' => 'fa-android',
     'icon-color' => '',
     'bg' => '#4CB238',
-    'active' => sp_is_plugin_active('sharepress-android-app')
+    'name' => 'sharepress-android-app'
   );
 
   $free[] = array(
     'title' => 'Social Login',
-    'description' => 'Allow your users to login for commenting',
+    'description' => 'Comments can login using Facebook, Twitter, Google+ and LinkedIn.',
     'icon' => 'fa-key',
     'icon-color' => '',
     'bg' => '#B23892',
-    'active' => sp_is_plugin_active('sharepress-social-login')
+    'name' => 'sharepress-social-login'
   );
+
+  foreach($premium as &$plugin) {
+    $plugin['active'] = sp_is_plugin_active($plugin['name']);
+  }
+
+  foreach($free as &$plugin) {
+    $plugin['active'] = sp_is_plugin_active($plugin['name']);
+  }
 
   wp_enqueue_style('sp-addons', SP_URL.'/css/addons.css');
   wp_enqueue_style('sp-fontawesome', '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css');

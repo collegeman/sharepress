@@ -71,7 +71,7 @@ sp.models = sp.models || {};
       return false;
     }
     for (var i = 0; i < spTour.pointers.length; i++) {
-      if (spTour.pointers[i].pointer_id === id) {
+      if (spTour.pointers[i] && spTour.pointers[i].pointer_id === id) {
         delete spTour.pointers[i];
         return true;
       }
@@ -119,7 +119,10 @@ sp.models = sp.models || {};
 
   sp.models.Update = B.Model.extend({
     url: function() {
-      return sp.api + '/update' + ( this.get('id') ? '/' + this.get('id') : '' ) + ( this.get('restore') ? '/restore' : '' );
+      var url = sp.api + '/update' + ( this.get('id') ? '/' + this.get('id') : '' ) + ( this.get('restore') ? '/restore' : '' );
+      // always load the latest error, if one exists
+      url += '?fields=error';
+      return url;
     },
     sync: sp.sync,
     getScheduleText: function() {

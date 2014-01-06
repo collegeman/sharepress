@@ -20,7 +20,6 @@ class TwitterSharePressClient implements SharePressClient {
 
   function profile() {
     if (!isset($_REQUEST['oauth_verifier'])) {
-      
       return false;
 
     } else {

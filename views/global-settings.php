@@ -1,7 +1,7 @@
 <div class="wrap" style="max-width:970px;">
 
   <?php screen_icon(); ?>
-  <h2>SharePress</h2>
+  <h2>SharePress Settings</h2>
   
   <form method="post" action="options.php">
 
