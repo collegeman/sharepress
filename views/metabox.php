@@ -95,6 +95,12 @@
 </div>
 <script>
   jQuery(function($) {
-    new sp.views.Metabox({ el: $('#sp_metabox'), post: <?php echo json_encode($post) ?> });
+    var $el = $('#sp_metabox').toggleClass('with_help_widget', <?php echo sp_get_opt('help_widget_enabled', true) ? 'true' : 'false' ?>);
+    new sp.views.Metabox({ el: $el, post: <?php echo json_encode($post) ?> });
   });
 </script>
+<?php if (sp_get_opt('help_widget_enabled', true)) { ?>
+  <div class="get-help">
+    <a href="#" onclick="GrooveWidget.toggle(); return false;">Get Help with SharePress</a>
+  </div>
+<?php } ?>

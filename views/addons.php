@@ -7,9 +7,15 @@
   </div>
    -->
 
-  <div id="message" class="updated fade" style="background-color: #d4efbf;">
-    <p><b>SharePress has add-ons now!</b> See anything you love? Let us know by clicking the &nbsp;<i class="fa fa-thumbs-up"></i>&nbsp;.</p>
-  </div>
+  <?php if ($_SERVER['SERVER_NAME'] === 'demo.getsharepress.com') { ?>
+    <div id="message" class="updated fade" style="background-color: #d4efbf;">
+      <p><b>SharePress has add-ons now!</b> See anything you love? Let us know by clicking the &nbsp;<i class="fa fa-thumbs-up"></i>&nbsp;.</p>
+    </div>
+  <?php } else { ?>
+    <div id="message" class="updated fade">
+      <p>Add-ons expand the functionality of SharePress. Each add-on is installed as a separate plugin and receives updates.</p>
+    </div>
+  <?php } ?>
 
   <div id="add-ons" class="clearfix">
     <div class="add-on-group clearfix">
@@ -24,9 +30,11 @@
             <div style="padding: 10px;">
               <?php if ( $add_on['active'] ) { ?>
                 <a class="button button-disabled"><span class="acf-sprite-tick"></span>Installed</a>
-              <?php } else { ?>
+              <?php } else if ($_SERVER['SERVER_NAME'] === 'demo.getsharepress.com') { ?>
                 <a data-plugin-name="<?php echo $add_on['name'] ?>" target="_blank" href="<?php echo $add_on['url'] ?>" class="button button-primary">&nbsp;<i class="fa fa-thumbs-up"></i>&nbsp;&nbsp;<span>I want this</span></a>
                 <!-- Purchase &amp; Install -->
+              <?php } else { ?>
+                <a data-plugin-name="<?php echo $add_on['name'] ?>" target="_blank" href="<?php echo $add_on['url'] ?>" class="button">&nbsp;Purchase&nbsp;&amp;&nbsp;Install</a>
               <?php } ?>
             </div>
           </div>
@@ -46,8 +54,10 @@
             <div style="padding: 10px;">
               <?php if ( $add_on['active'] ) { ?>
                 <a class="button button-disabled"><span class="acf-sprite-tick"></span>Installed</a>
-              <?php } else { ?>
+              <?php } else if ($_SERVER['SERVER_NAME'] === 'demo.getsharepress.com') { ?>
                 <a data-plugin-name="<?php echo $add_on['name'] ?>" target="_blank" href="<?php echo $add_on['url'] ?>" class="button button-primary">&nbsp;<i class="fa fa-thumbs-up"></i>&nbsp;&nbsp;<span>I want this</span></a>
+              <?php } else { ?>
+                <a data-plugin-name="<?php echo $add_on['name'] ?>" target="_blank" href="<?php echo $add_on['url'] ?>" class="button">&nbsp;Download&nbsp;&amp;&nbsp;Install</a>
               <?php } ?>
             </div>
           </div>

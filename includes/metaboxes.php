@@ -2,6 +2,15 @@
 add_action('add_meta_boxes', 'sp_add_meta_boxes');
 add_action('admin_enqueue_scripts', 'sp_meta_admin_enqueue_scripts');
 add_action('save_post', 'sp_save_social_metadata');
+add_action('admin_head', 'sp_add_help_widget');
+
+function sp_add_help_widget() {
+  if (sp_get_opt('help_widget_enabled', true)) {
+    if (preg_match('/(post.php|post-new.php)$/i', $_SERVER['PHP_SELF'])) {
+      sp_require_view('help-widget');
+    }
+  }
+}
 
 function sp_save_social_metadata($post_id) {
 

@@ -24,7 +24,7 @@ function sp_addons_page() {
 
   $premium[] = array(
     'title' => 'Support',
-    'description' => 'Technical support from SharePress developers, and advanced access to new features.',
+    'description' => 'Technical support from real developers, and advanced access to new features.',
     'icon' => 'fa-wrench',
     'icon-color' => '',
     'bg' => '#FFA000',
