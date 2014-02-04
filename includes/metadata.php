@@ -141,7 +141,18 @@ function sp_wp_head() {
     $og['article:author'] = $article_author;
   }
   
-  $allowed = sp_get_allowed_og_tags();
+  $allowed = array_merge(array(
+    'og:title' => false,
+    'og:type' => false,
+    'og:image' => false,
+    'og:url' => false,
+    'fb:app_id' => false,
+    'og:site_name' => false,
+    'og:description' => false,
+    'og:locale' => false,
+    'article:publisher' => false,
+    'article:author' => false
+  ), sp_get_allowed_og_tags());
   foreach($allowed as $tag => $allowed) {
     if (!$allowed) {
       unset($og[$tag]);
