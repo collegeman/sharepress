@@ -2,7 +2,7 @@
 /*
 Plugin Name: SharePress
 Plugin URI: http://getsharepress.com
-Description: SharePress: your content, your schedule. Curate awesome content from around the Web and share it on Facebook and Twitter. Custom messages, Facebook Pages, LinkedIn, Google+, autoposting, and many more features available with add-ons.
+Description: SharePress: your content, your schedule. Curate awesome content from around the Web and share it on Facebook, Twitter, and Google+. Custom messages, Facebook Pages, LinkedIn, autoposting, and many more features available with add-ons.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
 Version: 3.0
@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 @define('SP_DIR', dirname(__FILE__) );
 @define('SP_URL', plugins_url('', SHAREPRESS));
 @define('SP_DEBUG', true);
-@define('SP_TEST_MESSAGE', "I'm testing SharePress: a plugin for WordPress that helps you curate and autopost to Facebook, Twitter, LinkedIn, and Google+!");
+@define('SP_TEST_MESSAGE', "I'm testing SharePress: a plugin for WordPress that helps you curate and autopost to Facebook, Twitter, and Google+!");
 @define('SP_TEST_URL', 'http://getsharepress.com');
 
 require(SP_DIR.'/includes/client.php');

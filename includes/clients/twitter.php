@@ -20,7 +20,6 @@ class TwitterSharePressClient implements SharePressClient {
 
   function profile() {
     if (!isset($_REQUEST['oauth_verifier'])) {
-      
       return false;
 
     } else {
@@ -197,7 +196,7 @@ class TwitterSharePressClient implements SharePressClient {
 
   function settings_keys_section() {
     ?>
-      <p>Drop in your Twitter App public key and secret below. Don't know what this means? <a href="#">Read this tutorial</a></p>
+      <p>Drop in your Twitter App public key and secret below. Don't know what this means? <a href="https://getsharepress.com/docs/sharepress/twitter">Read this tutorial</a></p>
     <?php
   }
 

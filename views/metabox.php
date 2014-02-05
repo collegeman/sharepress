@@ -10,19 +10,7 @@
     <ul class="dropdown">
       <li class="item"><a href="<?php echo site_url('/sp/1/auth/facebook/profiles') ?>" data-open-in="modal">Facebook</a></li>
       <li class="item"><a href="<?php echo site_url('/sp/1/auth/twitter/profiles') ?>" data-open-in="modal">Twitter</a></li>
-      <li class="item"><a href="<?php 
-        if ($has_googleplus = sp_has_client('googleplus')) {
-          echo site_url('/sp/1/auth/googleplus/profiles');
-        } else {
-          echo admin_url('admin.php?page=sp-addons');
-        }
-      ?>" <?php
-        if ($has_googleplus) {
-          echo 'data-open-in="modal"';
-        } else {
-          echo 'target="_blank"';
-        }
-      ?>>Google+</a></li>
+      <li class="item"><a href="<?php echo site_url('/sp/1/auth/googleplus/profiles') ?>" data-open-in="modal">Google+</a></li>
       <li class="item"><a href="<?php 
         if ($has_linkedin = sp_has_client('linkedin')) {
           echo site_url('/sp/1/auth/linkedin/profiles');
@@ -38,7 +26,7 @@
       ?>>LinkedIn</a></li>
     </ul>
   </div>
-  <!-- <a href="<?php echo admin_url('admin.php?page=sp-updates&post_id=' . $post->ID); ?>" class="button pull-right">History</a> -->
+  <a href="<?php echo admin_url('admin.php?page=sp-updates'); ?>" class="button pull-right" target="_blank">History</a> <!-- &post_id=' . $post->ID -->
 </div>
 <div class="calendar" id="sp_calendar" data-ui="calendar">
   <div class="controls">
@@ -107,6 +95,12 @@
 </div>
 <script>
   jQuery(function($) {
-    new sp.views.Metabox({ el: $('#sp_metabox'), post: <?php echo json_encode($post) ?> });
+    var $el = $('#sp_metabox').toggleClass('with_help_widget', <?php echo sp_get_opt('help_widget_enabled', true) ? 'true' : 'false' ?>);
+    new sp.views.Metabox({ el: $el, post: <?php echo json_encode($post) ?> });
   });
 </script>
+<?php if (sp_get_opt('help_widget_enabled', true)) { ?>
+  <div class="get-help">
+    <a href="#" onclick="GrooveWidget.toggle(); return false;">Get Help with SharePress</a>
+  </div>
+<?php } ?>

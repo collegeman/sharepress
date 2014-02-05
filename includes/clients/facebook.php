@@ -146,7 +146,7 @@ class FacebookSharePressClient extends Facebook implements SharePressClient {
 
   function settings_keys_section() {
     ?>
-      <p>Drop in your Facebook App Id and Secret below. Don't know what this means? <a href="#">Read this tutorial</a></p>
+      <p>Drop in your Facebook App Id and Secret below. Don't know what this means? <a href="https://getsharepress.com/docs/sharepress/facebook" target="_new">Read this tutorial</a></p>
     <?php
   }
 

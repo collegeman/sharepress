@@ -96,6 +96,15 @@
           }
         }); 
         return false;
+      },
+      'click [data-action="retry"]': function(e) {
+        var update = this.model;
+        update.save({ now: true }, {
+          success: function() {
+            updates.fetch();
+          }
+        }); 
+        return false;
       }
     },
     initialize: function() {
