@@ -159,10 +159,12 @@ function sp_addons_page() {
 
   foreach($premium as &$plugin) {
     $plugin['active'] = sp_is_plugin_active($plugin['name']);
+    $plugin['url'] = 'https://getsharepress.com/plugins/' . $plugin['name'];
   }
 
   foreach($free as &$plugin) {
     $plugin['active'] = sp_is_plugin_active($plugin['name']);
+    $plugin['url'] = 'https://getsharepress.com/plugins/' . $plugin['name'];
   }
 
   wp_enqueue_style('sp-addons', SP_URL.'/css/addons.css');
