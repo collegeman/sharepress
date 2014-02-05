@@ -20,12 +20,12 @@ function sp_get_allowed_og_tags() {
   if (!empty($old_settings['page_og_tag'])) {
     $defaults = $old_settings['page_og_tag'];
   } else {
-    // by default, all turned on
+    // by default, all but og:url
     $defaults = array(
       'og:title'          => true,
       'og:type'           => true,
       'og:image'          => true,
-      'og:url'            => true,
+      'og:url'            => false,
       'fb:app_id'         => true,
       'og:site_name'      => true,
       'og:description'    => true,
@@ -94,6 +94,13 @@ function sp_get_og_article_author($post) {
 
   $new_setting = get_the_author_meta( 'article:author', $post->post_author );
   return $new_setting ? $new_setting : $old_setting;
+}
+
+function replace_utf8_entities($text) {
+  return str_replace(
+          array("\xe2\x80\x98", "\xe2\x80\x99", "\xe2\x80\x9c", "\xe2\x80\x9d", "\xe2\x80\x93", "\xe2\x80\x94", "\xe2\x80\xa6"),
+          array("'", "'", '"', '"', '-', '--', '...'),
+          $text);
 }
 
 /**
@@ -193,11 +200,13 @@ function sp_wp_head() {
     }
     
     foreach($og as $property => $content) {
-      echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
-        array('"', '<', '>'), 
-        array('&quot;', '&lt;', '&gt;'), 
-        strip_shortcodes($content)
-      ));
+      echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", replace_utf8_entities(str_replace(
+            array('"', '<', '>'), 
+            array('&quot;', '&lt;', '&gt;'), 
+            strip_shortcodes($content)
+          )
+        )
+      );
     }
     echo '<!-- /sharepress social metatags -->';
   } 
