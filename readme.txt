@@ -121,8 +121,9 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 
 == Changelog ==
 
-= 2.2.27 = 
+= 2.2.26 = 
 * Added new support ticket system
+* Version bump: compatible with WordPress 3.8.1
 
 = 2.2.25 =
 * Added: Filter "sp_auto_flush_fb" for disabling Facebook cache flushing: just return false
