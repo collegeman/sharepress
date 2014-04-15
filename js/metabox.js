@@ -215,7 +215,9 @@ sp.views = sp.views || {};
         return false;
       }
     },
-    initialize: function() {
+    initialize: function(options) {
+      this.options = options || {};
+      
       var that = this;
 
       this._editing = !this.model.get('id');
@@ -375,7 +377,8 @@ sp.views = sp.views || {};
         return false;
       }
     },
-    initialize: function() {
+    initialize: function(options) {
+      this.options = options || {};
       // intialize global collections:
       profiles = new sp.models.Profiles(),
       updates = new sp.models.Updates();
@@ -474,12 +477,12 @@ sp.views = sp.views || {};
       className: 'media-frame sp-media-frame',
       frame: 'select',
       multiple: false,
-      title: 'Choose a share image',
+      title: 'Choose a social image',
       library: {
           type: 'image'
       },
       button: {
-          text:  'Choose Share Image'
+          text:  'Choose Social Image'
       }
     });
  
