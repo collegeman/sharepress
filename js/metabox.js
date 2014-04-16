@@ -482,7 +482,7 @@ sp.views = sp.views || {};
           type: 'image'
       },
       button: {
-          text:  'Choose Social Image'
+          text:  'Set social image'
       }
     });
  

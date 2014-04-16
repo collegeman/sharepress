@@ -61,6 +61,14 @@ function sp_get_profile_for_service_tag($service_tag) {
   }
 }
 
+add_filter('sp_get_profile', 'sp_profile_filters', 10);
+
+function sp_profile_filters($profile) {
+  if ( has_filter('sp_extended_profile_filter') ) {
+    return apply_filters('sp_extended_profile_filter', $profile);
+  }
+  return ($profile->user_id == get_current_user_id()) ? $profile : null;
+}
 
 /**
  * This class models a user's account on a third-party
@@ -285,10 +293,6 @@ function sp_get_profiles($args = '') {
 
   $args['post_type'] = 'sp_profile';
   $args['numberposts'] = !empty($args['limit']) ? (int) $args['limit'] : 0;
-
-  if ( !current_user_can('manage_options') ) {
-    $args['user_id'] = get_current_user_id();
-  }
 
   if (!empty($args['user_id'])) {
     $args['author'] = $args['user_id'];
