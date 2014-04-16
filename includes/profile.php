@@ -67,7 +67,7 @@ function sp_profile_filters($profile) {
   if ( has_filter('sp_extended_profile_filter') ) {
     return apply_filters('sp_extended_profile_filter', $profile);
   }
-  return ($profile->user_id == get_current_user_id()) ? $profile : null;
+  return ($profile->user_id == get_current_user_id()) ? $profile : false;
 }
 
 /**
@@ -338,7 +338,7 @@ function sp_get_profiles($args = '') {
   $profiles = array();
   foreach($posts as $post) {
     $profile = sp_get_profile($post);
-    if (empty($args['service']) || $profile->service === $args['service']) {
+    if ($profile && (empty($args['service']) || $profile->service === $args['service']) ) {
       $profiles[] = $profile;
     }
   }
