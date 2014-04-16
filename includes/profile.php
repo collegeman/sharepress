@@ -286,6 +286,10 @@ function sp_get_profiles($args = '') {
   $args['post_type'] = 'sp_profile';
   $args['numberposts'] = !empty($args['limit']) ? (int) $args['limit'] : 0;
 
+  if ( !current_user_can('manage_options') ) {
+    $args['user_id'] = get_current_user_id();
+  }
+
   if (!empty($args['user_id'])) {
     $args['author'] = $args['user_id'];
     unset($args['user_id']);
