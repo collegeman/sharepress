@@ -267,9 +267,11 @@ class SpApi_v1 extends AbstractSpApi {
         return sp_update_profile($_REQUEST);
       // get profiles for current user
       } else {
+        /*
+        XXX: Should we just handle this inside the profiles filter?
         if (!$this->_isAdmin()) {
           $_GET['user_id'] = get_current_user_id();
-        }
+        }*/
         $profiles = array_map(array($this, '_sanitizeProfile'), sp_get_profiles($_GET));
     
         if ($this->_isAdmin()) {
