@@ -45,10 +45,14 @@ function sp_save_social_metadata($post_id) {
 }
 
 function sp_add_meta_boxes() {
-  //foreach(sp_supported_post_types() as $type) {
-    add_meta_box('sp_metabox', 'SharePress', 'sp_metabox', 'post', 'side', 'high');
-    add_meta_box('sp_metabox_og', 'Simple Social Metadata', 'sp_metabox_og', 'post', 'side', 'high');
-  //}
+  $supported = apply_filters('sharepress_supported_post_types', array('post'));
+  if (!$supported) { // make sure to return an array
+    $supported = array();
+  }
+  foreach($supported as $type) {
+    add_meta_box('sp_metabox', 'SharePress', 'sp_metabox', $type, 'side', 'high');
+    add_meta_box('sp_metabox_og', 'Simple Social Metadata', 'sp_metabox_og', $type, 'side', 'high');
+  }
 }
 
 
