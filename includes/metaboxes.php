@@ -45,9 +45,12 @@ function sp_save_social_metadata($post_id) {
 }
 
 function sp_add_meta_boxes() {
-  add_meta_box('sp_metabox', 'SharePress', 'sp_metabox', 'post', 'side', 'high');
-  add_meta_box('sp_metabox_og', 'Simple Social Metadata', 'sp_metabox_og', 'post', 'side', 'high');
+  //foreach(sp_supported_post_types() as $type) {
+    add_meta_box('sp_metabox', 'SharePress', 'sp_metabox', 'post', 'side', 'high');
+    add_meta_box('sp_metabox_og', 'Simple Social Metadata', 'sp_metabox_og', 'post', 'side', 'high');
+  //}
 }
+
 
 function sp_meta_admin_enqueue_scripts($hook) {
   if ($hook === 'post.php' || $hook === 'post-new.php') {
