@@ -99,6 +99,7 @@ sp.views = sp.views || {};
       this.$('[data-ui="until_date"]').toggle( this.$('[data-value="until"]').val() === 'future' );
       this.$el.dialog({
         modal: true,
+        width: 360,
         resizable: false,
         draggable: false,
         title: 'Change publish date for this update'

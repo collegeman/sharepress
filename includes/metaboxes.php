@@ -60,6 +60,8 @@ function sp_meta_admin_enqueue_scripts($hook) {
   if ($hook === 'post.php' || $hook === 'post-new.php') {
     wp_enqueue_media();
     wp_enqueue_style('sp_metabox_style', SP_URL.'/css/metabox.css');
+    wp_enqueue_style('wp-jquery-ui-dialog');
+    wp_enqueue_script('jquery-ui-dialog');
     wp_enqueue_script('sp_metabox_script', SP_URL.'/js/metabox.js', array('sp_sharepress_script'));
   }
 }
