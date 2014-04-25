@@ -340,7 +340,7 @@ sp.views = sp.views || {};
         var update = new sp.models.Update({
           'profile_id': profile.get('id'),
           'post_id': $('#post_ID').val(),
-          'text': '[title] [link]',
+          'text': '[title] - [link]',
           'schedule': {
             'when': this.options.post.post_status === 'publish' ? 'immediately' : 'publish'
           }

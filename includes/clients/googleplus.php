@@ -108,7 +108,7 @@ class GooglePlusSharePressClient implements SharePressClient {
   }
 
   function filter_update_text($text) {
-    return '[title] [link]';
+    return '[title] - [link]';
   }
 
   function profiles() {
