@@ -4,7 +4,7 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 3.9
-Stable tag: 2.2.28
+Stable tag: 2.2.29
 
 Automatic posting and reposting to Facebook and Twitter.
 
@@ -120,6 +120,9 @@ Documentation and support for SharePress are available [here](http://getsharepre
 E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
 
 == Changelog ==
+
+= 2.2.29 =
+* Facebook permissions update
 
 = 2.2.28 = 
 * Compatible with WordPress 3.9
