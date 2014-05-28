@@ -431,6 +431,10 @@ function sp_update_profile($profile) {
     $meta['limit'] = $profile['limit'];
   }
 
+  if (isset($profile['readonly'])) {
+    $meta['readonly'] = $profile['readonly'];
+  }
+
   if (array_key_exists('default_text', $profile)) {
     $meta['default_text'] = $profile['default_text'];
   }
