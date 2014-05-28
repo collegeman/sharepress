@@ -270,8 +270,8 @@ sp.views = sp.views || {};
           .parent().attr('title', profile.get('service') + ': ' + profile.get('formatted_username'));
         this.$('[data-value="text"]').text(this.model.get('text'));
       }
-      this.$('textarea').attr('readonly', profile.get('readonly'));
-      this.$('.promo').toggle(profile.get('readonly'));
+      this.$('textarea').prop('readonly', profile.get('readonly'));
+      this.$('.promo')[profile.get('readonly') ? 'show' : 'hide']();
       this.$el.toggle(!this.model.get('hidden'));
       this.updateCharCount();
       return this;
