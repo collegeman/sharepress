@@ -712,7 +712,7 @@ function sp_default_update_text_format($text, $update) {
 
     // [title]
     if (stripos($text, '[title]') !== false) {
-      $text = preg_replace('/\[title\]/', apply_filters('the_title', $post->post_title), $text);
+      $text = preg_replace('/\[title\]/', apply_filters('sp_the_title', $post->post_title), $text);
     }
 
     // [link]
