@@ -64,7 +64,7 @@ function sp_get_profile_for_service_tag($service_tag) {
 add_filter('sp_get_profile', 'sp_profile_filters', 10);
 
 function sp_profile_filters($profile) {
-  return ( get_current_user_id() == 0 || $profile->user_id == get_current_user_id() ) ? $profile : false;
+  return ( get_current_user_id() == 0 || ( has_filter('sp_authors') && apply_filters('sp_authors', $profile) ) || $profile->user_id == get_current_user_id() ) ? $profile : false;
 }
 
 /**
