@@ -125,7 +125,7 @@ function replace_utf8_entities($text) {
   );
   $chr = array_keys  ($chr_map); // but: for efficiency you should
   $rpl = array_values($chr_map); // pre-calculate these two arrays
-  return urlencode(str_replace($chr, $rpl, html_entity_decode($text, ENT_QUOTES, "UTF-8")));
+  return htmlentities(str_replace($chr, $rpl, html_entity_decode($text, ENT_QUOTES, "UTF-8")));
 }
 
 /**
@@ -226,11 +226,12 @@ function sp_wp_head() {
     
     foreach($og as $property => $content) {
       if ($stripped = strip_shortcodes($content)) {
-        echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", replace_utf8_entities(str_replace(
+        $stripped = ( $property !== 'og:url' ) ? replace_utf8_entities(str_replace(
           array('"', '<', '>'), 
           array('&quot;', '&lt;', '&gt;'), 
           $stripped
-        )));
+        )) : $stripped;
+        echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", $stripped);
       }
     }
     
