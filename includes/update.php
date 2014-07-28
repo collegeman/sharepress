@@ -353,6 +353,7 @@ function sp_post_update($update) {
   update_post_meta($update->id, 'service_update_id', $result->service_update_id);
   update_post_meta($update->id, 'sent_data', $result->data);
   
+  sp_notify_success($post, $update);
   return (object) sp_get_update($update->id)->toJSON();
 }
 
@@ -680,6 +681,7 @@ function sp_set_update_error_status($update, $error = null) {
   $post->post_status = 'error';
   wp_insert_post($post);
   add_post_meta($update->id, 'error', $error);
+  sp_notify_error($post, $update, $error);
   return true;
 }
 
@@ -741,4 +743,71 @@ function sp_default_permalink($permalink, $post, $update) {
  */
 function sp_create_default_updates($post_ID, $post, $updated) {
 
+}
+
+function sp_notify_success($post, $meta) {
+  if (sp_notify_on_success()) {
+    $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
+    error_log('success_email \n\n' . sp_get_success_email() . '\n\n' . print_r($post, true) . '\n\n' . print_r($meta, true));
+    wp_mail(
+      sp_get_success_email(),
+      "SharePress Success",
+      print_r($meta, true)
+    );
+  }
+}
+
+function sp_notify_error($post, $meta, $error) {
+  if (is_object($error)) {
+    $code = $error->getCode();
+    $error = $error->getMessage();
+  }
+  error_log('error_email \n\n' . sp_get_error_email() . '\n\n' . print_r($post, true) . '\n\n' . print_r($meta, true) . '\n\n' . print_r($error, true));
+  if ($post) {
+    update_post_meta($post->ID, self::META_ERROR, $error);
+    if (sp_notify_on_error()) { 
+      $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
+
+      $message = "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}";
+      if ($code == 1611070) { 
+        $message = "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\Why is this happening?\n======================\nThis happened because there is more than one set of Open Graph Meta tags in the <head> of your page. These could be added either by your theme, or by another plugin.\n\nHow do I fix it?\n================\nThe recommended fix is to disable those settings elsewhere (my modifying the configuration of other plugins or your theme), and letting SharePress be the open graph meta tag authority for your site. If this isn't possible, you can uncheck the open graph checkboxes in SharePress' settings.\n\nYou can test whether or not you've fixed the problem by analyzing your content with Facebook's object debugger, here: https://developers.facebook.com/tools/debug/og/object?q={$this->get_permalink($post->ID)}";
+      }
+
+      wp_mail(
+        sp_get_error_email(),
+        "SharePress Error",
+        print_r($post, true) . '\n\n' . print_r($meta, true) . '\n\n' . print_r($error, true) . '\n\n'
+      );
+    }
+  
+  } else {
+    wp_mail(
+      sp_get_error_email(),
+      "SharePress Error",
+      $error
+    );
+
+  }
+  
+ 
+}
+
+function sp_get_error_email() {
+  $options = sp_get_opt('notify_settings');
+  return (@$options['on_error_email']) ? $options['on_error_email'] : get_option('admin_email');
+}
+
+function sp_notify_on_error() {
+  $options = sp_get_opt('notify_settings');
+  return $options ? $options['on_error'] == '1' : true;
+}
+
+function sp_get_success_email() {
+  $options = sp_get_opt('notify_settings');
+  return (@$options['on_success_email']) ? $options['on_success_email'] : get_option('admin_email');
+}
+
+function sp_notify_on_success() {
+  $options = sp_get_opt('notify_settings');
+  return $options ? $options['on_success'] == '1' : true;
 }

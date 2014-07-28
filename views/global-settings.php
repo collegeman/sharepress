@@ -92,7 +92,38 @@
           </span>
         </td>
       </tr>
-      
+      <tr>
+        <th>
+          SharePress Status Notifications
+        </th>
+        <td>
+          <p>
+            Choose when and who to notify of SharePress successes and failures by email.
+          </p>
+          <?
+            $notify_settings = array_merge(array(
+                'on_success' => false,
+                'on_error_email' => null,
+                'on_success_email' => null,
+                'on_error' => false
+              ), 
+              sp_get_opt('notify_settings')
+            );
+          ?>
+          <p>
+            <input type="checkbox" id="notify_on_success" name="<?php echo sp_get_opt_name('notify_settings') ?>[on_success]" value="1" <?php if ($notify_settings['on_success']) echo 'checked="checked"' ?> />
+            <label for="notify_on_success"><b>E-mail notification on successful post</b></label><br>
+            <input id="notify_on_success_email" class="regular-text" placeholder="E-mail address" type="text" name="<?php echo sp_get_opt_name('notify_settings') ?>[on_success_email]" value="<?php echo $notify_settings['on_success_email'] ?>">
+            <br>
+            <br>
+          </p>
+          <p>
+            <input type="checkbox" id="notify_on_error" name="<?php echo sp_get_opt_name('notify_settings') ?>[on_error]" value="1" <?php if ($notify_settings['on_error']) echo 'checked="checked"' ?> />
+            <label for="notify_on_error"><b>E-mail notification on posting error</b></label><br>
+            <input id="notify_on_error_email" class="regular-text" placeholder="E-mail address" type="text" name="<?php echo sp_get_opt_name('notify_settings') ?>[on_error_email]" value="<?php echo $notify_settings['on_error_email'] ?>"> <br><br>
+          </p>
+        </td>
+      </tr>
     </table>
 
     <?php submit_button(); ?>

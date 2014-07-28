@@ -27,6 +27,7 @@ function sp_admin_init() {
     register_setting('sp-global-settings', sp_get_opt_name('og_site_type'));
     register_setting('sp-global-settings', sp_get_opt_name('og_locale'));
     register_setting('sp-global-settings', sp_get_opt_name('og_article_publisher'));
+    register_setting('sp-global-settings', sp_get_opt_name('notify_settings'));
   }
 }
 
