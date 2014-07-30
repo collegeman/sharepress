@@ -107,7 +107,7 @@
                 'on_success_email' => null,
                 'on_error' => false
               ), 
-              sp_get_opt('notify_settings')
+              sp_get_opt('notify_settings', array())
             );
           ?>
           <p>
