@@ -343,6 +343,7 @@ function sp_post_update($update) {
       'update' => $update->toJSON()
     ));
     sp_set_update_error_status($update, $error);
+    sp_log("Error while posting #{$update->id}");
     return $error;
   }
 
@@ -352,7 +353,7 @@ function sp_post_update($update) {
   update_post_meta($update->id, 'sent_at', time());
   update_post_meta($update->id, 'service_update_id', $result->service_update_id);
   update_post_meta($update->id, 'sent_data', $result->data);
-  
+  sp_log("Success while posting #{$update->id}");
   sp_notify_success($post, $update);
   return (object) sp_get_update($update->id)->toJSON();
 }

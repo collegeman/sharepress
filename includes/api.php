@@ -210,7 +210,8 @@ class SpApi_v1 extends AbstractSpApi {
         $update->post = array(
           'id' => $update->post_id,
           'title' => apply_filters('the_title', $post->post_title),
-          'status' => $post->post_status
+          'status' => $post->post_status,
+          'publish_date' => get_post_time( 'U', false, $post, false )
         );
       }
       if (!empty($_REQUEST['fields'])) {
