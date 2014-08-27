@@ -55,10 +55,10 @@ class SpApi_v1 extends AbstractSpApi {
       }
     } else {
       // TODO: create a namedspaced function that does this
-      set_transient('sp_doing_cron', sprintf( '%.22F', microtime(true) ));
+      set_transient('sp_doing_cron', $cron_transient = sprintf( '%.22F', microtime(true) ));
     }
 
-    $result = sp_post_pending();
+    $result = sp_post_pending(null, $cron_transient);
 
     delete_transient( 'sp_doing_cron' );
   
@@ -426,6 +426,27 @@ class SpApi_v1 extends AbstractSpApi {
 
     if ($id === 'counts') {
       return sp_count_updates();
+
+    } else if ($id === 'pending') {
+      return array_map(function($update) {
+        return sp_get_update($update->ID)->toJSON();
+      }, sp_get_pending_updates());
+
+    } else if ($id === 'inconsistent') {
+      $updates = array_map(function($update) {
+        return sp_get_update($update->ID)->toJSON();
+      }, sp_get_pending_updates());
+
+      // filter out delayed shares
+      $updates = array_filter($updates, function($update) {
+        return $update['schedule']->when == 'publish';
+      });
+
+      $inconsistent = array_filter($updates, function($update) {
+        return $update['post']['status'] == 'publish';
+      });
+
+      return $inconsistent;
 
     } else if ($this->_isPost() || $action === 'create') {
       unset($_REQUEST['id']);

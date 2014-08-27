@@ -114,6 +114,15 @@ class SharePressUpdate {
     $data['text_formatted'] = $this->text_formatted;
     $data['id'] = (int) $data['id'];
     $data['profile_id'] = (int) $data['profile_id'];
+    if (!empty($data['post_id'])) {
+      $post = get_post($data['post_id']);
+      $data['post'] = array(
+        'ID' => $post->ID,
+        'title' => $post->post_title,
+        'status' => $post->post_status,
+        'post_date' => $post->post_date
+      );
+    }
     return $data;
   }
 
@@ -211,45 +220,35 @@ function sp_restore_update($update) {
  * @param int $until All updates whose publishing due date is
  * older than this time will be published. If null, a timestamp
  * 60 seconds in the future is used.
+ * @param float When the calling context is a cron job,
+ * set this argument equal to the current lock transient
  * @action pre_sp_post_pending
  * @action post_sp_post_pending
  */
-function sp_post_pending($until = null) {
+function sp_post_pending($until = null, $in_cron = null) {
   global $wpdb;
 
-  // TODO: put this cron lock check in a function and reuse it
-  // here as well as in includes/cron.php
   $local_time = microtime( true );
-  $lock = get_transient('sp_doing_cron');
-  if ( $lock > $local_time + 10*60 ) {
-    $lock = 0;
+  if ($lock = get_transient('sp_doing_cron')) {
+    if (is_null($in_cron) || $in_cron != $lock ) {
+      $error = new WP_Error('cron', 'sp_post_pending: locked out (wrong context)');
+      sp_log($error, 'ERROR');
+      return $error;
+    } else if (is_null($in_cron)) {
+      if ( $lock > $local_time + 10 * 60 ) {
+        $lock = 0;
+      }
+      if ( $lock + WP_CRON_LOCK_TIMEOUT > $local_time ) {
+        $error = new WP_Error('cron', 'sp_post_pending: locked out (not in cron, lock active)');
+        sp_log($error, 'ERROR');
+        return $error;
+      }
+    }
   }
-  if ( $lock + WP_CRON_LOCK_TIMEOUT > $local_time ) {
-    sp_log('sp_post_pending: locked out by cron');
-    return;
-  }
-
-  if (is_null($until)) {
-    // default cron job is on a 2-min interval, so we
-    // look one minute into the future
-    $until = time() + 60;
-  }
-
-  // a little bit of var filtering
-  $until = (int) $until;
-
+  
   do_action('pre_sp_post_pending');
 
-  $posts = $wpdb->get_results("
-    SELECT ID FROM {$wpdb->posts}
-    JOIN {$wpdb->postmeta} ON (post_ID = ID)
-    WHERE
-      post_type = 'sp_update'
-      AND post_status = 'buffer'
-      AND meta_key = 'due_at' 
-      AND meta_value IS NOT NULL
-      AND meta_value <= {$until}
-  ");
+  $posts = sp_get_pending_updates($until);
 
   $results = array();
 
@@ -262,6 +261,36 @@ function sp_post_pending($until = null) {
   do_action('post_sp_post_pending');
 
   return $results;
+}
+
+/**
+ * Get a list of all pending updates.
+ * @param int $until All updates whose publishing due date is
+ * older than this time. If null, a timestamp
+ * 60 seconds in the future is used.
+ */
+function sp_get_pending_updates($until = null) {
+  global $wpdb;
+
+  if (is_null($until)) {
+    // default cron job is on a 2-min interval, so we
+    // look one minute into the future
+    $until = time() + 60;
+  }
+
+  // a little bit of var filtering
+  $until = (int) $until;
+
+  return $wpdb->get_results("
+    SELECT ID FROM {$wpdb->posts}
+    JOIN {$wpdb->postmeta} ON (post_ID = ID)
+    WHERE
+      post_type = 'sp_update'
+      AND post_status = 'buffer'
+      AND meta_key = 'due_at' 
+      AND meta_value IS NOT NULL
+      AND meta_value <= {$until}
+  ");
 }
 
 /**
