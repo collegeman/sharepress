@@ -415,6 +415,23 @@ class SpApi_v1 extends AbstractSpApi {
       return $result->updates[0];
     }
   }
+  
+  /**
+  * private functions to support backwards php compatibility
+  * anonymous functions not allowed.
+  */
+  private static function updatesToJSON($update) {
+    return sp_get_update($update->ID)->toJSON();
+  }
+
+  private static function shareOnPublish($update) {
+    return $update['schedule']->when == 'publish';
+  }
+
+  private static function postPublished($update) {
+    return $update['post']['status'] == 'publish';
+  }
+  /* end anonymous replacements */
 
   function updates($id = null, $action = null) {
     $this->_assertLoggedIn();
@@ -428,23 +445,15 @@ class SpApi_v1 extends AbstractSpApi {
       return sp_count_updates();
 
     } else if ($id === 'pending') {
-      return array_map(function($update) {
-        return sp_get_update($update->ID)->toJSON();
-      }, sp_get_pending_updates());
+      return array_map('SpApi_v1::updatesToJSON', sp_get_pending_updates());
 
     } else if ($id === 'inconsistent') {
-      $updates = array_map(function($update) {
-        return sp_get_update($update->ID)->toJSON();
-      }, sp_get_pending_updates());
+      $updates = array_map('SpApi_v1::updatesToJSON', sp_get_pending_updates());
 
       // filter out delayed shares
-      $updates = array_filter($updates, function($update) {
-        return $update['schedule']->when == 'publish';
-      });
+      $updates = array_filter($updates, 'SpApi_v1::shareOnPublish');
 
-      $inconsistent = array_filter($updates, function($update) {
-        return $update['post']['status'] == 'publish';
-      });
+      $inconsistent = array_filter($updates, 'SpApi_v1::postPublished');
 
       return $inconsistent;
 
