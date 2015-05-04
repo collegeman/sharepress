@@ -121,6 +121,9 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 
 == Changelog ==
 
+= 2.2.31 =
+* Update Facebook setup to require new page-posting permissions
+
 = 2.2.30 =
 * Fix notice errors on settings screen
 * Version bump: compatible with WordPress 4.0
