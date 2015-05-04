@@ -3,15 +3,15 @@ Contributors: aaroncollegeman, joeyblake
 Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
-Tested up to: 4.0
-Stable tag: 2.2.30
+Tested up to: 4.1.2
+Stable tag: 2.2.31
 
 Automatic posting and reposting to Facebook and Twitter.
 
 == Description ==
 
 [SharePress](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=sharepress) is a WordPress plugin that automatically shares your content to Facebook and Twitter.
-Support for LinkedIn, and more goodies are coming in [version 3.0](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=version-3.0). 
+Support for LinkedIn, and more goodies are coming in [version 3.0](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=version-3.0).
 
 Features include:
 
@@ -37,8 +37,8 @@ Three great reasons:
 Google+ and LinkedIn, too - so that SharePress can continue to be the most reliable solution for automatic
 posting and reposting. You write good content, and we'll keep the oauth out of your hair.
 
-**Ease of use** Simple is hard, but we're committed to keeping SharePress easy to use. Like WordPress' core features, we'll 
-always try to keep our defaults sensible, and our options pages short. This ensures SharePress is easy to 
+**Ease of use** Simple is hard, but we're committed to keeping SharePress easy to use. Like WordPress' core features, we'll
+always try to keep our defaults sensible, and our options pages short. This ensures SharePress is easy to
 use for you, your clients and customers, and also keeps SharePress healthy and easy to maintain.
 
 **Support** SharePress is [supported software](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
@@ -53,7 +53,7 @@ Awesome people like these:
 
 Mike Schepker of <a href="http://letstalkabout.tv" target="_blank">letstalkabout.tv</a> says
 
-> SharePress is the easiest, most reliable plugin for getting your WordPress content onto your Facebook page. Setup was a breeze and I have not experienced any issues with the new plugin. SharePress is a much more elegant solution than other services like Networked Blogs. SharePress was the first premium plugin I've ever purchased for my site, and let me tell you, it was well worth the money. 
+> SharePress is the easiest, most reliable plugin for getting your WordPress content onto your Facebook page. Setup was a breeze and I have not experienced any issues with the new plugin. SharePress is a much more elegant solution than other services like Networked Blogs. SharePress was the first premium plugin I've ever purchased for my site, and let me tell you, it was well worth the money.
 
 Corey Brown of <a href="http://www.notreble.com">No Treble</a> and <a href="http://www.squidoo.com">Squidoo</a> says
 
@@ -109,7 +109,7 @@ Soon. SharePress 3.0 is nigh.
 
 = When will SharePress support Google+? =
 
-At this time it is not possible to publish to Google+ as Google does not offer a writable API. 
+At this time it is not possible to publish to Google+ as Google does not offer a writable API.
 
 Other services and plugins support writing to Google+, but they do this by storing your Google account username and password, which is *extremely* dangerous.
 
@@ -128,14 +128,14 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 = 2.2.29 =
 * Facebook permissions update
 
-= 2.2.28 = 
+= 2.2.28 =
 * Compatible with WordPress 3.9
 * Admin utility for flushing settings
 
 = 2.2.27 =
 * Gracefully fix twitter authentication keys
 
-= 2.2.26 = 
+= 2.2.26 =
 * Added new support ticket system
 * Version bump: compatible with WordPress 3.8.1
 
@@ -193,7 +193,7 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 = 2.2.12 =
 * Change: SharePress Multi-Site and Multi-Network configuration made easier http://aaroncollegeman.com/sharepress/help/whats-the-best-way-to-use-sharepress-with-multisite-wordpress/
 * Change: Make it possible to take advantage of centralized license key configuration without forcing the use of a single Facebook app across the multi-site or multi-network installation
-* Added: Support for Facebook's [new article Open Graph meta tags](https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/) article:publisher and article:author 
+* Added: Support for Facebook's [new article Open Graph meta tags](https://developers.facebook.com/blog/post/2013/06/19/platform-updates--new-open-graph-tags-for-media-publishers-and-more/) article:publisher and article:author
 
 = 2.2.11 =
 * Fix: Compatible with Twitter's API v1.1
@@ -222,7 +222,7 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 * Added: Now reporting SharePress version to intercom, so that I can safely notify users who haven't upgraded without annoying users who have
 
 = 2.2.4 =
-* Added: More concise description of schedule fixing feature on settings screen regarding 
+* Added: More concise description of schedule fixing feature on settings screen regarding
 * Change: When using schedule fixing feature, ignore errors that occurred more than twenty-four hours ago
 * Fixed: Sometimes Facebook API errors still made it through into WP admin screen, instead of being handled and warning the user
 
@@ -390,7 +390,7 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 
 = 2.0.17 =
 * Change: The Open Graph tags SharePress is allowed to insert can now be independently turned on and off, instead of in bulky groups
-* Added: fb:app_id can be inserted automatically 
+* Added: fb:app_id can be inserted automatically
 * Added: og:description can be inserted automatically
 
 = 2.0.16 =
@@ -441,19 +441,19 @@ E-mail based tech support is available to Pro customers. All you have to do is [
 * Fixed: Major bug in setup process, prevented establishing API key and app secret in the database.
 
 = 2.0.3 =
-* Fixed: Featured Image feature of SharePress was not working unless the activate Theme supported post-thumbnails. 
+* Fixed: Featured Image feature of SharePress was not working unless the activate Theme supported post-thumbnails.
 
 = 2.0.2 =
 * Fixed: Activating SharePress when the active theme did not use add_theme_support('post-thumbnails') would result in error messages being displayed in the Media management tool and other places
 
 = 2.0.1 =
-* Fixed: cron job is working again 
-* Fixed: cron job is no longer dependent upon activation/deactivation 
-* Fixed: if Facebook error occurs on Settings screen, wp_die is thrown with directions on how to get more information 
+* Fixed: cron job is working again
+* Fixed: cron job is no longer dependent upon activation/deactivation
+* Fixed: if Facebook error occurs on Settings screen, wp_die is thrown with directions on how to get more information
 * Fixed: no inline error when user has no Pages to manage
 
 = 2.0 =
-* SharePress Pro is now available! If you want access to the pro features, you'll need to upgrade SharePress and then buy a license key. This release also fixes a number of bugs and usability issues, and 
+* SharePress Pro is now available! If you want access to the pro features, you'll need to upgrade SharePress and then buy a license key. This release also fixes a number of bugs and usability issues, and
 
 = 1.0.10 =
 * [Jen Russo](http://www.mauitime.com) reported that posts created via e-mailing to Posterous weren't triggering SharePress. There was a bug that prevented SharePress from firing in all cases other than the ones wherein the user was manually accessing the admin. This is now fixed.

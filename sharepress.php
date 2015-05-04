@@ -1,11 +1,11 @@
-<?php 
+<?php
 /*
 Plugin Name: SharePress
 Plugin URI: https://getsharepress.com
 Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
 Author: Fat Panda, LLC
 Author URI: http://fatpandadev.com
-Version: 2.2.30
+Version: 2.2.31
 License: GPL2
 */
 
@@ -35,14 +35,14 @@ require('lib/facebook.php');
 SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
   CURLOPT_SSL_VERIFYPEER => false
 );
-  
+
 // override this in functions.php
 @define('SHAREPRESS_DEBUG', false);
 
 class Sharepress {
 
   const VERSION = '2.2.29';
-  
+
   const MISSED_SCHEDULE_DELAY = 5;
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
 
@@ -56,7 +56,7 @@ class Sharepress {
   const OPTION_SETTINGS = 'sharepress_settings';
   const OPTION_SESSION_ARG = 'sharepress_%s';
   const OPTION_LAST_TOKEN_EXCHANGE = 'sharepress_last_token_exchange';
-  
+
   //const META_MESSAGE_ID = 'sharepress_message_id';
   const META_RESULT = 'sharepress_result';
   const META_TWITTER_RESULT = 'sharepress_twitter_result';
@@ -68,21 +68,21 @@ class Sharepress {
   const META_BITLY = 'sharepress_bitly_url';
 
   const TRANSIENT_IS_BUSINESS = 'sharepress_is_business';
-  
+
   // holds the singleton instance of your plugin's core
   static $instance;
   // holds a reference to the pro version of the plugin
   static $pro;
   // raise error flag
   static $errors = array();
-  
+
   static function load() {
     if (!self::$instance) {
       self::$instance = new Sharepress();
     }
     return self::$instance;
   }
-  
+
   private function __construct() {
     add_action('init', array($this, 'init'), 11, 1);
   }
@@ -90,21 +90,21 @@ class Sharepress {
   function gat($category, $action, $opt_label = null, $opt_value = null) {
     if (!is_null($opt_value) && !is_numeric($opt_value)) {
       throw new Exception("Google Analytics cannot track non-integer event values: {$opt_value}");
-    } 
-    
+    }
+
     if (!$category && $action) {
       throw new Exception("Google Analytics requires Category and Action be specified.");
     }
-    
+
     static $host;
-    
+
     if (!$host) {
       $host = array();
       $script = file_get_contents('http://www.google-analytics.com/u/ga_debug.js');
       preg_match('/qa="([\d\.\w]+)"/', $script, $matches);
       $host['version'] = $matches[1];
     }
-    
+
     $params = array(
       // GA client version
       'utmwv' => '4.3',
@@ -150,7 +150,7 @@ class Sharepress {
     if (!is_null($opt_value)) {
       $params['utme'] .= '('.$opt_value.')';
     }
-    
+
     $url = 'http://www.google-analytics.com/__utm.gif?'.http_build_query($params);
 
     wp_remote_get($url, array(
@@ -171,7 +171,7 @@ class Sharepress {
     }
     return $supported;
   }
-  
+
   function init() {
     if (!apply_filters('sharepress_enabled', true)) {
       return false;
@@ -189,7 +189,7 @@ class Sharepress {
       'view_item' => __('View Book'),
       'search_items' => __('Search Books'),
       'not_found' =>  __('No books found'),
-      'not_found_in_trash' => __('No books found in Trash'), 
+      'not_found_in_trash' => __('No books found in Trash'),
       'parent_item_colon' => '',
       'menu_name' => 'Books'
 
@@ -198,16 +198,16 @@ class Sharepress {
       'labels' => $labels,
       'public' => true,
       'publicly_queryable' => true,
-      'show_ui' => true, 
-      'show_in_menu' => true, 
+      'show_ui' => true,
+      'show_in_menu' => true,
       'query_var' => true,
       'rewrite' => true,
       'capability_type' => 'post',
-      'has_archive' => true, 
+      'has_archive' => true,
       'hierarchical' => false,
       'menu_position' => null,
       'supports' => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' )
-    ); 
+    );
     register_post_type('book', $args); */
 
     if (is_admin()) {
@@ -222,7 +222,7 @@ class Sharepress {
         wp_enqueue_style('theme-editor');
       }
     }
-    
+
     add_action('save_post', array($this, 'save_post'));
     add_action('transition_post_status', array($this, 'transition_post_status'), 10, 3);
     add_action('future_to_publish', array($this, 'future_to_publish'));
@@ -252,7 +252,7 @@ class Sharepress {
     add_action('edit_user_profile', array($this, 'user_profile_fb_author_edit_action' ));
     add_action('personal_options_update', array($this,'sharepress_user_profile_update_action' ));
     add_action('edit_user_profile_update', array($this,'sharepress_user_profile_update_action' ));
-  } 
+  }
 
   private static $ok_to_show_support_here = false;
   private static $on_settings_screen = false;
@@ -271,7 +271,7 @@ class Sharepress {
     }
 
     $actions['fb-kick'] = '<a data-action="fb-kick" target="_blank" href="'. sprintf('http://developers.facebook.com/tools/debug/og/object?q=%s', urlencode(get_permalink($post->ID))) .'" title="'
-      . esc_attr( __( 'Use this feature to flush Facebook\'s cache of your content, fixing most issues with images and meta data.', $this->textdomain  ) ) 
+      . esc_attr( __( 'Use this feature to flush Facebook\'s cache of your content, fixing most issues with images and meta data.', $this->textdomain  ) )
       . '">' . __( 'Flush Facebook', $this->textdomain  ) . '</a>';
 
     return $actions;
@@ -289,7 +289,7 @@ class Sharepress {
       </tr>
       </tbody>
     </table>
-  <?php 
+  <?php
   }
 
   function sharepress_user_profile_update_action($user_id) {
@@ -347,24 +347,24 @@ class Sharepress {
       'interval' => 60,
       'display' => __('Every Minute')
     );
-    
+
     return $schedules;
   }
-  
+
   function wp_head() {
     global $wpdb, $post;
-    
+
     if (self::setting('page_og_tags', 'on') == 'on' || self::setting('page_og_tags', 'on') == 'imageonly') {
       // get any values stored in meta data
       $defaults = array();
       $overrides = array();
-      
+
       $query = $wpdb->get_results( $wpdb->prepare("
         SELECT M.meta_key AS K, M.meta_value AS V
         FROM $wpdb->postmeta M INNER JOIN $wpdb->posts P ON (M.post_ID = P.ID)
         WHERE P.ID = %d
       ", $post->ID) );
-      
+
       foreach($query as $M) {
         if (strpos($M->K, 'og:') === 0 || strpos($M->K, 'fb:') === 0) {
           $overrides[trim($M->K)] = trim($M->V);
@@ -373,7 +373,7 @@ class Sharepress {
 
       if (is_single() || ( is_page() && !is_front_page() )) {
         $meta = get_post_meta($post->ID, self::META, true);
-        
+
         $picture = $this->get_og_image_url($post, $meta);
 
         global $post;
@@ -403,11 +403,11 @@ class Sharepress {
           'og:description' => $this->strip_shortcodes(get_bloginfo('description')),
           'og:locale' => $this->setting('og_locale', 'en_US')
         );
-        
+
       }
-      
+
       $og = array_merge($defaults, $overrides);
-      
+
       if ( $fb_publisher = $this->setting('fb_publisher_url') ) {
         $og['article:publisher'] = $fb_publisher;
       }
@@ -415,7 +415,7 @@ class Sharepress {
       if ( $fb_author = get_the_author_meta( 'fb_author_url', $post->post_author ) ) {
         $og['article:author'] = $fb_author;
       }
-      
+
       #
       # poke out the ones that aren't allowed
       #
@@ -447,7 +447,7 @@ class Sharepress {
           }
         }
       }
-      
+
 
       $og = apply_filters('sharepress_og_tags', $og, $post, $meta);
 
@@ -463,25 +463,25 @@ class Sharepress {
 
         foreach($og as $property => $content) {
           echo sprintf("<meta property=\"{$property}\" content=\"%s\" />\n", str_replace(
-            array('"', '<', '>'), 
-            array('&quot;', '&lt;', '&gt;'), 
+            array('"', '<', '>'),
+            array('&quot;', '&lt;', '&gt;'),
             $this->strip_shortcodes($content)
           ));
         }
       }
-    } 
+    }
 
   }
 
   static function twitter_ready() {
-    return self::unlocked() 
+    return self::unlocked()
       && self::setting('twitter_is_ready', 1)
-      && self::setting('twitter_consumer_key') 
-      && self::setting('twitter_consumer_secret') 
-      && self::setting('twitter_access_token') 
+      && self::setting('twitter_consumer_key')
+      && self::setting('twitter_consumer_secret')
+      && self::setting('twitter_access_token')
       && self::setting('twitter_access_token_secret');
   }
-  
+
   static function err($message) {
     self::log($message, 'ERROR');
   }
@@ -489,7 +489,7 @@ class Sharepress {
   static function debug() {
     return (defined('SHAREPRESS_DEBUG') && SHAREPRESS_DEBUG) || self::setting('debugging', '0') == '1';
   }
-  
+
   static function log($message, $level = 'INFO') {
     if (self::debug()) {
       global $thread_id, $blog_id;
@@ -504,11 +504,11 @@ class Sharepress {
       }
     }
   }
-  
+
   static function api_key() {
     return get_option(self::OPTION_API_KEY, '');
   }
-  
+
   static function app_secret() {
     return get_option(self::OPTION_APP_SECRET, '');
   }
@@ -523,10 +523,10 @@ class Sharepress {
         // check token exchange
         if (!($when = get_option(self::OPTION_LAST_TOKEN_EXCHANGE)) || (time() - $when) > 900) {
           $result = _wp_http_get_object()->post(sprintf(
-            'https://graph.facebook.com/oauth/access_token?client_id=%s&client_secret=%s&grant_type=fb_exchange_token&fb_exchange_token=%s', 
+            'https://graph.facebook.com/oauth/access_token?client_id=%s&client_secret=%s&grant_type=fb_exchange_token&fb_exchange_token=%s',
             self::api_key(),
             self::app_secret(),
-            self::facebook()->getAccessToken()  
+            self::facebook()->getAccessToken()
           ));
 
           if (!is_wp_error($result) && $result['response']['code'] == 200) {
@@ -539,7 +539,7 @@ class Sharepress {
           }
         }
       }
-      
+
       return $me;
 
 
@@ -564,13 +564,13 @@ class Sharepress {
     'license_key' => null,
     'append_link' => 'on'
   );
-  
+
   static function setting($name = null, $default = null) {
     $settings = get_option(self::OPTION_SETTINGS, self::$default_settings);
-    
+
     return (!is_null($name)) ? ( !is_null(@$settings[$name]) ? $settings[$name] : $default ) : $settings;
   }
-  
+
   static function targets($id = null) {
     $targets = get_option(self::OPTION_PUBLISHING_TARGETS, false);
     if ($targets === false) {
@@ -580,10 +580,10 @@ class Sharepress {
         $targets = array();
       }
     }
-    
+
     return ($id) ? isset($targets[$id]) : $targets;
   }
-  
+
   static $facebook;
   static function facebook() {
     if (!self::$facebook) {
@@ -596,10 +596,10 @@ class Sharepress {
         return null;
       }
     }
-    
+
     return self::$facebook;
   }
-  
+
   /**
    * Make a call to the Facebook API, optionally caching in (or retrieving a cached result from) the database.
    * Only GET requests are cacheable.
@@ -612,7 +612,7 @@ class Sharepress {
   static function api($path, $method = 'GET', $params = array(), $cache_for = false) {
     if ($facebook = self::facebook()) {
       $cache = null;
-      
+
       // we're allowed to cache when $method == 'GET' and $cache_for !== false
       if ($method == 'GET' && $cache_for !== false) {
         // build the cache key
@@ -621,8 +621,8 @@ class Sharepress {
         array_pop($args);
         // hashsum it!
         $cache_key = 'sharepress_cache-'.md5(serialize($args));
-        
-        if ($cache = get_option($cache_key)) {    
+
+        if ($cache = get_option($cache_key)) {
           // when does the cache expire?
           if ($cache_for === true) {
             // forever
@@ -634,16 +634,16 @@ class Sharepress {
             // $cache_for was not a valid expression of time:
             throw new Exception("Invalid value for 'cache_for' parameter.");
           }
-    
+
           if ($cache['cache_until'] !== 0 && $cache['cache_until'] < $cache_until) {
             // clear from the cache
             delete_option($cache_key);
             // nulify
             $cache = null;
-          } 
-        } 
+          }
+        }
       }
-      
+
       if ($cache) {
         return $cache['packet'];
       } else {
@@ -662,7 +662,7 @@ class Sharepress {
             }
           }
         } while ($retries);
-    
+
         // if we're allowed to cache, do it!
         if ($cache_for !== false && $method == 'GET') {
           // if $cache_for is literally true, then cache never expires
@@ -684,8 +684,8 @@ class Sharepress {
       throw new SharepressFacebookSessionException();
     }
   }
-  
-  /** 
+
+  /**
    * Unify user data: standard and business accounts.
    * @param string $param (optional) Return only the value at $param
    * @param boolean $rethrow If set to true, rethrow an exception triggered by the API call
@@ -700,7 +700,7 @@ class Sharepress {
       } else {
         $me = self::api('/me', 'GET', array(), $flush ? false : '30 days');
         return ($param) ? $me[$param] : $me;
-      } 
+      }
     } catch (Exception $e) {
       if ($rethrow) {
         throw $e;
@@ -713,7 +713,7 @@ class Sharepress {
   static function is_business($rethrow = false) {
     if (is_string($is_business = get_transient(self::TRANSIENT_IS_BUSINESS))) {
       return $is_business == '1';
-      
+
     } else {
       try {
         $me = self::api('/me');
@@ -725,13 +725,13 @@ class Sharepress {
           return false;
         }
       }
-      
+
       $is_business = !$me;
-      set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600 * 24 * 30); 
+      set_transient(self::TRANSIENT_IS_BUSINESS, $is_business ? '1' : '0', 3600 * 24 * 30);
       return $is_business;
     }
   }
-  
+
   static function handleFacebookException($e) {
     // echo $e->getTraceAsString();
     // log the error
@@ -739,7 +739,7 @@ class Sharepress {
     // stack the error
     self::$errors[] = $e;
   }
-  
+
   static function pages() {
     try {
       $pages = array();
@@ -750,13 +750,13 @@ class Sharepress {
       return array();
     }
   }
-  
+
   static function clear_cache() {
     self::log('Clearing the cache.');
     global $wpdb;
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'sharepress_cache-%'");
   }
-  
+
   function add_meta_boxes() {
     if (self::installed()) {
       foreach(self::supported_post_types() as $type) {
@@ -764,7 +764,7 @@ class Sharepress {
       }
     }
   }
-  
+
   function get_default_picture() {
     if ($set = get_option(self::OPTION_DEFAULT_PICTURE)) {
       return $set['url'];
@@ -777,28 +777,28 @@ class Sharepress {
     if (!@$meta['message'] && ( @$meta['title_is_message'] || !self::$pro )) {
       $meta['message'] = apply_filters('post_title', $post->post_title);
     }
-    
+
     if (!@$meta['description'] || @$meta['excerpt_is_description']) {
       $meta['description'] = $this->get_excerpt($post);
     }
-    
+
     /*
     if (!@$meta['link'] || @$meta['link_is_permalink']) {
       $meta['link'] = $this->get_permalink($post->ID);
     }
     */
     $meta['link'] = $this->get_permalink($post->ID);
-    
+
     if (!@$meta['name']) {
       $meta['name'] = apply_filters('post_title', $post->post_title);
     }
-    
+
     if (!@$meta['targets'] && ( !self::$pro || !self::$pro->is_excluded_page('wall') )) {
       $meta['targets'] = array('wall');
     }
-    
+
     $meta['picture'] = $this->get_og_image_url($post, $meta);
-    
+
     return $meta;
   }
 
@@ -808,7 +808,7 @@ class Sharepress {
     }
 
     if (!$meta['let_facebook_pick_pic']) { // use featured image, fallback on first image in post, come to rest on global default
-      
+
       if ($src = wp_get_attachment_image_src( get_post_meta( $post->ID, '_thumbnail_id', true ), 'large' )) {
         $picture = $src[0];
       }
@@ -831,7 +831,7 @@ class Sharepress {
     } else if ($meta['let_facebook_pick_pic'] == 2) { // explicitly set to use the default
 
       $picture = $this->get_default_picture();
-    
+
     } else if ($meta['let_facebook_pick_pic'] == 4) { // explicitly set to use gallery, fail to global default
 
       $picture = $this->get_gallery_image($post->ID);
@@ -854,7 +854,7 @@ class Sharepress {
   }
 
   function get_gallery_image($post_id, $index = 0) {
-    $images = array_values( get_children(array( 
+    $images = array_values( get_children(array(
       'post_type' => 'attachment',
       'post_mime_type' => 'image',
       'post_parent' => $post_id,
@@ -892,29 +892,29 @@ class Sharepress {
       }
     }
   }
-  
+
   static $meta;
-  
+
   static function sort_by_selected($p1, $p2) {
     $s1 = @in_array($p1['id'], self::$meta['targets']);
     $s2 = @in_array($p2['id'], self::$meta['targets']);
-    return $s1 === $s2 ? 
-      ( self::$pro ? self::$pro->sort_by_name($p1, $p2) : 0 ) 
-      : 
+    return $s1 === $s2 ?
+      ( self::$pro ? self::$pro->sort_by_name($p1, $p2) : 0 )
+      :
       ( $s1 && !$s2 ? -1 : 1 );
   }
-  
+
   function meta_box($post) {
     // standard meta box
     ob_start();
     require('meta-box.php');
     $meta_box = ob_get_clean();
-    
+
     // nonce
     ob_start();
     wp_nonce_field(plugin_basename(__FILE__), 'sharepress-nonce');
     $nonce = ob_get_clean();
-    
+
     $posted = get_post_meta($post->ID, self::META_POSTED, true);
     $scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
     $last_posted = $last_posted_on_facebook = self::get_last_posted($post);
@@ -942,20 +942,20 @@ class Sharepress {
       if ($meta['title_is_message']) {
         $meta['message'] = $post->post_title;
       }
-      
+
       if ($meta['excerpt_is_description']) {
         $meta['description'] = $this->get_excerpt($post);
       }
     }
-    
+
     // targets must have at least one... try here, and enforce with javascript
     if (!$meta['targets']) {
       $meta['targets'] = self::targets() ? array_keys(self::targets()) : array();
     }
-    
+
     // load the meta data
     $twitter_meta = get_post_meta($post->ID, Sharepress::META_TWITTER, true);
-    
+
     if (!$twitter_meta) {
       // defaults:
       $twitter_meta = array(
@@ -969,21 +969,21 @@ class Sharepress {
     self::$meta = $meta;
     // allow for pro override
     $meta_box = apply_filters('sharepress_meta_box', $meta_box, array(
-      'post' => $post, 
-      'meta' => $meta, 
-      'posted' => $posted, 
-      'scheduled' => $scheduled, 
-      'last_posted' => $last_posted, 
+      'post' => $post,
+      'meta' => $meta,
+      'posted' => $posted,
+      'scheduled' => $scheduled,
+      'last_posted' => $last_posted,
       'last_result' => $last_result,
       'twitter_meta' => $twitter_meta,
       'twitter_enabled' => $twitter_enabled
     ));
     // unstash $meta
     self::$meta = null;
-    
+
     // nonce, followed by the form
     echo $nonce;
-    
+
     // style
     ?>
       <style>
@@ -1001,18 +1001,18 @@ class Sharepress {
       require('behavior-picker.php');
     }
   }
-  
+
   function save_post($post_id) {
     self::log("save_post($post_id)");
-    
+
     // don't do anything on autosave events
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
       self::log("DOING_AUTOSAVE is true; ignoring save_post($post_id)");
       return false;
     }
-    
+
     $post = get_post($post_id);
-    
+
     // make sure we're not working with a revision
     if ($post->post_status == 'auto-draft' || ( $parent_post_id = wp_is_post_revision($post) )) {
       self::log("Post is a revision; ignoring save_post($post_id)");
@@ -1021,13 +1021,13 @@ class Sharepress {
 
     $is_xmlrpc = defined('XMLRPC_REQUEST') && XMLRPC_REQUEST;
     self::log($is_xmlrpc ? 'In XML-RPC request' : 'Not in XML-RPC request');
-    
+
     $is_cron = defined('DOING_CRON') && DOING_CRON;
     self::log($is_cron ? 'In CRON job' : 'Not in CRON job');
-    
+
     $is_pressthis = strpos($_POST['_wp_http_referer'], 'press-this.php') !== false;
     self::log($is_pressthis ? 'In Press This widget request' : 'Not in Press This widget request');
-    
+
     $is_quickpress = 'post-quickpress-publish' == $_POST['action'];
     self::log($is_quickpress ? 'In QuickPress widget request' : 'Not in QuickPress widget request');
 
@@ -1038,7 +1038,7 @@ class Sharepress {
       self::log("Current user is not allowed to edit posts; ignoring save_post($post_id)");
       return false;
     }
-    
+
     $already_posted = get_post_meta($post->ID, self::META_POSTED, true);
     $is_scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true);
     $ignore_nonce = apply_filters('sharepress_ignore_save_nonce', false);
@@ -1051,24 +1051,24 @@ class Sharepress {
 
       // update facebook meta?
       if (@$_POST[self::META]['publish_again'] || ( $_POST[self::META]['enabled'] == 'on' && !$already_posted && !$is_scheduled )) {
-                
+
         // if publish_action was set, make sure enabled = 'on'
         if ($_POST[self::META]['publish_again']) {
           $_POST[self::META]['enabled'] = 'on';
         }
-        
+
         // remove the publish_again flag
         unset($_POST[self::META]['publish_again']);
         // clear the published date in meta
         delete_post_meta($post->ID, self::META_POSTED);
-        
+
         // filter the meta
         if (!$_POST[self::META]) {
           $meta = get_post_meta($post->ID, self::META, true);
         } else {
-          $meta = apply_filters('filter_'.self::META, $_POST[self::META], $post);  
+          $meta = apply_filters('filter_'.self::META, $_POST[self::META], $post);
         }
-        
+
         // save the meta data
         update_post_meta($post->ID, self::META, $meta);
 
@@ -1076,7 +1076,7 @@ class Sharepress {
         if (!$_POST[self::META_TWITTER]) {
           $twitter_meta = get_post_meta($post->ID, self::META_TWITTER, true);
         } else {
-          $twitter_meta = apply_filters('filter_'.self::META_TWITTER, $_POST[self::META_TWITTER], $post);  
+          $twitter_meta = apply_filters('filter_'.self::META_TWITTER, $_POST[self::META_TWITTER], $post);
         }
 
         if (empty($twitter_meta['enabled'])) {
@@ -1085,29 +1085,29 @@ class Sharepress {
 
         // save the twitter meta data
         update_post_meta($post->ID, self::META_TWITTER, $twitter_meta);
-        
+
         // if the post is published, then consider posting to facebook immediately
         if ($post->post_status == 'publish') {
           // if lite version or if publish time has already past
           if (!self::$pro || ( ($time = self::$pro->get_publish_time()) < current_time('timestamp') )) {
             self::log("Posting to Facebook now; save_post($post_id)");
             $this->share($post);
-            
+
           // otherwise, if $time specified, schedule future publish
           } else if ($time) {
             self::log("Scheduling future repost at {$time}; save_post($post_id)");
             update_post_meta($post->ID, self::META_SCHEDULED, $time);
-          
+
           // otherwise...?
           } else {
             self::log("Not time to post or no post schedule time given, so not posting to Facebook; save_post($post_id)");
           }
-        
+
         } else {
           self::log("Post status is not 'publish'; not posting to Facebook on save_post($post_id)");
 
         }
-        
+
       } else if (get_post_meta($post->ID, self::META_SCHEDULED, true) && @$_POST[self::META]['cancelled']) {
         self::log("Scheduled repost canceled by save_post($post_id)");
         delete_post_meta($post->ID, self::META_SCHEDULED);
@@ -1121,7 +1121,7 @@ class Sharepress {
         self::log("Post is already posted or is not allowed to be posted to facebook; save_post($post_id)");
       }
 
-      
+
 
     #
     # When save_post is invoked by XML-RPC, a CRON job, the Press This widget, or the Quick press widget
@@ -1182,9 +1182,9 @@ class Sharepress {
         $meta = array_merge($defaults, is_array($meta) ? $meta : array());
       } else {
         $meta = $defaults;
-      }   
+      }
 
-      $meta = apply_filters('filter_'.self::META_TWITTER, $meta);  
+      $meta = apply_filters('filter_'.self::META_TWITTER, $meta);
 
       update_post_meta($post->ID, self::META_TWITTER, $meta);
 
@@ -1195,7 +1195,7 @@ class Sharepress {
 
     } else {
       self::log("{$is_scheduled} {$already_posted} SharePress nonce was invalid; ignoring save_post($post_id)");
-      
+
     }
   }
 
@@ -1203,14 +1203,14 @@ class Sharepress {
     global $wpdb;
 
     define('SP_FIXING_MISSED_SCHEDULE', true);
-    
+
     // check to see if the publishing window is up again...
     $last = get_option(self::MISSED_SCHEDULE_OPTION, false);
     if ($last && $last > ( time() - ( self::MISSED_SCHEDULE_DELAY * 60 ))) {
       return;
     }
     update_option(self::MISSED_SCHEDULE_OPTION, time());
-    
+
     self::log("Checking for missed schedules...");
 
     // remove this so that we don't publish twice...
@@ -1221,11 +1221,11 @@ class Sharepress {
 
     // locate any posts that should have been published but haven't been...
     $post_ids = $wpdb->get_col("
-      SELECT `ID` FROM `{$wpdb->posts}` 
-      WHERE 
+      SELECT `ID` FROM `{$wpdb->posts}`
+      WHERE
         `post_status` = 'future'
-        AND `post_date_gmt` > 0 
-        AND `post_date_gmt` <= UTC_TIMESTAMP() 
+        AND `post_date_gmt` > 0
+        AND `post_date_gmt` <= UTC_TIMESTAMP()
         AND `post_date_gmt` >= '{$twenty_four_hours_ago}'
         AND `post_type` = 'post'
     ");
@@ -1241,22 +1241,22 @@ class Sharepress {
       }
 
       $this->error(false, false, "
-Oops! Schedule Missed on {$_SERVER['HTTP_HOST']} 
+Oops! Schedule Missed on {$_SERVER['HTTP_HOST']}
 
 This isn't necessarily a SharePress error, but is simply a failure of WordPress to post on schedule.
 
 So, these posts were published late...\n\n".implode("\n", $permalinks));
-    } 
+    }
   }
-  
+
   function future_to_publish($post) {
     if (self::debug()) {
       self::log(sprintf("future_to_publish(%s)", is_object($post) ? $post->post_title : $post));
     }
-    
+
     $this->transition_post_status('publish', 'future', $post);
   }
-  
+
   function transition_post_status($new_status, $old_status, $post) {
     if (self::debug()) {
       self::log(sprintf("transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
@@ -1267,29 +1267,29 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
         self::log(sprintf("Saving operation in progress; ignoring transition_post_status(%s, %s, %s)", $new_status, $old_status, is_object($post) ? $post->post_title : $post));
       }
       return;
-    } 
-    
+    }
+
     // value of $post here is inconsistent
     if (!is_object($post)) {
       $post = get_post($post);
     }
-    
+
     if ($post) {
       $this->share($post);
-    } 
+    }
   }
-  
+
   function publish_post($post_id) {
     self::log("publish_post($post_id)");
-    
+
     if (!empty($_POST[self::META])) {
       self::log("Saving operation in progress; ignoring publish_post($post_id)");
       // saving operation... don't execute this
       return;
     }
-    
+
     $post = get_post($post_id);
-    
+
     if ($post && ($post->post_status == 'publish')) {
       $this->share($post);
     }
@@ -1302,19 +1302,19 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     return preg_replace('#\[/[^\]]+\]#', '', $text);
 
   }
-  
+
   function get_excerpt($post = null, $text = null) {
     if (!is_null($post)) {
       $text = $post->post_excerpt ? $post->post_excerpt : $post->post_content;
-    } 
+    }
     $text = $this->strip_shortcodes( $text );
     $text = str_replace(']]>', ']]&gt;', $text);
     $text = strip_tags($text);
-    
+
     $excerpt_length = apply_filters('sharepress_excerpt_length', self::setting('excerpt_length'));
     $excerpt_more = apply_filters('sharepress_excerpt_more', self::setting('excerpt_more'));
     $words = preg_split("/[\n\r\t ]+/", $text, $excerpt_length + 1, PREG_SPLIT_NO_EMPTY);
-    
+
     if ( count($words) > $excerpt_length ) {
       array_pop($words);
       $text = implode(' ', $words);
@@ -1322,33 +1322,33 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     } else {
       $text = implode(' ', $words);
     }
-    
+
     return $text;
   }
-  
+
   private function can_post_on_facebook($post) {
     $can_post_on_facebook = (
       // post only if defined
-      $post 
-      
+      $post
+
       // post only if sharepress meta data is available
-      && ($meta = get_post_meta($post->ID, self::META, true)) 
-      
+      && ($meta = get_post_meta($post->ID, self::META, true))
+
       // post only if enabled
-      && ($meta['enabled'] == 'on') 
-      
+      && ($meta['enabled'] == 'on')
+
       // post only if never posted before
       && !get_post_meta($post->ID, self::META_POSTED, true)
-      
+
       // on schedule
-      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= current_time('timestamp')) 
-      
+      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= current_time('timestamp'))
+
       // post only if no errors precede this posting
       && !get_post_meta($post->ID, self::META_ERROR)
     );
 
     self::log("Loaded for {$post->ID}: ".json_encode($meta));
-    
+
     return ($can_post_on_facebook ? $meta : false);
   }
 
@@ -1358,27 +1358,27 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       self::twitter_ready()
 
       // post only if defined
-      && $post 
-      
+      && $post
+
       // post only if sharepress meta data is available
-      && ($meta = get_post_meta($post->ID, self::META_TWITTER, true)) 
-      
+      && ($meta = get_post_meta($post->ID, self::META_TWITTER, true))
+
       // post only if enabled
-      && ($meta['enabled'] == 'on') 
-      
+      && ($meta['enabled'] == 'on')
+
       // post only if never posted before
       && !get_post_meta($post->ID, self::META_POSTED, true)
-      
+
       // on schedule
-      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= current_time('timestamp')) 
-      
+      && (!($scheduled = get_post_meta($post->ID, self::META_SCHEDULED, true)) ||  $scheduled <= current_time('timestamp'))
+
       // post only if no errors precede this posting
       && !get_post_meta($post->ID, self::META_ERROR)
     );
 
     return ($can_post_on_twitter ? $meta : false);
   }
-  
+
   /**
    * @return timestamp -- the last time the post was posted to facebook, or false if never
    */
@@ -1386,7 +1386,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     if (!is_object($post)) {
       $post = get_post($post);
     }
-    
+
     if ($result = self::get_last_result($post)) {
       return $result['posted'];
     } else if ($posted = get_post_meta($post->ID, self::META_POSTED, true)) {
@@ -1395,12 +1395,12 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       return false;
     }
   }
-  
+
   static function get_last_result($post) {
     if (!is_object($post)) {
       $post = get_post($post);
     }
-    
+
     if ($result = get_post_meta($post->ID, self::META_RESULT)) {
       usort($result, array('Sharepress', 'sort_by_posted_date'));
       return $result[0];
@@ -1414,7 +1414,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     if (!$post->ID) {
       return false;
     }
-    
+
     $permalink = $this->get_permalink($post->ID);
 
     if (!$login = $this->setting('bitly_login')) {
@@ -1426,7 +1426,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     }
 
     if ($post->post_status == 'publish') {
-      
+
       $response = _wp_http_get_object()->request('https://api-ssl.bitly.com/v3/shorten?' . http_build_query(array(
         'login' => $login,
         'apikey' => $apikey,
@@ -1447,27 +1447,27 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
           SharePress::log('Bit.ly issue: '.json_encode($response), 'ERROR');
           return $permalink;
         }
-        
-      }   
+
+      }
 
     } else {
       return $permalink;
     }
 
   }
-  
+
   function sort_by_posted_date($result1, $result2) {
     $date1 = $result1['posted'];
     $date2 = $result2['posted'];
     return ($date1 == $date2) ? 0 : ( $date1 < $date2 ? 1 : -1);
   }
-  
+
   function share($post) {
-    
+
     if (self::debug()) {
       self::log(sprintf("share(%s)", is_object($post) ? $post->post_title : $post));
-    }    
-    
+    }
+
     if (!is_object($post)) {
       $post = get_post($post);
     }
@@ -1489,14 +1489,14 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
         update_post_meta($post->ID, self::META, $meta);
         return false;
       }
-      
+
       if (!empty($meta['append_link'])) {
         if ($meta['message']) {
-          $meta['message'] .= ' - ';  
+          $meta['message'] .= ' - ';
         }
         $meta['message'] .= $this->get_permalink($post->ID);
       }
-    
+
       try {
         // flush the fb cache
         if ( apply_filters('sp_auto_flush_fb', true) ) {
@@ -1506,8 +1506,8 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
             )
           );
         }
-        
-        
+
+
         // no targets? error.
         if (!$meta['targets'] && !self::is_business()) {
           throw new Exception("No publishing Targets selected.");
@@ -1524,23 +1524,23 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
           ));
 
           self::log(sprintf("posted to the wall: %s", serialize($result)));
-          
-          // store the ID and published date for queuing 
+
+          // store the ID and published date for queuing
           $result['published'] = time();
           $result['message'] = $meta['message'];
           add_post_meta($post->ID, Sharepress::META_RESULT, $result);
         }
-        
+
         // next, fire the sharepress_post action
         // the pro version picks this up
         do_action('sharepress_post', $meta, $post);
-              
+
         $this->success($post, $meta);
 
         delete_post_meta($post->ID, self::META_SCHEDULED);
 
         $posted = true;
-    
+
       } catch (Exception $e) {
         self::err(sprintf("Exception thrown while in share: %s", $e->getMessage()));
         $this->error($post, $meta, $e);
@@ -1565,10 +1565,10 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
 
     if ($posted && !$error) {
       // success:
-      update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));  
+      update_post_meta($post->ID, self::META_POSTED, gmdate('Y-m-d H:i:s'));
     }
-    
-   
+
+
   }
 
   /**
@@ -1582,7 +1582,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     }
     return $actions;
   }
-  
+
   /**
    * As part of setup, save the client-side session data - we don't trust cookies
    */
@@ -1594,19 +1594,19 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       }
       echo self::facebook()->getLoginUrl(array(
         'redirect_uri' => $_REQUEST['current_url'],
-        'scope' => 'read_stream,publish_actions,manage_pages,share_item'
+        'scope' => 'read_stream,publish_actions,publish_pages,manage_pages,share_item'
       ));
-        
+
     } else {
       header('Status: 403 Not Allowed');
     }
     exit;
   }
-  
-  
+
+
   function admin_init() {
     if ($action = @$_REQUEST['action']) {
-      
+
       if ( $action == 'flush') {
         if (current_user_can('administrator')) {
           self::log('Flushing all SharePress options.');
@@ -1619,7 +1619,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
         }
       }
       // when the user clicks "Setup" tab on the settings screen:
-      if ($action == 'clear_session') {      
+      if ($action == 'clear_session') {
         if (current_user_can('administrator')) {
           self::log('Clearing the session (running setup again?)');
           self::facebook()->clearAllPersistentData();
@@ -1644,7 +1644,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
           wp_die("You're not allowed to do that.");
         }
       }
-      
+
       // clear the cache
       if ($action == 'clear_cache') {
         if (current_user_can('administrator')) {
@@ -1654,7 +1654,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
           wp_die("You're not allowed to do that.");
         }
       }
-      
+
     }
 
     register_setting('fb-step1', self::OPTION_API_KEY);
@@ -1667,7 +1667,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   }
 
   function sanitize_settings($settings) {
-    
+
     if (!empty($settings['license_key'])) {
       $settings['license_key'] = trim($settings['license_key']);
     }
@@ -1679,12 +1679,12 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   static function has_keys() {
     return ( self::api_key() && self::app_secret() );
   }
-  
+
   static function installed() {
     // return ( self::has_keys() && self::session() );
     return self::has_keys();
   }
-  
+
   static function is_mu() {
     return defined('MULTISITE') && MULTISITE && defined('SHAREPRESS_MU') && SHAREPRESS_MU;
   }
@@ -1714,15 +1714,15 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
             </div>
           <?php
         }
-      }      
+      }
     }
   }
-  
+
   function admin_menu() {
     add_submenu_page('options-general.php', 'SharePress', 'SharePress', 'administrator', 'sharepress', array($this, 'settings'));
   }
-  
-  function settings() {  
+
+  function settings() {
     if (isset($_REQUEST['log'])) {
       require('console.php');
       return;
@@ -1739,7 +1739,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     if (self::api_key() && self::app_secret() && self::session(false)) {
       $_REQUEST['step'] = 'config';
     }
-    
+
     require('settings.php');
   }
 
@@ -1779,7 +1779,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       ? ':' . $parts['port'] : '';
 
     // rebuild
-    return $protocol . $parts['host'] . $port . $parts['path'] . $query; 
+    return $protocol . $parts['host'] . $port . $parts['path'] . $query;
   }
 
   protected static $DROP_QUERY_PARAMS = array(
@@ -1796,7 +1796,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
     }
     return true;
   }
-  
+
   function success($post, $meta) {
     if ($this->notify_on_success()) {
       $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
@@ -1807,7 +1807,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       );
     }
   }
-  
+
   function error($post, $meta, $error) {
     if (is_object($error)) {
       $code = $error->getCode();
@@ -1816,11 +1816,11 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
 
     if ($post) {
       update_post_meta($post->ID, self::META_ERROR, $error);
-      if ($this->notify_on_error()) { 
+      if ($this->notify_on_error()) {
         $link = get_option('siteurl').'/wp-admin/post.php?action=edit&post='.$post->ID;
 
         $message = "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\nTo retry, simply edit your post and save it again:\n{$link}";
-        if ($code == 1611070) { 
+        if ($code == 1611070) {
           $message = "SharePress Error: $error; while sending \"{$meta['message']}\" to Facebook for post {$post->ID}\n\Why is this happening?\n======================\nThis happened because there is more than one set of Open Graph Meta tags in the <head> of your page. These could be added either by your theme, or by another plugin.\n\nHow do I fix it?\n================\nThe recommended fix is to disable those settings elsewhere (my modifying the configuration of other plugins or your theme), and letting SharePress be the open graph meta tag authority for your site. If this isn't possible, you can uncheck the open graph checkboxes in SharePress' settings.\n\nYou can test whether or not you've fixed the problem by analyzing your content with Facebook's object debugger, here: https://developers.facebook.com/tools/debug/og/object?q={$this->get_permalink($post->ID)}";
         }
 
@@ -1830,8 +1830,8 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
           $message
         );
       }
-      error_log("SharePress Error: $error; while sending {$meta['message']} for post {$post->ID}");   
-    
+      error_log("SharePress Error: $error; while sending {$meta['message']} for post {$post->ID}");
+
     } else {
       wp_mail(
         $this->get_error_email(),
@@ -1840,25 +1840,25 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       );
 
     }
-    
-   
+
+
   }
-  
+
   static function get_error_email() {
     $options = get_option(self::OPTION_NOTIFICATIONS);
     return (@$options['on_error_email']) ? $options['on_error_email'] : get_option('admin_email');
   }
-  
+
   static function notify_on_error() {
     $options = get_option(self::OPTION_NOTIFICATIONS);
     return $options ? $options['on_error'] == '1' : true;
   }
-  
+
   static function get_success_email() {
     $options = get_option(self::OPTION_NOTIFICATIONS);
     return (@$options['on_success_email']) ? $options['on_success_email'] : get_option('admin_email');
   }
-  
+
   static function notify_on_success() {
     $options = get_option(self::OPTION_NOTIFICATIONS);
     return $options ? $options['on_success'] == '1' : true;
@@ -1874,7 +1874,7 @@ class SharePress_TwitterClient {
   private $access_token;
   private $access_token_secret;
   private $host = 'https://api.twitter.com/1.1';
-  
+
   function __construct($settings) {
     $this->consumer_key = trim( $settings['twitter_consumer_key'] );
     $this->consumer_secret = trim( $settings['twitter_consumer_secret'] );
@@ -1888,7 +1888,7 @@ class SharePress_TwitterClient {
   function test() {
     $tweet = "Hey, hey! Just testing SharePress: an awesome plugin for posting to Twitter and Facebook from WordPress http://bit.ly/pqo6KO";
     if (false === ($response = $this->post($tweet))) {
-      return "Connection error. Please try again."; 
+      return "Connection error. Please try again.";
     } else if ($response->errors) {
       return "Twitter says there's a problem: [{$response->errors[0]->code}' : '{$response->errors[0]->message}] Make sure all of your keys are correct, and double-check your Twitter app's settings.";
     } else {
@@ -1922,7 +1922,7 @@ class SharePress_TwitterClient {
         'oauth_consumer_key' => $this->consumer_key,
         'oauth_token' => $this->access_token
       ),
-      $params, 
+      $params,
       array(
         'consumer_secret' => $this->consumer_secret,
         'access_token_secret' => $this->access_token_secret
@@ -2002,7 +2002,7 @@ class SharePress_WordPressOAuth {
       $signable_params
     ));
 
-    $base_string = implode('&', $parts);    
+    $base_string = implode('&', $parts);
     $key_parts = self::urlencode_rfc3986(array( $consumer_secret, $access_token_secret ));
     $key = implode('&', $key_parts);
 
