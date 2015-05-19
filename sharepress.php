@@ -2,15 +2,15 @@
 /*
 Plugin Name: SharePress
 Plugin URI: https://getsharepress.com
-Description: SharePress publishes your content to your personal Facebook Wall and the Walls of Pages you choose.
-Author: Fat Panda, LLC
-Author URI: http://fatpandadev.com
-Version: 2.2.33
+Description: Automatic posting and reposting to Facebook and Twitter.
+Author: Aaron Collegeman
+Author URI: http://aaroncollegeman.sites.fatpandadev.com/the-story-of-sharepress-and-the-future-of-social-media/
+Version: 2.2.34
 License: GPL2
 */
 
 /*
-Copyright (C)2011 Fat Panda, LLC
+Copyright (C)2011-2015 Fat Panda, LLC
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -1690,11 +1690,14 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   }
 
   static function unlocked() {
+    return true;
+
     $license_key = self::license_key();
     return apply_filters('sharepress_enabled', true) && strlen($license_key) == 32;
   }
 
   static function license_key() {
+    return '00000000000000000000000000000000';
     return ( defined('SHAREPRESS_MU_LICENSE_KEY') && SHAREPRESS_MU_LICENSE_KEY ) ? SHAREPRESS_MU_LICENSE_KEY : self::load()->setting('license_key');
   }
 
@@ -2189,7 +2192,6 @@ class SharePress_WordPressOAuth {
 Sharepress::load();
 
 #
-# Don't be a dick. I like to eat, too.
-# http://aaroncollegeman/sharepress/
+# Everybody eats for free!
 #
-if (Sharepress::unlocked()) require('pro.php');
+require('pro.php');

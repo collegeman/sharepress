@@ -4,21 +4,21 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 4.2.2
-Stable tag: 2.2.33
+Stable tag: 2.2.34
 
 Automatic posting and reposting to Facebook and Twitter.
 
 == Description ==
 
-[SharePress](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=sharepress) is a WordPress plugin that automatically shares your content to Facebook and Twitter.
-Support for LinkedIn, and more goodies are coming in [version 3.0](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=version-3.0).
+**SharePress** is a WordPress plugin that automatically shares your content to Facebook and Twitter.
 
-Features include:
+**Note:** This version of SharePress is being sunset, and will no longer be supported after December 31, 2015. 
+You can read about this decision [here](http://aaroncollegeman.sites.fatpandadev.com/the-story-of-sharepress-and-the-future-of-social-media/).
+There are currently no plans to continue SharePress development beyond December 31, 2015.
+
+Features of this plugin include:
 
 * Automatically publish your WordPress posts to your personal Facebook wall
-
-Upgrade to the Pro version for e-mail based support directly from the developers and access to these features:
-
 * Publish to all of the Facebook pages you manage
 * Publish to your Twitter followers
 * Customize each Facebook status message
@@ -31,19 +31,15 @@ Upgrade to the Pro version for e-mail based support directly from the developers
 SharePress is compatible with WordPress Multisite (MU) and WordPress Multi-Network.
 
 = Why use SharePress instead of those other guys? =
-Three great reasons:
+Two great reasons:
 
-**Focus** Integrating with social networks is hard, so we focus on the big providers - Facebook and Twitter, and soon
-Google+ and LinkedIn, too - so that SharePress can continue to be the most reliable solution for automatic
+**Focus** Integrating with social networks is hard, so we focus on the big providers&mdash;Facebook and Twitter&mdash;so 
+that SharePress can continue to be the most reliable solution for automatic
 posting and reposting. You write good content, and we'll keep the oauth out of your hair.
 
-**Ease of use** Simple is hard, but we're committed to keeping SharePress easy to use. Like WordPress' core features, we'll
-always try to keep our defaults sensible, and our options pages short. This ensures SharePress is easy to
-use for you, your clients and customers, and also keeps SharePress healthy and easy to maintain.
-
-**Support** SharePress is [supported software](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
-Having trouble setting up your Facebook or Twitter application? No problem, we've got your back.
-Something not working the way you expect? We're an e-mail away, and we often respond on the first day.
+**Ease of use** Simple is hard, but we're committed to keeping SharePress easy to use. Like WordPress' core 
+features, we'll always try to keep our defaults sensible, and our options pages short. This ensures SharePress 
+is easy to use for you, your clients and customers, and also keeps SharePress healthy and easy to maintain.
 
 But don't take our word for it...
 
@@ -89,37 +85,16 @@ Need support? [Get the Pro version].(https://getsharepress.com/?utm_source=wordp
 
 == Frequently Asked Questions ==
 
-= How do I post to the wall of my Facebook page? =
+= I purchased a license key for SharePress; how do I get support? =
 
-You need the Pro version. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=post-to-page).
+E-mail based tech support is available to license holders until December 31, 2015. 
 
-= Why do I need to pay for posting to my Facebook page? =
-
-SharePress' features are without parallel. Being able to post automatically to your Facebook page is only the beginning. The reposting feature is the one that has the potential to bring the most traffic growth to your site.
-
-Plus, Facebook is a very difficult platform the work with - their motto is, "Move fast and break things." No joke. When you pay for SharePress you are paying for Fat Panda to constantly monitor and maintain this stable connection between your site and the social Web.
-
-= I'm posting to Facebook via Twitter. Isn't that the same thing? =
-
-No. SharePress Pro provides you with the ability to customize message (status update) and the photo that appears on Facebook. Posting via Twitter does not provide this feature.
-
-= When will SharePress support LinkedIn? =
-
-Soon. SharePress 3.0 is nigh.
-
-= When will SharePress support Google+? =
-
-At this time it is not possible to publish to Google+ as Google does not offer a writable API.
-
-Other services and plugins support writing to Google+, but they do this by storing your Google account username and password, which is *extremely* dangerous.
-
-= I'm having trouble. Where can I get support? =
-
-Documentation and support for SharePress are available [here](http://getsharepress.com/setup).
-
-E-mail based tech support is available to Pro customers. All you have to do is [buy a key](https://getsharepress.com/?utm_source=wordpress.org&utm_medium=app-store&utm_campaign=get-support).
+All you have to do is e-mail us at [yo@fatpandadev.com](mailto:yo@fatpandadev.com).
 
 == Changelog ==
+
+= 2.2.34 =
+* No more license keys version! SharePress can now be used to publish to Facebook and Twitter without the need to purchase a license key. You can read about this decision [here](http://aaroncollegeman.sites.fatpandadev.com/the-story-of-sharepress-and-the-future-of-social-media/)
 
 = 2.2.33 =
 * Remove "share_item" scope request
