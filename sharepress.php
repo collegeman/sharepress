@@ -5,7 +5,7 @@ Plugin URI: https://getsharepress.com
 Description: Automatic posting and reposting to Facebook and Twitter.
 Author: Aaron Collegeman
 Author URI: http://aaroncollegeman.sites.fatpandadev.com/the-story-of-sharepress-and-the-future-of-social-media/
-Version: 2.2.34
+Version: 2.2.35
 License: GPL2
 */
 
@@ -41,7 +41,7 @@ SpBaseFacebook::$CURL_OPTS = SpBaseFacebook::$CURL_OPTS + array(
 
 class Sharepress {
 
-  const VERSION = '2.2.29';
+  const VERSION = '2.2.35';
 
   const MISSED_SCHEDULE_DELAY = 5;
   const MISSED_SCHEDULE_OPTION = 'sharepress_missed_schedule';
@@ -1697,8 +1697,8 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
   }
 
   static function license_key() {
-    return '00000000000000000000000000000000';
-    return ( defined('SHAREPRESS_MU_LICENSE_KEY') && SHAREPRESS_MU_LICENSE_KEY ) ? SHAREPRESS_MU_LICENSE_KEY : self::load()->setting('license_key');
+    $key = ( defined('SHAREPRESS_MU_LICENSE_KEY') && SHAREPRESS_MU_LICENSE_KEY ) ? SHAREPRESS_MU_LICENSE_KEY : self::load()->setting('license_key');
+    return $key ? $key : '00000000000000000000000000000000';
   }
 
   function admin_notices() {
