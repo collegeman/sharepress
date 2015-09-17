@@ -4,7 +4,7 @@ Donate link: https://getsharepress.com
 Tags: facebook, twitter, social, like, posts, page
 Requires at least: 2.9
 Tested up to: 4.2.2
-Stable tag: 2.2.35
+Stable tag: 2.2.36
 
 Automatic posting and reposting to Facebook and Twitter.
 
@@ -92,6 +92,9 @@ E-mail based tech support is available to license holders until December 31, 201
 All you have to do is e-mail us at [yo@fatpandadev.com](mailto:yo@fatpandadev.com).
 
 == Changelog ==
+
+= 2.2.36 =
+* Facebook no longer supports read_stream permission
 
 = 2.2.35 =
 * If user already had a license key, don't hide it

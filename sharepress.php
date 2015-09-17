@@ -5,7 +5,7 @@ Plugin URI: https://getsharepress.com
 Description: Automatic posting and reposting to Facebook and Twitter.
 Author: Aaron Collegeman
 Author URI: http://aaroncollegeman.sites.fatpandadev.com/the-story-of-sharepress-and-the-future-of-social-media/
-Version: 2.2.35
+Version: 2.2.36
 License: GPL2
 */
 
@@ -1594,7 +1594,7 @@ So, these posts were published late...\n\n".implode("\n", $permalinks));
       }
       echo self::facebook()->getLoginUrl(array(
         'redirect_uri' => $_REQUEST['current_url'],
-        'scope' => 'read_stream,publish_actions,publish_pages,manage_pages'
+        'scope' => 'publish_actions,publish_pages,manage_pages'
       ));
 
     } else {
